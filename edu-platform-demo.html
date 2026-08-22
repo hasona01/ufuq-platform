@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>أفق — منصة الطالب الجامعي</title>
+
+<!-- PWA: يخلي المنصة قابلة للإضافة للشاشة الرئيسية -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1F6F5C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="أُفق">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #EFE9DC;
+    --paper: #FFFFFF;
+    --ink: #24303A;
+    --ink-soft: #64707C;
+    --line: #DED4BE;
+    --gold: #1F6F5C;
+    --gold-soft: #DCEDE7;
+    --cs: #3B5BA5;
+    --cs-bg: #E5EBF6;
+    --math: #C1542D;
+    --math-bg: #F6E6DB;
+    --lit: #8B4F86;
+    --lit-bg: #F3E4F1;
+    --phys: #2E8B57;
+    --phys-bg: #E1F1E7;
+    --radius: 14px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans Arabic', sans-serif; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.display{font-family:'Amiri', serif;}
+  .mono{font-family:'IBM Plex Mono', monospace; direction:ltr; display:inline-block;}
+  button{font-family:inherit; cursor:pointer;}
+
+  /* ===== Header ===== */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px; background:var(--paper); border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:20;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand .seal{
+    width:38px; height:38px; border-radius:50%; background:var(--ink);
+    color:var(--gold-soft); display:flex; align-items:center; justify-content:center;
+    font-family:'Amiri',serif; font-weight:700; font-size:18px; flex-shrink:0;
+    border:2px solid var(--gold);
+  }
+  .brand-text h1{margin:0; font-size:19px; font-weight:700;}
+  .brand-text p{margin:0; font-size:11px; color:var(--ink-soft); letter-spacing:.5px;}
+  .avatar{
+    width:36px; height:36px; border-radius:50%; background:var(--gold-soft);
+    color:var(--gold); display:flex; align-items:center; justify-content:center;
+    font-weight:600; border:1px solid var(--gold);
+  }
+
+  /* ===== Layout ===== */
+  .app{max-width:1180px; margin:0 auto; padding:20px 16px 60px; display:grid; grid-template-columns:200px 1fr; gap:22px;}
+  @media (max-width:800px){ .app{grid-template-columns:1fr;} }
+
+  /* Binder tab nav */
+  nav.binder{display:flex; flex-direction:column; gap:6px;}
+  .tab{
+    display:flex; align-items:center; gap:10px; padding:12px 14px;
+    border-radius:0 999px 999px 0; border:1px solid transparent; border-left:none;
+    background:transparent; color:var(--ink-soft); font-size:14px; font-weight:500;
+    text-align:right; transition:.15s;
+  }
+  .tab .dot{width:8px; height:8px; border-radius:50%; background:var(--line); flex-shrink:0;}
+  .tab.active{background:var(--paper); color:var(--ink); font-weight:700; border-color:var(--line); box-shadow:2px 0 0 var(--gold) inset;}
+  .tab.active .dot{background:var(--gold);}
+  .tab:hover{background:var(--paper); color:var(--ink);}
+  @media (max-width:800px){
+    nav.binder{flex-direction:row; overflow-x:auto; padding-bottom:4px;}
+    .tab{white-space:nowrap; border-radius:999px; border-left:1px solid transparent;}
+  }
+
+  main{min-width:0;}
+
+  /* Stats row */
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px;}
+  @media (max-width:640px){ .stats{grid-template-columns:1fr;} }
+  .stat-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 18px;
+  }
+  .stat-card .label{font-size:12px; color:var(--ink-soft); margin-bottom:6px;}
+  .stat-card .value{font-size:26px; font-weight:700; font-family:'IBM Plex Mono',monospace; direction:ltr; text-align:right;}
+  .stat-card .value small{font-size:14px; font-weight:400; color:var(--ink-soft);}
+
+  section{margin-bottom:30px;}
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px;}
+  .section-head h2{font-size:20px; margin:0;}
+  .section-head span{font-size:12px; color:var(--ink-soft);}
+
+  /* Faculty switcher */
+  .faculty-switch{ display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+  .fac-btn{
+    background:var(--paper); border:1.5px solid var(--line); border-radius:999px;
+    padding:10px 18px; font-size:13.5px; font-weight:600; color:var(--ink-soft);
+  }
+  .fac-btn.active{ background:var(--gold); border-color:var(--gold); color:#fff; }
+
+  /* Timeline (today's schedule) */
+  .timeline{position:relative; padding-right:20px;}
+  .timeline::before{content:""; position:absolute; right:6px; top:6px; bottom:6px; width:2px; background:var(--line);}
+  .t-item{position:relative; display:flex; gap:14px; align-items:flex-start; padding-bottom:20px;}
+  .t-item::before{content:""; position:absolute; right:-1px; top:4px; width:10px; height:10px; border-radius:50%; background:var(--gold); border:2px solid var(--bg);}
+  .t-time{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); width:56px; flex-shrink:0; direction:ltr; text-align:left;}
+  .t-card{
+    flex:1; background:var(--paper); border:1px solid var(--line); border-radius:10px;
+    padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+  }
+  .t-card .name{font-weight:600; font-size:14px;}
+  .t-card .room{font-size:12px; color:var(--ink-soft);}
+  .badge{font-size:11px; padding:3px 9px; border-radius:999px; font-weight:600; white-space:nowrap;}
+
+  /* Course cards */
+  .courses{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px;}
+  .course-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; border-right:5px solid var(--c); cursor:pointer; transition:.15s;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  .course-card:hover{transform:translateY(-2px); box-shadow:0 6px 18px rgba(30,42,56,.08);}
+  .course-card .top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .course-card h3{margin:0; font-size:16px; font-weight:700; font-family:'IBM Plex Sans Arabic';}
+  .course-card .code{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); direction:ltr; display:inline-block;}
+  .tag{font-size:11px; padding:3px 9px; border-radius:999px; font-weight:600; background:var(--cbg); color:var(--c);}
+  .progress-track{height:6px; background:var(--line); border-radius:999px; overflow:hidden;}
+  .progress-fill{height:100%; background:var(--c); border-radius:999px; transition:width .4s ease;}
+  .course-card .meta{font-size:12px; color:var(--ink-soft); display:flex; justify-content:space-between;}
+
+  /* Standalone course page */
+  #coursePage{ animation:fadeIn .3s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .back-btn{
+    display:inline-flex; align-items:center; gap:6px; background:var(--paper); border:1px solid var(--line);
+    border-radius:999px; padding:8px 16px; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:18px;
+  }
+  .back-btn:hover{ color:var(--ink); }
+  .course-hero{
+    background:var(--c-bg, var(--gold-soft)); border-radius:var(--radius); padding:22px 22px 20px;
+    border-right:5px solid var(--c-page, var(--gold)); margin-bottom:26px;
+  }
+  .course-hero .tag{ background:var(--paper); color:var(--c-page, var(--gold)); }
+  .course-hero h2{ margin:8px 0 2px; font-size:26px; }
+  .course-hero .sub{ font-size:13px; color:var(--ink-soft); margin-bottom:14px; }
+  .course-hero .progress-track{ height:8px; }
+  .course-hero .progress-fill{ background:var(--c-page, var(--gold)); }
+  .cp-section{ margin-bottom:26px; }
+  .cp-section h3{ font-size:16px; margin:0 0 12px; }
+  .lesson{
+    display:flex; align-items:center; gap:12px; background:var(--paper); border:1px solid var(--line);
+    border-radius:10px; padding:12px 14px; margin-bottom:8px;
+  }
+  .lesson input{width:18px; height:18px; accent-color:var(--c-page, var(--gold)); flex-shrink:0;}
+  .lesson .l-name{flex:1; font-size:14px; font-weight:500;}
+  .lesson.done .l-name{text-decoration:line-through; color:var(--ink-soft);}
+  .lesson .l-dur{font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; direction:ltr;}
+  .cp-empty{ font-size:13px; color:var(--ink-soft); background:var(--paper); border:1px dashed var(--line); border-radius:10px; padding:16px; text-align:center; }
+
+  /* Lecture list rows (each row navigates to its own page) */
+  .lecture-card{
+    display:flex; align-items:center; gap:10px; padding:13px 14px; cursor:pointer;
+    background:var(--paper); border:1px solid var(--line); border-radius:12px; margin-bottom:10px;
+  }
+  .lecture-card:hover{ border-color:var(--c-page, var(--gold)); }
+  .lecture-check{ width:18px; height:18px; accent-color:var(--c-page, var(--gold)); flex-shrink:0; }
+  .lecture-title{ flex:1; font-size:14px; font-weight:600; }
+  .lecture-title.done{ text-decoration:line-through; color:var(--ink-soft); }
+  .lecture-dur{ font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; direction:ltr; }
+  .lecture-arrow{ font-size:16px; color:var(--c-page, var(--gold)); font-weight:700; }
+  .lecture-icons{ font-size:12px; color:var(--ink-soft); display:flex; gap:4px; }
+  .attach-chip{ display:inline-block; font-size:12px; background:var(--c-bg, var(--gold-soft)); color:var(--c-page, var(--gold)); padding:6px 12px; border-radius:999px; margin-bottom:8px; }
+  .upload-status{ font-size:12px; color:var(--ink-soft); margin:2px 0 8px; }
+
+  /* Standalone lecture page */
+  #lecturePage{ animation:fadeIn .3s ease; }
+  .lecture-hero{
+    background:var(--c-bg, var(--gold-soft)); border-radius:var(--radius); padding:20px 22px;
+    border-right:5px solid var(--c-page, var(--gold)); margin-bottom:24px;
+    display:flex; align-items:center; gap:14px;
+  }
+  .lecture-hero h2{ margin:0 0 2px; font-size:22px; }
+  .lecture-hero .sub{ font-size:12px; color:var(--ink-soft); }
+
+  /* Upload */
+  .upload-row{ display:flex; gap:10px; flex-wrap:wrap; margin:12px 0 8px; }
+  .upload-btn{
+    display:inline-flex; align-items:center; gap:8px; background:var(--paper); border:1.5px dashed var(--c-page, var(--gold));
+    color:var(--c-page, var(--gold)); border-radius:10px; padding:9px 14px; font-size:12.5px; font-weight:600;
+  }
+  .upload-btn:hover{ background:var(--c-bg, var(--gold-soft)); }
+
+  /* Quiz */
+  .quiz-area{ margin-top:6px; }
+  .quiz-btn{
+    background:var(--c-page, var(--gold)); color:#fff; border:none; border-radius:8px; padding:9px 14px;
+    font-size:12.5px; font-weight:600;
+  }
+  .quiz-btn:disabled{ opacity:.45; }
+  .quiz-status{ font-size:12px; color:var(--ink-soft); margin-top:8px; }
+  .quiz-hint{
+    background:var(--c-bg, var(--gold-soft)); border:1px solid var(--c-page, var(--gold));
+    border-radius:10px; padding:14px 16px; font-size:13px; line-height:1.8; color:var(--ink);
+  }
+  .quiz-hint em{ color:var(--c-page, var(--gold)); font-style:normal; font-weight:600; }
+  .quiz-block{ margin-top:14px; border-top:1px solid var(--line); padding-top:14px; }
+  .quiz-h{ font-size:13px; color:var(--c-page, var(--gold)); margin:18px 0 10px; }
+  .quiz-h:first-child{ margin-top:0; }
+  .quiz-q{ margin-bottom:12px; }
+  .quiz-q .q-text{ font-size:13.5px; font-weight:600; margin-bottom:7px; }
+  .quiz-q .q-opt{
+    display:block; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:9px 12px;
+    font-size:13px; margin-bottom:6px; cursor:pointer;
+  }
+  .quiz-q .q-opt input{ margin-left:8px; accent-color:var(--c-page, var(--gold)); }
+  .quiz-q .q-opt.correct{ border-color:#2E8B57; background:#E1F1E7; }
+  .quiz-q .q-opt.wrong{ border-color:#C1542D; background:#F6E6DB; }
+  .quiz-submit{
+    background:var(--c-page, var(--gold)); color:#fff; border:none; border-radius:999px; padding:10px 22px;
+    font-size:13px; font-weight:700; margin-top:4px;
+  }
+  .quiz-score{ font-size:15px; font-weight:700; margin-top:12px; }
+
+  .essay-box{
+    width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:13px;
+    font-family:inherit; resize:vertical; background:var(--bg); margin-bottom:8px;
+  }
+  .reveal-btn{
+    background:transparent; border:1px solid var(--c-page, var(--gold)); color:var(--c-page, var(--gold));
+    border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600;
+  }
+  .reveal-box{
+    margin-top:10px; background:var(--c-bg, var(--gold-soft)); border-radius:8px; padding:10px 14px;
+    font-size:13px; line-height:1.7; list-style-position:inside;
+  }
+
+  .terms-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+  .term-card{ background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
+  .term-name{ font-weight:700; font-size:14px; margin-bottom:8px; }
+
+  /* Assignments */
+  .assign-list{display:flex; flex-direction:column; gap:8px;}
+  .assign{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:12px 16px;
+  }
+  .assign .info{display:flex; flex-direction:column; gap:2px;}
+  .assign .a-title{font-weight:600; font-size:14px;}
+  .assign .a-course{font-size:12px; color:var(--ink-soft);}
+  .assign .due{font-size:12px; font-weight:600; font-family:'IBM Plex Mono',monospace; direction:ltr;}
+  .assign .a-right{ display:flex; align-items:center; gap:10px; }
+  .assign .a-delete{
+    background:transparent; border:none; color:var(--ink-soft); font-size:16px; line-height:1;
+    padding:4px 6px; border-radius:6px;
+  }
+  .assign .a-delete:hover{ color:#B0522D; background:#F6E6DB; }
+
+  .add-btn{
+    background:var(--gold); color:#fff; border:none; border-radius:999px; padding:7px 16px;
+    font-size:12.5px; font-weight:600;
+  }
+  .assign-form{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:16px;
+    margin-bottom:14px; display:flex; flex-direction:column; gap:10px;
+  }
+  .assign-form input, .assign-form select{
+    border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:13px;
+    font-family:inherit; background:var(--bg); color:var(--ink); width:100%;
+  }
+  .assign-form label{ font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; }
+  .assign-form .form-actions{ display:flex; gap:10px; margin-top:4px; }
+  .assign-form .btn-save{ background:var(--gold); color:#fff; border:none; border-radius:999px; padding:9px 18px; font-size:13px; font-weight:700; }
+  .assign-form .btn-cancel{ background:transparent; border:1px solid var(--line); color:var(--ink-soft); border-radius:999px; padding:9px 18px; font-size:13px; }
+
+  .grade-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:14px 16px;
+    margin-bottom:12px; border-right:4px solid var(--gc, var(--gold));
+  }
+  .grade-card-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .grade-course-title{ font-size:14px; font-weight:700; }
+  .grade-total{ font-size:13px; font-weight:700; font-family:'IBM Plex Mono',monospace; direction:ltr; color:var(--gc, var(--gold)); }
+  .grade-rows{ display:flex; flex-direction:column; gap:8px; }
+  .grade-row{ display:flex; align-items:center; gap:8px; }
+  .grade-label{ font-size:12.5px; color:var(--ink-soft); width:70px; flex-shrink:0; }
+  .grade-input{
+    border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:13px;
+    font-family:'IBM Plex Mono',monospace; background:var(--bg); color:var(--ink); width:100%; text-align:center;
+  }
+  .grade-input.small{ max-width:56px; }
+  .grade-slash{ color:var(--ink-soft); font-size:13px; }
+
+  footer{text-align:center; padding:24px; font-size:12px; color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div class="seal">أ</div>
+    <div class="brand-text">
+      <h1>أُفـق</h1>
+      <p>كليتا التمريض والحاسبات والمعلومات</p>
+    </div>
+  </div>
+  <div class="avatar">س ع</div>
+</header>
+
+<div class="app">
+  <nav class="binder">
+    <button class="tab active" data-tab="dashboard"><span class="dot"></span>لوحة التحكم</button>
+    <button class="tab" data-tab="coursesSection"><span class="dot"></span>موادّي</button>
+    <button class="tab" data-tab="assignmentsSection"><span class="dot"></span>الواجبات</button>
+    <button class="tab" data-tab="gradesSection"><span class="dot"></span>الدرجات</button>
+  </nav>
+
+  <main>
+   <div id="dashboardView">
+    <div class="faculty-switch" id="facultySwitch"></div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="label">واجبات مستحقة هذا الأسبوع</div>
+        <div class="value" id="dueStat">—</div>
+      </div>
+    </div>
+
+    <section id="scheduleSection">
+      <div class="section-head">
+        <h2>جدول اليوم — الأربعاء</h2>
+        <span>19 أغسطس</span>
+      </div>
+      <div class="timeline" id="timelineWrap"></div>
+    </section>
+
+    <section id="coursesSection">
+      <div class="section-head">
+        <h2>موادّي هذا الفصل</h2>
+        <span id="courseCount">4 مواد</span>
+      </div>
+      <div class="courses" id="courseGrid"></div>
+    </section>
+
+    <section id="assignmentsSection">
+      <div class="section-head">
+        <h2>واجبات قادمة</h2>
+        <button class="add-btn" id="addAssignBtn">+ إضافة واجب</button>
+      </div>
+      <div id="assignForm" class="assign-form" style="display:none;"></div>
+      <div class="assign-list" id="assignList"></div>
+    </section>
+
+    <section id="gradesSection">
+      <div class="section-head">
+        <h2>الدرجات</h2>
+        <span>كويزات · ميد تيرم · فاينال — تحطها انت بنفسك</span>
+      </div>
+      <div id="gradesList"></div>
+    </section>
+   </div>
+
+   <div id="coursePage" style="display:none;"></div>
+   <div id="lecturePage" style="display:none;"></div>
+  </main>
+</div>
+
+<footer>نموذج تجريبي — تفاعلي بالكامل، بدون تسجيل دخول حقيقي</footer>
+
+<script>
+const FACULTIES = {
+  nursing: {label:'🩺 كلية التمريض', short:'التمريض'},
+  cs: {label:'💻 كلية الحاسبات والمعلومات', short:'الحاسبات'},
+};
+
+const THEME = {
+  // ===== كلية الحاسبات والمعلومات =====
+  cg:    {c:'#1B7A93', bg:'#DCF0F4', label:'الرسم بالحاسب'},
+  net:   {c:'#6A4FA0', bg:'#ECE5F5', label:'شبكات الحاسب'},
+  field: {c:'#557A46', bg:'#E4EEDF', label:'التدريب الميداني'},
+  os:    {c:'#A67C27', bg:'#F3EAD3', label:'نظم التشغيل'},
+  se:    {c:'#C1542D', bg:'#F6E6DB', label:'هندسة البرمجيات'},
+  vp:    {c:'#A64C82', bg:'#F5E1EC', label:'البرمجة المرئية'},
+  // ===== كلية التمريض =====
+  ms:    {c:'#B23A48', bg:'#F7E3E5', label:'باطني وجراحي'},
+  path:  {c:'#6B4C6B', bg:'#F2E9EF', label:'علم الأمراض'},
+  pharm: {c:'#8B5E34', bg:'#F1E6D8', label:'علم الأدوية'},
+  crit:  {c:'#C23B2E', bg:'#F8E2DE', label:'حالات حرجة وطوارئ'},
+  nutr:  {c:'#4F7A3D', bg:'#E5EFDF', label:'تغذية علاجية'},
+  surg:  {c:'#3B6E71', bg:'#E1EEEE', label:'جراحة وباطنة عامة'},
+  psych: {c:'#5B6EA5', bg:'#E6E9F3', label:'تمريض نفسي'},
+};
+
+const courses = [
+  // ===== كلية التمريض (7 مواد) =====
+  {
+    id:'nurs_ms', faculty:'nursing', subject:'ms', code:'NURS 210', title:'تمريض باطني وجراحي', materials:[],
+    lessons:[
+      {t:'تقييم المريض الباطني', d:'22 د', done:true},
+      {t:'رعاية ما قبل وبعد الجراحة', d:'26 د', done:false},
+      {t:'التعامل مع الجروح والضمادات', d:'20 د', done:false},
+      {t:'مراقبة العلامات الحيوية للمريض الجراحي', d:'18 د', done:false},
+    ]
+  },
+  {
+    id:'nurs_path', faculty:'nursing', subject:'path', code:'NURS 215', title:'علم الأمراض', materials:[],
+    lessons:[
+      {t:'مقدمة في الباثولوجيا العامة', d:'20 د', done:true},
+      {t:'الالتهابات وأنواعها', d:'24 د', done:false},
+      {t:'اضطرابات النمو الخلوي', d:'22 د', done:false},
+      {t:'أمراض جهاز الدوران', d:'25 د', done:false},
+    ]
+  },
+  {
+    id:'nurs_pharm', faculty:'nursing', subject:'pharm', code:'NURS 220', title:'علم الأدوية', materials:[],
+    lessons:[
+      {t:'مبادئ علم الأدوية', d:'20 د', done:true},
+      {t:'حساب الجرعات الدوائية', d:'25 د', done:true},
+      {t:'أدوية القلب والأوعية الدموية', d:'23 د', done:false},
+      {t:'المضادات الحيوية', d:'21 د', done:false},
+    ]
+  },
+  {
+    id:'nurs_crit', faculty:'nursing', subject:'crit', code:'NURS 225', title:'تمريض الحالات الحرجة والطوارئ', materials:[],
+    lessons:[
+      {t:'مبادئ فرز الحالات (Triage)', d:'20 د', done:false},
+      {t:'الإنعاش القلبي الرئوي الأساسي', d:'28 د', done:false},
+      {t:'التعامل مع حالات الصدمة', d:'22 د', done:false},
+      {t:'مراقبة المريض في العناية المركزة', d:'24 د', done:false},
+    ]
+  },
+  {
+    id:'nurs_nutr', faculty:'nursing', subject:'nutr', code:'NURS 230', title:'التغذية والتغذية العلاجية', materials:[],
+    lessons:[
+      {t:'أساسيات التغذية السليمة', d:'18 د', done:true},
+      {t:'التغذية العلاجية لمرضى السكر', d:'22 د', done:false},
+      {t:'التغذية الأنبوبية والوريدية', d:'20 د', done:false},
+      {t:'تقييم الحالة الغذائية للمريض', d:'19 د', done:false},
+    ]
+  },
+  {
+    id:'nurs_surg', faculty:'nursing', subject:'surg', code:'NURS 235', title:'الجراحة وأمراض الباطنة العامة', materials:[],
+    lessons:[
+      {t:'مبادئ الجراحة العامة', d:'23 د', done:false},
+      {t:'أمراض الجهاز الهضمي', d:'25 د', done:false},
+      {t:'أمراض الجهاز البولي', d:'21 د', done:false},
+      {t:'التمريض في العيادات الخارجية', d:'17 د', done:false},
+    ]
+  },
+  {
+    id:'nurs_psych', faculty:'nursing', subject:'psych', code:'NURS 240', title:'التمريض النفسي والطب النفسي', materials:[],
+    lessons:[
+      {t:'مقدمة في الصحة النفسية', d:'20 د', done:true},
+      {t:'الاضطرابات القلقية والاكتئابية', d:'24 د', done:false},
+      {t:'التواصل العلاجي مع المريض النفسي', d:'22 د', done:false},
+      {t:'التعامل مع الأزمات النفسية', d:'20 د', done:false},
+    ]
+  },
+
+  // ===== كلية الحاسبات والمعلومات (6 مواد) =====
+  {
+    id:'cs_cg', faculty:'cs', subject:'cg', code:'CS 240', title:'الرسم بالحاسب', materials:[],
+    lessons:[
+      {t:'مقدمة عن الرسم بالحاسب', d:'20 د', done:true},
+      {t:'خوارزميات رسم الخطوط والدوائر', d:'24 د', done:false},
+      {t:'التحويلات الهندسية ثنائية الأبعاد', d:'22 د', done:false},
+      {t:'نماذج الألوان والإضاءة', d:'19 د', done:false},
+      {t:'تمثيل الأجسام ثلاثية الأبعاد', d:'26 د', done:false},
+    ]
+  },
+  {
+    id:'cs_net', faculty:'cs', subject:'net', code:'CS 250', title:'شبكات الحاسب', materials:[],
+    lessons:[
+      {t:'نموذج OSI', d:'24 د', done:true},
+      {t:'بروتوكولات TCP/IP', d:'23 د', done:false},
+      {t:'عنونة IP والتوجيه', d:'25 د', done:false},
+      {t:'أساسيات أمن الشبكات', d:'20 د', done:false},
+    ]
+  },
+  {
+    id:'cs_field', faculty:'cs', subject:'field', code:'CS 400', title:'التدريب الميداني', materials:[],
+    lessons:[
+      {t:'توجيه واختيار جهة التدريب', d:'15 د', done:true},
+      {t:'أساسيات بيئة العمل المهنية', d:'18 د', done:false},
+      {t:'كتابة تقرير التدريب', d:'20 د', done:false},
+      {t:'عرض تقديمي لمشروع التدريب', d:'17 د', done:false},
+    ]
+  },
+  {
+    id:'cs_os', faculty:'cs', subject:'os', code:'CS 260', title:'نظم التشغيل', materials:[],
+    lessons:[
+      {t:'مقدمة عن نظم التشغيل', d:'20 د', done:true},
+      {t:'إدارة العمليات (Processes)', d:'24 د', done:false},
+      {t:'خوارزميات الجدولة (Scheduling)', d:'23 د', done:false},
+      {t:'إدارة الذاكرة', d:'22 د', done:false},
+      {t:'أنظمة الملفات', d:'19 د', done:false},
+    ]
+  },
+  {
+    id:'cs_se', faculty:'cs', subject:'se', code:'CS 310', title:'هندسة البرمجيات', materials:[],
+    lessons:[
+      {t:'دورة حياة تطوير البرمجيات', d:'22 د', done:false},
+      {t:'جمع وتحليل المتطلبات', d:'20 د', done:false},
+      {t:'أنماط التصميم (Design Patterns)', d:'27 د', done:false},
+      {t:'الاختبار البرمجي', d:'19 د', done:false},
+      {t:'إدارة الإصدارات باستخدام Git', d:'18 د', done:false},
+    ]
+  },
+  {
+    id:'cs_vp', faculty:'cs', subject:'vp', code:'CS 220', title:'البرمجة المرئية', materials:[],
+    lessons:[
+      {t:'مقدمة في بيئة البرمجة المرئية', d:'20 د', done:true},
+      {t:'تصميم الواجهات الرسومية', d:'24 د', done:false},
+      {t:'ربط الأحداث (Events) بالعناصر', d:'22 د', done:false},
+      {t:'الاتصال بقواعد البيانات من الواجهة', d:'25 د', done:false},
+    ]
+  },
+];
+
+const assignments = [
+  {id:1, title:'تقرير حالة مريض جراحي', course:'تمريض باطني وجراحي', faculty:'nursing', due:'21 أغسطس', urgent:true},
+  {id:2, title:'ورقة عمل: حساب الجرعات الدوائية', course:'علم الأدوية', faculty:'nursing', due:'24 أغسطس', urgent:false},
+  {id:3, title:'خطة تغذية علاجية لمريض سكري', course:'التغذية والتغذية العلاجية', faculty:'nursing', due:'27 أغسطس', urgent:false},
+  {id:4, title:'مشروع رسم مشهد بسيط بالحاسب', course:'الرسم بالحاسب', faculty:'cs', due:'21 أغسطس', urgent:true},
+  {id:5, title:'تقرير عملي: إعداد شبكة محلية', course:'شبكات الحاسب', faculty:'cs', due:'23 أغسطس', urgent:false},
+  {id:6, title:'تسليم تقرير التدريب الميداني', course:'التدريب الميداني', faculty:'cs', due:'26 أغسطس', urgent:false},
+];
+let nextAssignmentId = 7;
+
+const schedule = [
+  {time:'08:30', name:'تمريض باطني وجراحي', room:'معمل المهارات التمريضية', faculty:'nursing', subject:'ms'},
+  {time:'10:30', name:'علم الأمراض', room:'قاعة ٢٠١', faculty:'nursing', subject:'path'},
+  {time:'13:00', name:'علم الأدوية', room:'قاعة ١١٥', faculty:'nursing', subject:'pharm'},
+  {time:'09:00', name:'الرسم بالحاسب', room:'معمل الحاسبات ٢', faculty:'cs', subject:'cg'},
+  {time:'11:00', name:'نظم التشغيل', room:'مدرج ب٢', faculty:'cs', subject:'os'},
+  {time:'13:30', name:'شبكات الحاسب', room:'معمل الشبكات', faculty:'cs', subject:'net'},
+];
+
+let currentFaculty = 'nursing';
+
+function pct(course){
+  const done = course.lessons.filter(l=>l.done).length;
+  return Math.round((done/course.lessons.length)*100);
+}
+
+function renderCourses(){
+  const grid = document.getElementById('courseGrid');
+  grid.innerHTML = '';
+  const facCourses = courses.filter(c=>c.faculty===currentFaculty);
+  facCourses.forEach(course=>{
+    const th = THEME[course.subject];
+    const p = pct(course);
+    const card = document.createElement('div');
+    card.className = 'course-card';
+    card.style.setProperty('--c', th.c);
+    card.style.setProperty('--cbg', th.bg);
+    card.innerHTML = `
+      <div class="top">
+        <div>
+          <h3>${course.title}</h3>
+          <span class="code">${course.code}</span>
+        </div>
+        <span class="tag">${th.label}</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${p}%"></div></div>
+      <div class="meta"><span>${p}% مكتمل</span><span>${course.lessons.length} محاضرة</span></div>
+    `;
+    card.addEventListener('click', ()=>openCourse(course.id));
+    grid.appendChild(card);
+  });
+  document.getElementById('courseCount').textContent = facCourses.length + ' مواد';
+  renderGrades(facCourses);
+}
+
+const gradesData = {};
+
+function getCourseGrades(courseId){
+  if(!gradesData[courseId]){
+    gradesData[courseId] = {
+      quiz:    {score:'', max:20},
+      midterm: {score:'', max:30},
+      final:   {score:'', max:50},
+    };
+  }
+  return gradesData[courseId];
+}
+
+function computeTotal(g){
+  const parts = ['quiz','midterm','final'];
+  let scoreSum = 0, maxSum = 0;
+  parts.forEach(p=>{
+    const s = parseFloat(g[p].score);
+    const m = parseFloat(g[p].max);
+    if(!isNaN(m) && m > 0) maxSum += m;
+    if(!isNaN(s)) scoreSum += s;
+  });
+  if(maxSum === 0) return null;
+  return {scoreSum, maxSum, pct: Math.round((scoreSum/maxSum)*100)};
+}
+
+function gradeRowHtml(courseId, part, label, obj){
+  return `
+    <div class="grade-row">
+      <span class="grade-label">${label}</span>
+      <input type="number" class="grade-input" placeholder="الدرجة" value="${obj.score}" data-grade="${courseId}|${part}|score" inputmode="decimal">
+      <span class="grade-slash">/</span>
+      <input type="number" class="grade-input small" placeholder="من" value="${obj.max}" data-grade="${courseId}|${part}|max" inputmode="decimal">
+    </div>`;
+}
+
+function renderGrades(facCourses){
+  const list = facCourses || courses.filter(c=>c.faculty===currentFaculty);
+  const wrap = document.getElementById('gradesList');
+  if(!wrap) return;
+  if(list.length === 0){
+    wrap.innerHTML = `<div class="cp-empty">مفيش مواد لعرض درجاتها</div>`;
+    return;
+  }
+
+  wrap.innerHTML = list.map(course=>{
+    const th = THEME[course.subject];
+    const g = getCourseGrades(course.id);
+    const total = computeTotal(g);
+    return `
+      <div class="grade-card" style="--gc:${th.c}; --gcbg:${th.bg}">
+        <div class="grade-card-head">
+          <span class="grade-course-title">${course.title}</span>
+          <span class="grade-total" id="total-${course.id}">${total ? `${total.scoreSum} / ${total.maxSum} (${total.pct}%)` : '—'}</span>
+        </div>
+        <div class="grade-rows">
+          ${gradeRowHtml(course.id, 'quiz', 'كويزات', g.quiz)}
+          ${gradeRowHtml(course.id, 'midterm', 'ميد تيرم', g.midterm)}
+          ${gradeRowHtml(course.id, 'final', 'فاينال', g.final)}
+        </div>
+      </div>`;
+  }).join('');
+
+  wrap.querySelectorAll('[data-grade]').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const [courseId, part, field] = inp.dataset.grade.split('|');
+      gradesData[courseId][part][field] = inp.value;
+      const total = computeTotal(gradesData[courseId]);
+      const totalEl = document.getElementById(`total-${courseId}`);
+      if(totalEl) totalEl.textContent = total ? `${total.scoreSum} / ${total.maxSum} (${total.pct}%)` : '—';
+    });
+  });
+}
+
+function renderTimeline(){
+  const wrap = document.getElementById('timelineWrap');
+  const items = schedule.filter(s=>s.faculty===currentFaculty).sort((a,b)=>a.time.localeCompare(b.time));
+  wrap.innerHTML = items.map(s=>{
+    const th = THEME[s.subject];
+    return `
+      <div class="t-item">
+        <div class="t-time">${s.time}</div>
+        <div class="t-card">
+          <div><div class="name">${s.name}</div><div class="room">${s.room}</div></div>
+          <span class="badge" style="background:${th.bg}; color:${th.c};">${th.label}</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderFacultySwitch(){
+  const wrap = document.getElementById('facultySwitch');
+  wrap.innerHTML = Object.entries(FACULTIES).map(([key, f])=>`
+    <button class="fac-btn ${key===currentFaculty?'active':''}" data-fac="${key}">${f.label}</button>
+  `).join('');
+  wrap.querySelectorAll('.fac-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      currentFaculty = btn.dataset.fac;
+      renderFacultySwitch();
+      renderCourses();
+      renderTimeline();
+      renderAssignments();
+    });
+  });
+}
+
+function openCourse(id){
+  const course = courses.find(c=>c.id===id);
+  const th = THEME[course.subject];
+  const dashboardView = document.getElementById('dashboardView');
+  const coursePage = document.getElementById('coursePage');
+  const lecturePage = document.getElementById('lecturePage');
+
+  lecturePage.style.display = 'none';
+  dashboardView.style.display = 'none';
+  coursePage.style.display = 'block';
+  coursePage.style.setProperty('--c-page', th.c);
+  coursePage.style.setProperty('--c-bg', th.bg);
+
+  const ownAssignments = assignments.filter(a => a.course === course.title);
+
+  function assignHtml(){
+    if(ownAssignments.length === 0){
+      return `<div class="cp-empty">لا توجد واجبات مستحقة لهذه المادة حاليًا</div>`;
+    }
+    return ownAssignments.map(a=>`
+      <div class="assign">
+        <div class="info"><span class="a-title">${a.title}</span></div>
+        <span class="due" style="color:${a.urgent?th.c:'#5B6472'}">${a.due}</span>
+      </div>
+    `).join('');
+  }
+
+  coursePage.innerHTML = `
+    <button class="back-btn" id="backBtn">→ رجوع للوحة التحكم</button>
+    <div class="course-hero">
+      <span class="tag">${th.label}</span>
+      <h2>${course.title}</h2>
+      <div class="sub">${course.code} · ${course.lessons.length} محاضرة · <span id="cpPct">${pct(course)}%</span> مكتمل</div>
+      <div class="progress-track"><div class="progress-fill" id="cpProgressFill" style="width:${pct(course)}%"></div></div>
+    </div>
+    <div class="cp-section">
+      <h3>المحاضرات</h3>
+      <div id="lectureList">${lecturesHtml(course)}</div>
+    </div>
+    <div class="cp-section">
+      <h3>واجبات هذه المادة</h3>
+      <div class="assign-list">${assignHtml()}</div>
+    </div>
+  `;
+
+  coursePage.querySelector('#backBtn').addEventListener('click', closeCourse);
+  wireLectureList(course);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ===== Lecture list (each lecture = its own PDF + audio + quiz) ===== */
+
+function lecturesHtml(course){
+  return course.lessons.map((l,i)=>lectureCardHtml(course,l,i)).join('');
+}
+
+function lectureCardHtml(course, l, i){
+  return `
+    <div class="lecture-card" data-open="${i}">
+      <input type="checkbox" class="lecture-check" data-check="${i}" ${l.done?'checked':''}>
+      <span class="lecture-title ${l.done?'done':''}">${l.t}</span>
+      <span class="lecture-dur">${l.d}</span>
+      <span class="lecture-icons">${l.pdf?'📄':''}${l.audio?'🎙️':''}${l.quiz?'✅':''}</span>
+      <span class="lecture-arrow">‹</span>
+    </div>`;
+}
+
+function wireLectureList(course){
+  document.querySelectorAll('[data-open]').forEach(el=>{
+    el.addEventListener('click', (e)=>{
+      if(e.target.closest('.lecture-check')) return;
+      openLecture(course, +el.dataset.open);
+    });
+  });
+  document.querySelectorAll('[data-check]').forEach(el=>{
+    el.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const i = +el.dataset.check;
+      course.lessons[i].done = el.checked;
+      renderCourses();
+      document.getElementById('lectureList').innerHTML = lecturesHtml(course);
+      wireLectureList(course);
+      document.getElementById('cpPct').textContent = pct(course) + '%';
+      document.getElementById('cpProgressFill').style.width = pct(course) + '%';
+    });
+  });
+}
+
+/* ===== Standalone lecture page ===== */
+
+function lectureContentHtml(course, l, i){
+  return `
+    <div class="upload-row">
+      <button type="button" class="upload-btn" id="pdfUploadBtn">📄 ${l.pdf ? 'استبدال PDF' : 'رفع PDF المحاضرة'}</button>
+      <button type="button" class="upload-btn" id="audioUploadBtn">🎙️ ${l.audio ? 'استبدال التسجيل' : 'رفع تسجيل صوتي'}</button>
+      <input type="file" accept="application/pdf" id="pdfInput" style="display:none">
+      <input type="file" accept="audio/*" id="audioInput" style="display:none">
+    </div>
+    <div class="upload-status" id="uploadStatus"></div>
+    ${l.pdf ? `<div class="attach-chip">📄 ${l.pdf.name}</div>` : ''}
+    ${l.audio ? `<audio controls src="${l.audio.url}"></audio>` : ''}
+    <div class="quiz-area">
+      <div class="quiz-hint">
+        📚 <strong>عايز كويز على المحاضرة دي؟</strong><br>
+        افتح شات مع كلود، ارفعله نفس ملف الـ PDF، واطلب منه:
+        <em>"اعملي كويز 20 اختياري + صح وخطأ + مقالي + مصطلحات على المحاضرة دي"</em> — هيطلعلك الكويز فورًا في الشات.
+      </div>
+      <div id="quizWrap">${l.quiz ? renderFullQuizHtml(l.quiz) : ''}</div>
+    </div>
+  `;
+}
+
+function openLecture(course, li){
+  const l = course.lessons[li];
+  const th = THEME[course.subject];
+  const coursePage = document.getElementById('coursePage');
+  const lecturePage = document.getElementById('lecturePage');
+
+  coursePage.style.display = 'none';
+  lecturePage.style.display = 'block';
+  lecturePage.style.setProperty('--c-page', th.c);
+  lecturePage.style.setProperty('--c-bg', th.bg);
+
+  lecturePage.innerHTML = `
+    <button class="back-btn" id="lectureBack">→ رجوع لـ ${course.title}</button>
+    <div class="lecture-hero">
+      <input type="checkbox" class="lecture-check" id="heroCheck" ${l.done?'checked':''}>
+      <div>
+        <h2 id="heroTitle" class="${l.done?'done':''}">${l.t}</h2>
+        <div class="sub">${course.code} · ${l.d}</div>
+      </div>
+    </div>
+    <div id="lectureContent">${lectureContentHtml(course, l, li)}</div>
+  `;
+
+  lecturePage.querySelector('#lectureBack').addEventListener('click', ()=>openCourse(course.id));
+  lecturePage.querySelector('#heroCheck').addEventListener('change', (e)=>{
+    l.done = e.target.checked;
+    document.getElementById('heroTitle').classList.toggle('done', l.done);
+    renderCourses();
+  });
+
+  wireLectureContent(course, li);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function refreshLectureContent(course, li){
+  document.getElementById('lectureContent').innerHTML = lectureContentHtml(course, course.lessons[li], li);
+  wireLectureContent(course, li);
+}
+
+function wireLectureContent(course, li){
+  const l = course.lessons[li];
+  const pdfInput = document.getElementById('pdfInput');
+  const audioInput = document.getElementById('audioInput');
+  document.getElementById('pdfUploadBtn').addEventListener('click', ()=>pdfInput.click());
+  document.getElementById('audioUploadBtn').addEventListener('click', ()=>audioInput.click());
+  pdfInput.addEventListener('change', (e)=>handlePdfUpload(e, course, li));
+  audioInput.addEventListener('change', (e)=>handleAudioUpload(e, course, li));
+  const objSubmit = document.querySelector('[data-obj-submit]');
+  if(objSubmit) objSubmit.addEventListener('click', ()=>gradeObjective(course, li));
+  document.querySelectorAll('[data-reveal-essay]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      document.getElementById(`essayPoints-${el.dataset.revealEssay}`).style.display = 'block';
+      el.style.display = 'none';
+    });
+  });
+  document.querySelectorAll('[data-reveal-term]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      document.getElementById(`termDef-${el.dataset.revealTerm}`).style.display = 'block';
+      el.style.display = 'none';
+    });
+  });
+}
+
+function closeLecture(course){
+  document.getElementById('lecturePage').style.display = 'none';
+  openCourse(course.id);
+}
+
+/* ===== PDF / audio upload (PDF sent as base64 directly to Claude — no client-side extraction) ===== */
+
+function fileToBase64(file){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = () => reject(new Error('تعذّرت قراءة الملف'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handlePdfUpload(e, course, li){
+  const file = e.target.files[0];
+  if(!file) return;
+  const statusEl = document.getElementById('uploadStatus');
+
+  if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
+    statusEl.textContent = 'الملف ده مش PDF، اختار ملف بصيغة .pdf';
+    return;
+  }
+  if(file.size > 25 * 1024 * 1024){
+    statusEl.textContent = 'الملف كبير أكتر من اللازم (الحد الأقصى ٢٥ ميجا لهذا النموذج).';
+    return;
+  }
+
+  statusEl.textContent = 'جارٍ رفع الملف…';
+  try{
+    const base64 = await fileToBase64(file);
+    const url = URL.createObjectURL(file);
+    course.lessons[li].pdf = {name:file.name, url, base64};
+    course.lessons[li].quiz = null;
+    statusEl.textContent = '';
+    refreshLectureContent(course, li);
+  }catch(err){
+    console.error('PDF upload failed:', err);
+    statusEl.textContent = 'حصل خطأ أثناء رفع الملف: ' + err.message;
+  }
+}
+
+function handleAudioUpload(e, course, li){
+  const file = e.target.files[0];
+  if(!file) return;
+  course.lessons[li].audio = {name:file.name, url: URL.createObjectURL(file)};
+  refreshLectureContent(course, li);
+}
+
+/* ===== Quiz rendering & grading (kept for display purposes if a quiz object is ever set) ===== */
+
+function renderFullQuizHtml(quiz){
+  const mcqHtml = quiz.mcq.map((q,qi)=>`
+    <div class="quiz-q" data-kind="mcq" data-qi="${qi}">
+      <div class="q-text">${qi+1}. ${q.question}</div>
+      ${q.options.map((opt,oi)=>`
+        <label class="q-opt">
+          <input type="radio" name="mcq-${qi}" value="${oi}"> ${opt}
+        </label>
+      `).join('')}
+    </div>
+  `).join('');
+
+  const tfHtml = quiz.tf.map((q,ti)=>`
+    <div class="quiz-q" data-kind="tf" data-ti="${ti}">
+      <div class="q-text">${ti+1}. ${q.statement}</div>
+      <label class="q-opt"><input type="radio" name="tf-${ti}" value="true"> صح</label>
+      <label class="q-opt"><input type="radio" name="tf-${ti}" value="false"> خطأ</label>
+    </div>
+  `).join('');
+
+  const essayHtml = quiz.essay.map((q,ei)=>`
+    <div class="quiz-q">
+      <div class="q-text">${ei+1}. ${q.question}</div>
+      <textarea class="essay-box" rows="3" placeholder="اكتب إجابتك هنا للمراجعة الذاتية…"></textarea>
+      <button class="reveal-btn" data-reveal-essay="${ei}">إظهار النقاط المتوقعة</button>
+      <ul class="reveal-box" id="essayPoints-${ei}" style="display:none">
+        ${q.points.map(p=>`<li>${p}</li>`).join('')}
+      </ul>
+    </div>
+  `).join('');
+
+  const termsHtml = quiz.terms.map((t,ti)=>`
+    <div class="term-card">
+      <div class="term-name">${t.term}</div>
+      <button class="reveal-btn" data-reveal-term="${ti}">إظهار التعريف</button>
+      <div class="reveal-box" id="termDef-${ti}" style="display:none">${t.definition}</div>
+    </div>
+  `).join('');
+
+  return `
+    <div class="quiz-block">
+      <h4 class="quiz-h">القسم الأول — اختيار من متعدد (${quiz.mcq.length})</h4>
+      ${mcqHtml}
+      <h4 class="quiz-h">القسم الثاني — صح أو خطأ (${quiz.tf.length})</h4>
+      ${tfHtml}
+      <button class="quiz-submit" data-obj-submit="1">تسليم القسم الموضوعي</button>
+      <div class="quiz-score" id="quizScore"></div>
+
+      <h4 class="quiz-h">القسم الثالث — أسئلة مقالية</h4>
+      ${essayHtml}
+
+      <h4 class="quiz-h">القسم الرابع — مصطلحات</h4>
+      <div class="terms-grid">${termsHtml}</div>
+    </div>`;
+}
+
+function gradeObjective(course, li){
+  const quiz = course.lessons[li].quiz;
+  let correct = 0, total = quiz.mcq.length + quiz.tf.length;
+
+  quiz.mcq.forEach((q, qi)=>{
+    const selected = document.querySelector(`input[name="mcq-${qi}"]:checked`);
+    const optsEls = document.querySelectorAll(`.quiz-q[data-kind="mcq"][data-qi="${qi}"] .q-opt`);
+    optsEls.forEach((el, oi)=>{
+      if(oi === q.answerIndex) el.classList.add('correct');
+      else if(selected && +selected.value === oi) el.classList.add('wrong');
+    });
+    if(selected && +selected.value === q.answerIndex) correct++;
+  });
+
+  quiz.tf.forEach((q, ti)=>{
+    const selected = document.querySelector(`input[name="tf-${ti}"]:checked`);
+    const optsEls = document.querySelectorAll(`.quiz-q[data-kind="tf"][data-ti="${ti}"] .q-opt`);
+    const correctVal = q.answer ? 'true' : 'false';
+    optsEls.forEach(el=>{
+      const val = el.querySelector('input').value;
+      if(val === correctVal) el.classList.add('correct');
+      else if(selected && selected.value === val) el.classList.add('wrong');
+    });
+    if(selected && selected.value === correctVal) correct++;
+  });
+
+  document.getElementById('quizScore').textContent = `النتيجة: ${correct} من ${total}`;
+}
+
+function closeCourse(){
+  document.getElementById('coursePage').style.display = 'none';
+  document.getElementById('dashboardView').style.display = 'block';
+}
+
+function renderAssignments(){
+  const list = document.getElementById('assignList');
+  const facAssignments = assignments.filter(a=>a.faculty===currentFaculty);
+  if(facAssignments.length === 0){
+    list.innerHTML = `<div class="cp-empty">مفيش واجبات دلوقتي — دوس "إضافة واجب" لو عايز تضيف واحد</div>`;
+  }else{
+    list.innerHTML = facAssignments.map(a=>`
+      <div class="assign">
+        <div class="info">
+          <span class="a-title">${a.title}</span>
+          <span class="a-course">${a.course}</span>
+        </div>
+        <div class="a-right">
+          <span class="due" style="color:${a.urgent?'#B0522D':'#5B6472'}">${a.due}</span>
+          <button class="a-delete" data-del-assign="${a.id}" title="حذف">✕</button>
+        </div>
+      </div>
+    `).join('');
+    list.querySelectorAll('[data-del-assign]').forEach(btn=>{
+      btn.addEventListener('click', ()=>deleteAssignment(+btn.dataset.delAssign));
+    });
+  }
+  document.getElementById('dueStat').textContent = facAssignments.length;
+}
+
+function deleteAssignment(id){
+  const idx = assignments.findIndex(a=>a.id===id);
+  if(idx !== -1) assignments.splice(idx, 1);
+  renderAssignments();
+}
+
+function openAssignForm(){
+  const facCourses = courses.filter(c=>c.faculty===currentFaculty);
+  const formEl = document.getElementById('assignForm');
+  formEl.innerHTML = `
+    <input type="text" id="newAssignTitle" placeholder="عنوان الواجب">
+    <select id="newAssignCourse">
+      ${facCourses.map(c=>`<option value="${c.title}">${c.title}</option>`).join('')}
+    </select>
+    <input type="text" id="newAssignDue" placeholder="تاريخ التسليم (مثلاً: 30 أغسطس)">
+    <label><input type="checkbox" id="newAssignUrgent"> عاجل</label>
+    <div class="form-actions">
+      <button class="btn-save" id="saveAssignBtn">حفظ</button>
+      <button class="btn-cancel" id="cancelAssignBtn">إلغاء</button>
+    </div>
+  `;
+  formEl.style.display = 'flex';
+  document.getElementById('saveAssignBtn').addEventListener('click', saveNewAssignment);
+  document.getElementById('cancelAssignBtn').addEventListener('click', closeAssignForm);
+}
+
+function closeAssignForm(){
+  document.getElementById('assignForm').style.display = 'none';
+  document.getElementById('assignForm').innerHTML = '';
+}
+
+function saveNewAssignment(){
+  const title = document.getElementById('newAssignTitle').value.trim();
+  const course = document.getElementById('newAssignCourse').value;
+  const due = document.getElementById('newAssignDue').value.trim();
+  const urgent = document.getElementById('newAssignUrgent').checked;
+
+  if(!title || !due){
+    alert('اكتب عنوان الواجب وتاريخ التسليم');
+    return;
+  }
+
+  assignments.push({id: nextAssignmentId++, title, course, faculty: currentFaculty, due, urgent});
+  closeAssignForm();
+  renderAssignments();
+}
+
+document.getElementById('addAssignBtn').addEventListener('click', ()=>{
+  const formEl = document.getElementById('assignForm');
+  if(formEl.style.display === 'flex'){ closeAssignForm(); }
+  else{ openAssignForm(); }
+});
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+
+    // لو مفتوح صفحة مادة/محاضرة، ارجع للوحة التحكم الأول
+    document.getElementById('coursePage').style.display = 'none';
+    document.getElementById('lecturePage').style.display = 'none';
+    document.getElementById('dashboardView').style.display = 'block';
+
+    const targetId = tab.dataset.tab;
+    if(targetId === 'dashboard'){
+      window.scrollTo({top:0, behavior:'smooth'});
+    }else{
+      const el = document.getElementById(targetId);
+      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  });
+});
+
+renderFacultySwitch();
+renderCourses();
+renderTimeline();
+renderAssignments();
+</script>
+</body>
+</html>
