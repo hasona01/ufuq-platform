@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>حسن — منصة الطالب الجامعي</title>
+<title>أفق — منصة الطالب الجامعي</title>
 
 <!-- PWA: يخلي المنصة قابلة للإضافة للشاشة الرئيسية -->
 <link rel="manifest" href="manifest.json">
@@ -377,7 +377,32 @@
 
 <footer>نموذج تجريبي — تفاعلي بالكامل، بدون تسجيل دخول حقيقي</footer>
 
-<script>
+<script type="module">
+// ============================================================
+// Firebase — لحفظ البيانات على الإنترنت عشان تتزامن بين أي جهاز
+// ⚙️ حط بيانات مشروعك من Firebase Console بدل القيم دي (شوف التعليمات)
+// ============================================================
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "REPLACE_ME",
+  authDomain: "REPLACE_ME",
+  projectId: "REPLACE_ME",
+  storageBucket: "REPLACE_ME",
+  messagingSenderId: "REPLACE_ME",
+  appId: "REPLACE_ME"
+};
+
+let db = null;
+if(firebaseConfig.apiKey !== "REPLACE_ME"){
+  try{
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+  }catch(e){ console.error('تعذّر تفعيل Firebase:', e); }
+}
+const stateDocRef = () => doc(db, 'ufuq', 'state');
+
 const FACULTIES = {
   nursing: {label:'🩺 كلية التمريض', short:'التمريض'},
   cs: {label:'💻 كلية الحاسبات والمعلومات', short:'الحاسبات'},
@@ -548,6 +573,63 @@ const schedule = [
 
 let currentFaculty = 'nursing';
 
+/* ===== حفظ التعديلات: على الإنترنت (Firebase) مع نسخة احتياطية محلية ===== */
+const STORAGE_KEY = 'ufuq_platform_state_v1';
+
+function buildState(){
+  const doneMap = {};
+  courses.forEach(c=>{ doneMap[c.id] = c.lessons.map(l=>l.done); });
+  return { assignments, nextAssignmentId, gradesData, doneMap };
+}
+
+function applyState(state){
+  if(!state) return;
+  if(Array.isArray(state.assignments)){
+    assignments.length = 0;
+    state.assignments.forEach(a=>assignments.push(a));
+  }
+  if(typeof state.nextAssignmentId === 'number'){
+    nextAssignmentId = state.nextAssignmentId;
+  }
+  if(state.gradesData){
+    Object.assign(gradesData, state.gradesData);
+  }
+  if(state.doneMap){
+    courses.forEach(c=>{
+      const arr = state.doneMap[c.id];
+      if(arr){
+        c.lessons.forEach((l,i)=>{ if(arr[i] !== undefined) l.done = arr[i]; });
+      }
+    });
+  }
+}
+
+async function saveState(){
+  const state = buildState();
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){ console.error('تعذّر الحفظ محليًا:', e); }
+  if(db){
+    try{ await setDoc(stateDocRef(), state); }
+    catch(e){ console.error('تعذّر الحفظ على الإنترنت (هيفضل محفوظ على الجهاز ده بس):', e); }
+  }
+}
+
+async function loadState(){
+  let state = null;
+  if(db){
+    try{
+      const snap = await getDoc(stateDocRef());
+      if(snap.exists()) state = snap.data();
+    }catch(e){ console.error('تعذّر التحميل من الإنترنت، هنجرب النسخة المحلية:', e); }
+  }
+  if(!state){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) state = JSON.parse(raw);
+    }catch(e){ console.error('تعذّر تحميل البيانات المحفوظة محليًا:', e); }
+  }
+  applyState(state);
+}
+
 function pct(course){
   const done = course.lessons.filter(l=>l.done).length;
   return Math.round((done/course.lessons.length)*100);
@@ -652,6 +734,7 @@ function renderGrades(facCourses){
       const total = computeTotal(gradesData[courseId]);
       const totalEl = document.getElementById(`total-${courseId}`);
       if(totalEl) totalEl.textContent = total ? `${total.scoreSum} / ${total.maxSum} (${total.pct}%)` : '—';
+      saveState();
     });
   });
 }
@@ -772,6 +855,7 @@ function wireLectureList(course){
       wireLectureList(course);
       document.getElementById('cpPct').textContent = pct(course) + '%';
       document.getElementById('cpProgressFill').style.width = pct(course) + '%';
+      saveState();
     });
   });
 }
@@ -828,6 +912,7 @@ function openLecture(course, li){
     l.done = e.target.checked;
     document.getElementById('heroTitle').classList.toggle('done', l.done);
     renderCourses();
+    saveState();
   });
 
   wireLectureContent(course, li);
@@ -1035,6 +1120,7 @@ function deleteAssignment(id){
   const idx = assignments.findIndex(a=>a.id===id);
   if(idx !== -1) assignments.splice(idx, 1);
   renderAssignments();
+  saveState();
 }
 
 function openAssignForm(){
@@ -1076,6 +1162,7 @@ function saveNewAssignment(){
   assignments.push({id: nextAssignmentId++, title, course, faculty: currentFaculty, due, urgent});
   closeAssignForm();
   renderAssignments();
+  saveState();
 }
 
 document.getElementById('addAssignBtn').addEventListener('click', ()=>{
@@ -1104,10 +1191,14 @@ document.querySelectorAll('.tab').forEach(tab=>{
   });
 });
 
-renderFacultySwitch();
-renderCourses();
-renderTimeline();
-renderAssignments();
+async function initApp(){
+  await loadState();
+  renderFacultySwitch();
+  renderCourses();
+  renderTimeline();
+  renderAssignments();
+}
+initApp();
 </script>
 </body>
-</html>
+  </html>
