@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>حسونه — منصة الطالب الجامعي</title>
+<title>أفق — منصة الطالب الجامعي</title>
 
 <!-- PWA: يخلي المنصة قابلة للإضافة للشاشة الرئيسية -->
 <link rel="manifest" href="manifest.json">
@@ -11,7 +11,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="حسونه ">
+<meta name="apple-mobile-web-app-title" content="أُفق">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 
@@ -351,27 +351,12 @@
       </div>
       <div class="courses" id="courseGrid"></div>
     </section>
-
-    <section id="assignmentsSection">
-      <div class="section-head">
-        <h2>واجبات قادمة</h2>
-        <button class="add-btn" id="addAssignBtn">+ إضافة واجب</button>
-      </div>
-      <div id="assignForm" class="assign-form" style="display:none;"></div>
-      <div class="assign-list" id="assignList"></div>
-    </section>
-
-    <section id="gradesSection">
-      <div class="section-head">
-        <h2>الدرجات</h2>
-        <span>كويزات · ميد تيرم · فاينال — تحطها انت بنفسك</span>
-      </div>
-      <div id="gradesList"></div>
-    </section>
    </div>
 
    <div id="coursePage" style="display:none;"></div>
    <div id="lecturePage" style="display:none;"></div>
+   <div id="assignmentsPage" style="display:none;"></div>
+   <div id="gradesPage" style="display:none;"></div>
   </main>
 </div>
 
@@ -384,6 +369,7 @@
 // ============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "REPLACE_ME",
@@ -395,13 +381,22 @@ const firebaseConfig = {
 };
 
 let db = null;
+let storage = null;
 if(firebaseConfig.apiKey !== "REPLACE_ME"){
   try{
     const app = initializeApp(firebaseConfig);
     db = getFirestore(app);
+    storage = getStorage(app);
   }catch(e){ console.error('تعذّر تفعيل Firebase:', e); }
 }
 const stateDocRef = () => doc(db, 'ufuq', 'state');
+
+async function uploadFileToStorage(file, path){
+  if(!storage) return null;
+  const fileRef = ref(storage, path);
+  await uploadBytes(fileRef, file);
+  return await getDownloadURL(fileRef);
+}
 
 const FACULTIES = {
   nursing: {label:'🩺 كلية التمريض', short:'التمريض'},
@@ -573,13 +568,25 @@ const schedule = [
 
 let currentFaculty = 'nursing';
 
+const ORDINALS = ['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'];
+function lectureLabel(i){
+  return 'المحاضرة ' + (ORDINALS[i] || (i+1));
+}
+
 /* ===== حفظ التعديلات: على الإنترنت (Firebase) مع نسخة احتياطية محلية ===== */
 const STORAGE_KEY = 'ufuq_platform_state_v1';
 
 function buildState(){
   const doneMap = {};
-  courses.forEach(c=>{ doneMap[c.id] = c.lessons.map(l=>l.done); });
-  return { assignments, nextAssignmentId, gradesData, doneMap };
+  const filesMap = {};
+  courses.forEach(c=>{
+    doneMap[c.id] = c.lessons.map(l=>l.done);
+    filesMap[c.id] = c.lessons.map(l=>({
+      pdf: l.pdf ? {name:l.pdf.name, url:l.pdf.url} : null,
+      audio: l.audio ? {name:l.audio.name, url:l.audio.url} : null,
+    }));
+  });
+  return { assignments, nextAssignmentId, gradesData, doneMap, filesMap };
 }
 
 function applyState(state){
@@ -602,7 +609,21 @@ function applyState(state){
       }
     });
   }
+  if(state.filesMap){
+    courses.forEach(c=>{
+      const arr = state.filesMap[c.id];
+      if(arr){
+        c.lessons.forEach((l,i)=>{
+          if(arr[i]){
+            if(arr[i].pdf) l.pdf = arr[i].pdf;
+            if(arr[i].audio) l.audio = arr[i].audio;
+          }
+        });
+      }
+    });
+  }
 }
+
 
 async function saveState(){
   const state = buildState();
@@ -629,6 +650,43 @@ async function loadState(){
   }
   applyState(state);
 }
+
+/* ===== نظام التنقل بين الصفحات (يدعم زرار الرجوع في الموبايل) ===== */
+const VIEW_IDS = ['dashboardView','coursePage','lecturePage','assignmentsPage','gradesPage'];
+
+function hideAllViews(){
+  VIEW_IDS.forEach(id=>{ document.getElementById(id).style.display = 'none'; });
+}
+
+function showView(view, params={}){
+  hideAllViews();
+  if(view === 'course'){
+    renderCoursePageContent(params.courseId);
+    document.getElementById('coursePage').style.display = 'block';
+  }else if(view === 'lecture'){
+    renderLecturePageContent(params.courseId, params.li);
+    document.getElementById('lecturePage').style.display = 'block';
+  }else if(view === 'assignments'){
+    renderAssignmentsPage();
+    document.getElementById('assignmentsPage').style.display = 'block';
+  }else if(view === 'grades'){
+    renderGradesPage();
+    document.getElementById('gradesPage').style.display = 'block';
+  }else{
+    document.getElementById('dashboardView').style.display = 'block';
+  }
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function navigate(view, params={}){
+  showView(view, params);
+  history.pushState({view, params}, '', '#'+view);
+}
+
+window.addEventListener('popstate', (e)=>{
+  const state = e.state || {view:'dashboard', params:{}};
+  showView(state.view, state.params);
+});
 
 function pct(course){
   const done = course.lessons.filter(l=>l.done).length;
@@ -661,7 +719,7 @@ function renderCourses(){
     grid.appendChild(card);
   });
   document.getElementById('courseCount').textContent = facCourses.length + ' مواد';
-  renderGrades(facCourses);
+  renderGradesList(facCourses);
 }
 
 const gradesData = {};
@@ -700,7 +758,7 @@ function gradeRowHtml(courseId, part, label, obj){
     </div>`;
 }
 
-function renderGrades(facCourses){
+function renderGradesList(facCourses){
   const list = facCourses || courses.filter(c=>c.faculty===currentFaculty);
   const wrap = document.getElementById('gradesList');
   if(!wrap) return;
@@ -739,6 +797,20 @@ function renderGrades(facCourses){
   });
 }
 
+function renderGradesPage(){
+  const page = document.getElementById('gradesPage');
+  page.innerHTML = `
+    <button class="back-btn" id="gradesBack">→ رجوع</button>
+    <div class="section-head">
+      <h2>الدرجات — ${FACULTIES[currentFaculty].short}</h2>
+      <span>كويزات · ميد تيرم · فاينال — تحطها انت بنفسك</span>
+    </div>
+    <div id="gradesList"></div>
+  `;
+  page.querySelector('#gradesBack').addEventListener('click', ()=>history.back());
+  renderGradesList();
+}
+
 function renderTimeline(){
   const wrap = document.getElementById('timelineWrap');
   const items = schedule.filter(s=>s.faculty===currentFaculty).sort((a,b)=>a.time.localeCompare(b.time));
@@ -766,21 +838,16 @@ function renderFacultySwitch(){
       renderFacultySwitch();
       renderCourses();
       renderTimeline();
-      renderAssignments();
+      renderAssignmentsList();
+      updateDueStat();
     });
   });
 }
 
-function openCourse(id){
-  const course = courses.find(c=>c.id===id);
+function renderCoursePageContent(courseId){
+  const course = courses.find(c=>c.id===courseId);
   const th = THEME[course.subject];
-  const dashboardView = document.getElementById('dashboardView');
   const coursePage = document.getElementById('coursePage');
-  const lecturePage = document.getElementById('lecturePage');
-
-  lecturePage.style.display = 'none';
-  dashboardView.style.display = 'none';
-  coursePage.style.display = 'block';
   coursePage.style.setProperty('--c-page', th.c);
   coursePage.style.setProperty('--c-bg', th.bg);
 
@@ -799,7 +866,7 @@ function openCourse(id){
   }
 
   coursePage.innerHTML = `
-    <button class="back-btn" id="backBtn">→ رجوع للوحة التحكم</button>
+    <button class="back-btn" id="backBtn">→ رجوع</button>
     <div class="course-hero">
       <span class="tag">${th.label}</span>
       <h2>${course.title}</h2>
@@ -816,9 +883,12 @@ function openCourse(id){
     </div>
   `;
 
-  coursePage.querySelector('#backBtn').addEventListener('click', closeCourse);
+  coursePage.querySelector('#backBtn').addEventListener('click', ()=>history.back());
   wireLectureList(course);
-  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function openCourse(id){
+  navigate('course', {courseId: id});
 }
 
 /* ===== Lecture list (each lecture = its own PDF + audio + quiz) ===== */
@@ -831,7 +901,7 @@ function lectureCardHtml(course, l, i){
   return `
     <div class="lecture-card" data-open="${i}">
       <input type="checkbox" class="lecture-check" data-check="${i}" ${l.done?'checked':''}>
-      <span class="lecture-title ${l.done?'done':''}">${l.t}</span>
+      <span class="lecture-title ${l.done?'done':''}">${lectureLabel(i)}: ${l.t}</span>
       <span class="lecture-dur">${l.d}</span>
       <span class="lecture-icons">${l.pdf?'📄':''}${l.audio?'🎙️':''}${l.quiz?'✅':''}</span>
       <span class="lecture-arrow">‹</span>
@@ -884,14 +954,11 @@ function lectureContentHtml(course, l, i){
   `;
 }
 
-function openLecture(course, li){
+function renderLecturePageContent(courseId, li){
+  const course = courses.find(c=>c.id===courseId);
   const l = course.lessons[li];
   const th = THEME[course.subject];
-  const coursePage = document.getElementById('coursePage');
   const lecturePage = document.getElementById('lecturePage');
-
-  coursePage.style.display = 'none';
-  lecturePage.style.display = 'block';
   lecturePage.style.setProperty('--c-page', th.c);
   lecturePage.style.setProperty('--c-bg', th.bg);
 
@@ -900,14 +967,14 @@ function openLecture(course, li){
     <div class="lecture-hero">
       <input type="checkbox" class="lecture-check" id="heroCheck" ${l.done?'checked':''}>
       <div>
-        <h2 id="heroTitle" class="${l.done?'done':''}">${l.t}</h2>
+        <h2 id="heroTitle" class="${l.done?'done':''}">${lectureLabel(li)}: ${l.t}</h2>
         <div class="sub">${course.code} · ${l.d}</div>
       </div>
     </div>
     <div id="lectureContent">${lectureContentHtml(course, l, li)}</div>
   `;
 
-  lecturePage.querySelector('#lectureBack').addEventListener('click', ()=>openCourse(course.id));
+  lecturePage.querySelector('#lectureBack').addEventListener('click', ()=>history.back());
   lecturePage.querySelector('#heroCheck').addEventListener('change', (e)=>{
     l.done = e.target.checked;
     document.getElementById('heroTitle').classList.toggle('done', l.done);
@@ -916,7 +983,10 @@ function openLecture(course, li){
   });
 
   wireLectureContent(course, li);
-  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function openLecture(course, li){
+  navigate('lecture', {courseId: course.id, li});
 }
 
 function refreshLectureContent(course, li){
@@ -948,21 +1018,7 @@ function wireLectureContent(course, li){
   });
 }
 
-function closeLecture(course){
-  document.getElementById('lecturePage').style.display = 'none';
-  openCourse(course.id);
-}
-
-/* ===== PDF / audio upload (PDF sent as base64 directly to Claude — no client-side extraction) ===== */
-
-function fileToBase64(file){
-  return new Promise((resolve, reject)=>{
-    const reader = new FileReader();
-    reader.onload = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = () => reject(new Error('تعذّرت قراءة الملف'));
-    reader.readAsDataURL(file);
-  });
-}
+/* ===== PDF / audio upload (uploaded to Firebase Storage for cross-device persistence) ===== */
 
 async function handlePdfUpload(e, course, li){
   const file = e.target.files[0];
@@ -974,29 +1030,49 @@ async function handlePdfUpload(e, course, li){
     return;
   }
   if(file.size > 25 * 1024 * 1024){
-    statusEl.textContent = 'الملف كبير أكتر من اللازم (الحد الأقصى ٢٥ ميجا لهذا النموذج).';
+    statusEl.textContent = 'الملف كبير أكتر من اللازم (الحد الأقصى ٢٥ ميجا).';
     return;
   }
 
   statusEl.textContent = 'جارٍ رفع الملف…';
   try{
-    const base64 = await fileToBase64(file);
-    const url = URL.createObjectURL(file);
-    course.lessons[li].pdf = {name:file.name, url, base64};
+    let url;
+    if(storage){
+      url = await uploadFileToStorage(file, `uploads/${course.id}/${li}/pdf-${Date.now()}-${file.name}`);
+    }else{
+      url = URL.createObjectURL(file);
+    }
+    course.lessons[li].pdf = {name:file.name, url};
     course.lessons[li].quiz = null;
-    statusEl.textContent = '';
+    statusEl.textContent = storage ? '' : 'تم الرفع، لكن التخزين الدائم لسه مش مفعّل — الملف هيتفقد لو قفلت الصفحة (كلّم اللي عامل المنصة عشان يفعّل Firebase Storage).';
     refreshLectureContent(course, li);
+    saveState();
   }catch(err){
     console.error('PDF upload failed:', err);
     statusEl.textContent = 'حصل خطأ أثناء رفع الملف: ' + err.message;
   }
 }
 
-function handleAudioUpload(e, course, li){
+async function handleAudioUpload(e, course, li){
   const file = e.target.files[0];
   if(!file) return;
-  course.lessons[li].audio = {name:file.name, url: URL.createObjectURL(file)};
-  refreshLectureContent(course, li);
+  const statusEl = document.getElementById('uploadStatus');
+  statusEl.textContent = 'جارٍ رفع التسجيل…';
+  try{
+    let url;
+    if(storage){
+      url = await uploadFileToStorage(file, `uploads/${course.id}/${li}/audio-${Date.now()}-${file.name}`);
+    }else{
+      url = URL.createObjectURL(file);
+    }
+    course.lessons[li].audio = {name:file.name, url};
+    statusEl.textContent = storage ? '' : 'تم الرفع، لكن التخزين الدائم لسه مش مفعّل — الملف هيتفقد لو قفلت الصفحة.';
+    refreshLectureContent(course, li);
+    saveState();
+  }catch(err){
+    console.error('Audio upload failed:', err);
+    statusEl.textContent = 'حصل خطأ أثناء رفع الملف: ' + err.message;
+  }
 }
 
 /* ===== Quiz rendering & grading (kept for display purposes if a quiz object is ever set) ===== */
@@ -1086,13 +1162,14 @@ function gradeObjective(course, li){
   document.getElementById('quizScore').textContent = `النتيجة: ${correct} من ${total}`;
 }
 
-function closeCourse(){
-  document.getElementById('coursePage').style.display = 'none';
-  document.getElementById('dashboardView').style.display = 'block';
+function updateDueStat(){
+  const el = document.getElementById('dueStat');
+  if(el) el.textContent = assignments.filter(a=>a.faculty===currentFaculty).length;
 }
 
-function renderAssignments(){
+function renderAssignmentsList(){
   const list = document.getElementById('assignList');
+  if(!list) return;
   const facAssignments = assignments.filter(a=>a.faculty===currentFaculty);
   if(facAssignments.length === 0){
     list.innerHTML = `<div class="cp-empty">مفيش واجبات دلوقتي — دوس "إضافة واجب" لو عايز تضيف واحد</div>`;
@@ -1113,13 +1190,33 @@ function renderAssignments(){
       btn.addEventListener('click', ()=>deleteAssignment(+btn.dataset.delAssign));
     });
   }
-  document.getElementById('dueStat').textContent = facAssignments.length;
+  updateDueStat();
+}
+
+function renderAssignmentsPage(){
+  const page = document.getElementById('assignmentsPage');
+  page.innerHTML = `
+    <button class="back-btn" id="assignBack">→ رجوع</button>
+    <div class="section-head">
+      <h2>واجبات ${FACULTIES[currentFaculty].short}</h2>
+      <button class="add-btn" id="addAssignBtn">+ إضافة واجب</button>
+    </div>
+    <div id="assignForm" class="assign-form" style="display:none;"></div>
+    <div class="assign-list" id="assignList"></div>
+  `;
+  page.querySelector('#assignBack').addEventListener('click', ()=>history.back());
+  page.querySelector('#addAssignBtn').addEventListener('click', ()=>{
+    const formEl = document.getElementById('assignForm');
+    if(formEl.style.display === 'flex'){ closeAssignForm(); }
+    else{ openAssignForm(); }
+  });
+  renderAssignmentsList();
 }
 
 function deleteAssignment(id){
   const idx = assignments.findIndex(a=>a.id===id);
   if(idx !== -1) assignments.splice(idx, 1);
-  renderAssignments();
+  renderAssignmentsList();
   saveState();
 }
 
@@ -1144,8 +1241,10 @@ function openAssignForm(){
 }
 
 function closeAssignForm(){
-  document.getElementById('assignForm').style.display = 'none';
-  document.getElementById('assignForm').innerHTML = '';
+  const formEl = document.getElementById('assignForm');
+  if(!formEl) return;
+  formEl.style.display = 'none';
+  formEl.innerHTML = '';
 }
 
 function saveNewAssignment(){
@@ -1161,34 +1260,43 @@ function saveNewAssignment(){
 
   assignments.push({id: nextAssignmentId++, title, course, faculty: currentFaculty, due, urgent});
   closeAssignForm();
-  renderAssignments();
+  renderAssignmentsList();
   saveState();
 }
-
-document.getElementById('addAssignBtn').addEventListener('click', ()=>{
-  const formEl = document.getElementById('assignForm');
-  if(formEl.style.display === 'flex'){ closeAssignForm(); }
-  else{ openAssignForm(); }
-});
 
 document.querySelectorAll('.tab').forEach(tab=>{
   tab.addEventListener('click', ()=>{
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
     tab.classList.add('active');
 
-    // لو مفتوح صفحة مادة/محاضرة، ارجع للوحة التحكم الأول
-    document.getElementById('coursePage').style.display = 'none';
-    document.getElementById('lecturePage').style.display = 'none';
-    document.getElementById('dashboardView').style.display = 'block';
-
     const targetId = tab.dataset.tab;
-    if(targetId === 'dashboard'){
-      window.scrollTo({top:0, behavior:'smooth'});
+    if(targetId === 'assignmentsSection'){
+      navigate('assignments');
+    }else if(targetId === 'gradesSection'){
+      navigate('grades');
+    }else if(targetId === 'coursesSection'){
+      navigate('dashboard');
+      setTimeout(()=>{
+        const el = document.getElementById('coursesSection');
+        if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+      }, 50);
     }else{
-      const el = document.getElementById(targetId);
-      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+      navigate('dashboard');
     }
   });
+});
+
+// إبراز التاب الصح لما يتغيّر الـ view (زرار رجوع الموبايل مثلاً)
+function syncActiveTab(view){
+  const map = {dashboard:'dashboard', assignments:'assignmentsSection', grades:'gradesSection'};
+  const targetTab = map[view];
+  document.querySelectorAll('.tab').forEach(t=>{
+    t.classList.toggle('active', targetTab && t.dataset.tab === targetTab);
+  });
+}
+window.addEventListener('popstate', (e)=>{
+  const state = e.state || {view:'dashboard'};
+  syncActiveTab(state.view);
 });
 
 async function initApp(){
@@ -1196,9 +1304,11 @@ async function initApp(){
   renderFacultySwitch();
   renderCourses();
   renderTimeline();
-  renderAssignments();
+  renderAssignmentsList();
+  updateDueStat();
+  history.replaceState({view:'dashboard', params:{}}, '', '#dashboard');
 }
 initApp();
 </script>
 </body>
-  </html>
+</html>
