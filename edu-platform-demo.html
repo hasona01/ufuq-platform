@@ -200,25 +200,25 @@
   .lecture-body{ padding:14px 14px 16px; border-top:1px solid var(--line); animation:slideDown .3s ease; }
   @keyframes slideDown{ from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);} }
 
-  .files-grid{
-    display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px; margin-bottom:12px;
+  .files-list{
+    display:flex; flex-direction:column; gap:8px; margin-bottom:12px;
   }
   .attach-chip{
-    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    display:flex; align-items:center; gap:12px;
     font-size:13px; background:var(--c-bg, var(--gold-soft));
-    color:var(--c-page, var(--gold)); padding:12px; border-radius:12px;
+    color:var(--c-page, var(--gold)); padding:12px 14px; border-radius:10px;
     text-decoration:none; cursor:pointer; border:1px solid transparent;
     transition:.2s; position:relative;
   }
-  .attach-chip:hover{ border-color:var(--c-page, var(--gold)); transform:translateY(-2px); }
-  .attach-chip .file-icon{ font-size:32px; }
-  .attach-chip .file-name{ font-size:11px; text-align:center; word-break:break-word; max-width:100%; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .attach-chip:hover{ border-color:var(--c-page, var(--gold)); transform:translateX(-2px); }
+  body.ltr .attach-chip:hover{ transform:translateX(2px); }
+  .attach-chip .file-icon{ font-size:28px; flex-shrink:0; }
+  .attach-chip .file-name{ flex:1; font-weight:500; word-break:break-word; }
   .attach-chip .file-del{
-    position:absolute; top:4px; right:4px; background:rgba(255,255,255,0.9); border:none;
-    width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
-    font-size:14px; color:var(--ink-soft); cursor:pointer; opacity:0; transition:.2s;
+    background:rgba(255,255,255,0.9); border:none;
+    width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:14px; color:var(--ink-soft); cursor:pointer; opacity:0; transition:.2s; flex-shrink:0;
   }
-  body.ltr .attach-chip .file-del{ right:auto; left:4px; }
   .attach-chip:hover .file-del{ opacity:1; }
   .attach-chip .file-del:hover{ color:#B0522D; background:#fff; }
 
@@ -493,6 +493,7 @@ let nextScheduleId = 1;
 
 let currentFaculty = 'nursing';
 let lang = 'ar';
+let currentView = {view: 'dashboard', params: {}};
 
 const DAYS_AR = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -653,7 +654,7 @@ const STR = {
 };
 function S(key){ return STR[lang][key] || key; }
 
-const STORAGE_KEY = 'ufuq_platform_state_v5';
+const STORAGE_KEY = 'ufuq_platform_state_v6';
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 function buildState(){
@@ -665,7 +666,10 @@ function buildState(){
     filesMap[c.id] = c.lessons.map(l=>l.files || []);
     lessonsMap[c.id] = c.lessons.map(l=>({t:l.t, d:l.d}));
   });
-  return { assignments, nextAssignmentId, schedule, nextScheduleId, gradesData, doneMap, filesMap, lessonsMap, lang, currentFaculty };
+  return { 
+    assignments, nextAssignmentId, schedule, nextScheduleId, gradesData, 
+    doneMap, filesMap, lessonsMap, lang, currentFaculty, currentView 
+  };
 }
 
 function applyState(state){
@@ -709,6 +713,7 @@ function applyState(state){
   }
   if(state.lang) lang = state.lang;
   if(state.currentFaculty) currentFaculty = state.currentFaculty;
+  if(state.currentView) currentView = state.currentView;
 }
 
 async function saveState(){
@@ -745,6 +750,8 @@ function hideAllViews(){
 
 function showView(view, params={}){
   hideAllViews();
+  currentView = {view, params};
+  
   if(view === 'course'){
     document.body.classList.add('course-view');
     renderCoursePageContent(params.courseId);
@@ -762,6 +769,7 @@ function showView(view, params={}){
     document.getElementById('dashboardView').style.display = 'block';
   }
   window.scrollTo({top:0, behavior:'smooth'});
+  saveState();
 }
 
 function navigate(view, params={}){
@@ -1168,7 +1176,7 @@ function getFileIcon(file){
 function lectureContentHtml(course, l, i){
   const files = l.files || [];
   const filesHtml = files.length > 0 ? `
-    <div class="files-grid">
+    <div class="files-list">
       ${files.map((f,fi)=>`
         <a class="attach-chip" href="${f.url}" target="_blank" rel="noopener">
           <div class="file-icon">${getFileIcon(f)}</div>
@@ -1464,12 +1472,11 @@ function applyLanguage(){
   renderAssignmentsList();
   updateDueStat();
   
-  const currentView = history.state?.view;
-  if(currentView === 'course'){
-    renderCoursePageContent(history.state.params.courseId);
-  }else if(currentView === 'assignments'){
+  if(currentView.view === 'course'){
+    renderCoursePageContent(currentView.params.courseId);
+  }else if(currentView.view === 'assignments'){
     renderAssignmentsPage();
-  }else if(currentView === 'grades'){
+  }else if(currentView.view === 'grades'){
     renderGradesPage();
   }
 }
@@ -1483,7 +1490,13 @@ document.getElementById('langToggle').addEventListener('click', ()=>{
 async function initApp(){
   await loadState();
   applyLanguage();
-  history.replaceState({view:'dashboard', params:{}}, '', '#dashboard');
+  
+  if(currentView && currentView.view){
+    showView(currentView.view, currentView.params);
+    history.replaceState(currentView, '', '#' + currentView.view);
+  }else{
+    history.replaceState({view:'dashboard', params:{}}, '', '#dashboard');
+  }
 }
 initApp();
 </script>
