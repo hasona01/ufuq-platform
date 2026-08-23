@@ -19,6 +19,7 @@
 <style>
   :root{
     --bg: #EFE9DC;
+    --bg-course: #E8F4F8;
     --paper: #FFFFFF;
     --ink: #24303A;
     --ink-soft: #64707C;
@@ -28,8 +29,9 @@
     --radius: 14px;
   }
   *{box-sizing:border-box;}
-  body{margin:0; background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans Arabic', sans-serif; -webkit-font-smoothing:antialiased;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans Arabic', sans-serif; -webkit-font-smoothing:antialiased; transition:background .3s;}
   body.ltr{direction:ltr;}
+  body.course-view{background:var(--bg-course);}
   h1,h2,h3,.display{font-family:'Amiri', serif;}
   .mono{font-family:'IBM Plex Mono', monospace; direction:ltr; display:inline-block;}
   button{font-family:inherit; cursor:pointer;}
@@ -189,7 +191,7 @@
   .lecture-title{ flex:1; font-size:14px; font-weight:600; }
   .lecture-title.done{ text-decoration:line-through; color:var(--ink-soft); }
   .lecture-dur{ font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; direction:ltr; }
-  .lecture-icons{ font-size:17px; display:flex; gap:3px; }
+  .lecture-icons{ font-size:20px; display:flex; gap:4px; }
   .lecture-badge{
     width:42px; height:42px; border-radius:50%; background:var(--c-bg, var(--gold-soft));
     color:var(--c-page, var(--gold)); display:flex; align-items:center; justify-content:center;
@@ -198,12 +200,27 @@
   .lecture-body{ padding:14px 14px 16px; border-top:1px solid var(--line); animation:slideDown .3s ease; }
   @keyframes slideDown{ from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);} }
 
-  .attach-chip{
-    display:inline-flex; align-items:center; gap:6px; font-size:12px; background:var(--c-bg, var(--gold-soft));
-    color:var(--c-page, var(--gold)); padding:6px 12px; border-radius:999px; margin:0 4px 8px 0;
-    text-decoration:none; cursor:pointer; border:1px solid transparent;
+  .files-grid{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px; margin-bottom:12px;
   }
-  .attach-chip:hover{ border-color:var(--c-page, var(--gold)); }
+  .attach-chip{
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+    font-size:13px; background:var(--c-bg, var(--gold-soft));
+    color:var(--c-page, var(--gold)); padding:12px; border-radius:12px;
+    text-decoration:none; cursor:pointer; border:1px solid transparent;
+    transition:.2s; position:relative;
+  }
+  .attach-chip:hover{ border-color:var(--c-page, var(--gold)); transform:translateY(-2px); }
+  .attach-chip .file-icon{ font-size:32px; }
+  .attach-chip .file-name{ font-size:11px; text-align:center; word-break:break-word; max-width:100%; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+  .attach-chip .file-del{
+    position:absolute; top:4px; right:4px; background:rgba(255,255,255,0.9); border:none;
+    width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:14px; color:var(--ink-soft); cursor:pointer; opacity:0; transition:.2s;
+  }
+  body.ltr .attach-chip .file-del{ right:auto; left:4px; }
+  .attach-chip:hover .file-del{ opacity:1; }
+  .attach-chip .file-del:hover{ color:#B0522D; background:#fff; }
 
   /* Upload */
   .upload-row{ display:flex; gap:10px; flex-wrap:wrap; margin:0 0 12px; }
@@ -403,67 +420,67 @@ const THEME = {
 
 const courses = [
   {id:'nurs_hosp', faculty:'nursing', subject:'hosp', code:'NURS 300', title:{ar:'المستشفى', en:'Hospital'}, lessons:[
-      {t:{ar:'التوجيه العام داخل المستشفى', en:'General Hospital Orientation'}, d:'20 د', done:true},
-      {t:{ar:'إجراءات السلامة والتحكم في العدوى', en:'Safety & Infection Control'}, d:'22 د', done:false},
+      {t:{ar:'التوجيه العام داخل المستشفى', en:'General Hospital Orientation'}, d:'20 د', done:true, files:[]},
+      {t:{ar:'إجراءات السلامة والتحكم في العدوى', en:'Safety & Infection Control'}, d:'22 د', done:false, files:[]},
     ]
   },
   {id:'nurs_adultTh', faculty:'nursing', subject:'adultTh', code:'NURS 305', title:{ar:'تمريض البالغين - نظري', en:'Adult Nursing - Theory'}, lessons:[
-      {t:{ar:'تقييم المريض البالغ', en:'Adult Patient Assessment'}, d:'22 د', done:true},
-      {t:{ar:'الأمراض المزمنة الشائعة', en:'Common Chronic Diseases'}, d:'26 د', done:false},
+      {t:{ar:'تقييم المريض البالغ', en:'Adult Patient Assessment'}, d:'22 د', done:true, files:[]},
+      {t:{ar:'الأمراض المزمنة الشائعة', en:'Common Chronic Diseases'}, d:'26 د', done:false, files:[]},
     ]
   },
   {id:'nurs_adultCl', faculty:'nursing', subject:'adultCl', code:'NURS 306', title:{ar:'تمريض البالغين - عملي', en:'Adult Nursing - Clinical'}, lessons:[
-      {t:{ar:'مهارات سريرية أساسية', en:'Basic Clinical Skills'}, d:'25 د', done:false},
+      {t:{ar:'مهارات سريرية أساسية', en:'Basic Clinical Skills'}, d:'25 د', done:false, files:[]},
     ]
   },
   {id:'nurs_pharm', faculty:'nursing', subject:'pharm', code:'NURS 220', title:{ar:'علم الأدوية', en:'Pharmacology'}, lessons:[
-      {t:{ar:'مبادئ علم الأدوية', en:'Principles of Pharmacology'}, d:'20 د', done:true},
-      {t:{ar:'حساب الجرعات الدوائية', en:'Drug Dosage Calculation'}, d:'25 د', done:true},
+      {t:{ar:'مبادئ علم الأدوية', en:'Principles of Pharmacology'}, d:'20 د', done:true, files:[]},
+      {t:{ar:'حساب الجرعات الدوائية', en:'Drug Dosage Calculation'}, d:'25 د', done:true, files:[]},
     ]
   },
   {id:'nurs_micro', faculty:'nursing', subject:'micro', code:'NURS 215', title:{ar:'الميكروبيولوجي', en:'Microbiology'}, lessons:[
-      {t:{ar:'مقدمة في علم الميكروبات', en:'Introduction to Microbiology'}, d:'20 د', done:true},
+      {t:{ar:'مقدمة في علم الميكروبات', en:'Introduction to Microbiology'}, d:'20 د', done:true, files:[]},
     ]
   },
   {id:'nurs_nutr', faculty:'nursing', subject:'nutr', code:'NURS 230', title:{ar:'التغذية', en:'Nutrition'}, lessons:[
-      {t:{ar:'أساسيات التغذية السليمة', en:'Fundamentals of Nutrition'}, d:'18 د', done:true},
+      {t:{ar:'أساسيات التغذية السليمة', en:'Fundamentals of Nutrition'}, d:'18 د', done:true, files:[]},
     ]
   },
   {id:'nurs_intmed', faculty:'nursing', subject:'intmed', code:'NURS 235', title:{ar:'الباطنة', en:'Internal Medicine'}, lessons:[
-      {t:{ar:'أمراض الجهاز الهضمي', en:'Gastrointestinal Diseases'}, d:'25 د', done:false},
+      {t:{ar:'أمراض الجهاز الهضمي', en:'Gastrointestinal Diseases'}, d:'25 د', done:false, files:[]},
     ]
   },
   {id:'nurs_comm', faculty:'nursing', subject:'comm', code:'NURS 240', title:{ar:'التواصل', en:'Communication'}, lessons:[
-      {t:{ar:'مهارات التواصل العلاجي', en:'Therapeutic Communication Skills'}, d:'20 د', done:true},
+      {t:{ar:'مهارات التواصل العلاجي', en:'Therapeutic Communication Skills'}, d:'20 د', done:true, files:[]},
     ]
   },
   {id:'nurs_eng2', faculty:'nursing', subject:'eng2', code:'ENG 202', title:{ar:'اللغة الإنجليزية 2', en:'English 2'}, lessons:[
-      {t:{ar:'قواعد اللغة الأساسية', en:'Basic Grammar'}, d:'18 د', done:true},
+      {t:{ar:'قواعد اللغة الأساسية', en:'Basic Grammar'}, d:'18 د', done:true, files:[]},
     ]
   },
   {id:'cs_cg', faculty:'cs', subject:'cg', code:'CS 240', title:{ar:'الرسم بالحاسب', en:'Computer Graphics'}, lessons:[
-      {t:{ar:'مقدمة عن الرسم بالحاسب', en:'Introduction to Computer Graphics'}, d:'20 د', done:true},
-      {t:{ar:'خوارزميات رسم الخطوط', en:'Line Drawing Algorithms'}, d:'24 د', done:false},
+      {t:{ar:'مقدمة عن الرسم بالحاسب', en:'Introduction to Computer Graphics'}, d:'20 د', done:true, files:[]},
+      {t:{ar:'خوارزميات رسم الخطوط', en:'Line Drawing Algorithms'}, d:'24 د', done:false, files:[]},
     ]
   },
   {id:'cs_net', faculty:'cs', subject:'net', code:'CS 250', title:{ar:'شبكات الحاسب', en:'Computer Networks'}, lessons:[
-      {t:{ar:'نموذج OSI', en:'OSI Model'}, d:'24 د', done:true},
+      {t:{ar:'نموذج OSI', en:'OSI Model'}, d:'24 د', done:true, files:[]},
     ]
   },
   {id:'cs_field', faculty:'cs', subject:'field', code:'CS 400', title:{ar:'التدريب الميداني', en:'Field Training'}, lessons:[
-      {t:{ar:'توجيه واختيار جهة التدريب', en:'Training Site Selection'}, d:'15 د', done:true},
+      {t:{ar:'توجيه واختيار جهة التدريب', en:'Training Site Selection'}, d:'15 د', done:true, files:[]},
     ]
   },
   {id:'cs_os', faculty:'cs', subject:'os', code:'CS 260', title:{ar:'نظم التشغيل', en:'Operating Systems'}, lessons:[
-      {t:{ar:'مقدمة عن نظم التشغيل', en:'Introduction to Operating Systems'}, d:'20 د', done:true},
+      {t:{ar:'مقدمة عن نظم التشغيل', en:'Introduction to Operating Systems'}, d:'20 د', done:true, files:[]},
     ]
   },
   {id:'cs_se', faculty:'cs', subject:'se', code:'CS 310', title:{ar:'هندسة البرمجيات', en:'Software Engineering'}, lessons:[
-      {t:{ar:'دورة حياة تطوير البرمجيات', en:'Software Development Life Cycle'}, d:'22 د', done:false},
+      {t:{ar:'دورة حياة تطوير البرمجيات', en:'Software Development Life Cycle'}, d:'22 د', done:false, files:[]},
     ]
   },
   {id:'cs_vp', faculty:'cs', subject:'vp', code:'CS 220', title:{ar:'البرمجة المرئية', en:'Visual Programming'}, lessons:[
-      {t:{ar:'مقدمة في بيئة البرمجة المرئية', en:'Introduction to Visual Programming'}, d:'20 د', done:true},
+      {t:{ar:'مقدمة في بيئة البرمجة المرئية', en:'Introduction to Visual Programming'}, d:'20 د', done:true, files:[]},
     ]
   },
 ];
@@ -508,6 +525,76 @@ function L(val){
   return val;
 }
 
+function translate(arText){
+  const translations = {
+    'التوجيه العام داخل المستشفى': 'General Hospital Orientation',
+    'إجراءات السلامة والتحكم في العدوى': 'Safety & Infection Control',
+    'التعامل مع فريق العمل الطبي': 'Working with Medical Team',
+    'تقييم المريض البالغ': 'Adult Patient Assessment',
+    'الأمراض المزمنة الشائعة': 'Common Chronic Diseases',
+    'التخطيط لرعاية المريض البالغ': 'Care Planning for Adults',
+    'مهارات سريرية أساسية': 'Basic Clinical Skills',
+    'تطبيق خطة الرعاية عمليًا': 'Applying Care Plan',
+    'التوثيق السريري': 'Clinical Documentation',
+    'مبادئ علم الأدوية': 'Principles of Pharmacology',
+    'حساب الجرعات الدوائية': 'Drug Dosage Calculation',
+    'أدوية القلب والأوعية الدموية': 'Cardiovascular Drugs',
+    'المضادات الحيوية': 'Antibiotics',
+    'مقدمة في علم الميكروبات': 'Introduction to Microbiology',
+    'أنواع البكتيريا وتصنيفها': 'Bacteria Types & Classification',
+    'طرق الوقاية من العدوى الميكروبية': 'Infection Prevention Methods',
+    'أساسيات التغذية السليمة': 'Fundamentals of Nutrition',
+    'التغذية العلاجية لمرضى السكر': 'Therapeutic Nutrition for Diabetics',
+    'تقييم الحالة الغذائية للمريض': 'Nutritional Assessment',
+    'أمراض الجهاز الهضمي': 'Gastrointestinal Diseases',
+    'أمراض الجهاز البولي': 'Urinary System Diseases',
+    'التمريض في العيادات الخارجية': 'Outpatient Nursing',
+    'مهارات التواصل العلاجي': 'Therapeutic Communication Skills',
+    'التواصل مع المريض وأسرته': 'Communicating with Patient & Family',
+    'التعامل مع المواقف الصعبة': 'Handling Difficult Situations',
+    'قواعد اللغة الأساسية': 'Basic Grammar',
+    'المصطلحات الطبية بالإنجليزي': 'Medical Terminology in English',
+    'مهارات الكتابة والقراءة': 'Writing & Reading Skills',
+    'مقدمة عن الرسم بالحاسب': 'Introduction to Computer Graphics',
+    'خوارزميات رسم الخطوط والدوائر': 'Line & Circle Drawing Algorithms',
+    'خوارزميات رسم الخطوط': 'Line Drawing Algorithms',
+    'التحويلات الهندسية ثنائية الأبعاد': '2D Geometric Transformations',
+    'نماذج الألوان والإضاءة': 'Color & Lighting Models',
+    'تمثيل الأجسام ثلاثية الأبعاد': '3D Object Representation',
+    'نموذج OSI': 'OSI Model',
+    'بروتوكولات TCP/IP': 'TCP/IP Protocols',
+    'عنونة IP والتوجيه': 'IP Addressing & Routing',
+    'أساسيات أمن الشبكات': 'Network Security Basics',
+    'توجيه واختيار جهة التدريب': 'Training Site Selection',
+    'أساسيات بيئة العمل المهنية': 'Professional Work Environment Basics',
+    'كتابة تقرير التدريب': 'Writing Training Report',
+    'عرض تقديمي لمشروع التدريب': 'Training Project Presentation',
+    'مقدمة عن نظم التشغيل': 'Introduction to Operating Systems',
+    'إدارة العمليات (Processes)': 'Process Management',
+    'خوارزميات الجدولة (Scheduling)': 'Scheduling Algorithms',
+    'إدارة الذاكرة': 'Memory Management',
+    'أنظمة الملفات': 'File Systems',
+    'دورة حياة تطوير البرمجيات': 'Software Development Life Cycle',
+    'جمع وتحليل المتطلبات': 'Requirements Gathering & Analysis',
+    'أنماط التصميم (Design Patterns)': 'Design Patterns',
+    'الاختبار البرمجي': 'Software Testing',
+    'إدارة الإصدارات باستخدام Git': 'Version Control with Git',
+    'مقدمة في بيئة البرمجة المرئية': 'Introduction to Visual Programming',
+    'تصميم الواجهات الرسومية': 'GUI Design',
+    'ربط الأحداث (Events) بالعناصر': 'Event Handling',
+    'الاتصال بقواعد البيانات من الواجهة': 'Database Connection from UI',
+  };
+  
+  const reverseTranslations = {};
+  Object.entries(translations).forEach(([ar, en]) => {
+    reverseTranslations[en] = ar;
+  });
+  
+  if(lang === 'ar' && reverseTranslations[arText]) return reverseTranslations[arText];
+  if(lang === 'en' && translations[arText]) return translations[arText];
+  return arText;
+}
+
 const STR = {
   ar: {
     brandSubtitle:'منصة الطالب الجامعي',
@@ -530,10 +617,7 @@ const STR = {
     empty_grades:'مفيش مواد', 
     empty_schedule:'مفيش جدول — دوس "+ إضافة"',
     footerText:'منصة أُفق',
-    uploadPdf:'📄 رفع PDF',
-    replacePdf:'📄 استبدال PDF',
-    uploadAudio:'🎙️ رفع تسجيل',
-    replaceAudio:'🎙️ استبدال',
+    uploadFile:'📎 رفع ملف',
     uploadingFile:'جارٍ الرفع...',
     uploadedLocal:'✅ تم الرفع',
     fileTooBig:'❌ الملف كبير جدًا (أكبر من 100 ميجا)',
@@ -560,10 +644,7 @@ const STR = {
     empty_grades:'No courses', 
     empty_schedule:'No schedule — tap "+ Add"',
     footerText:'Ufuq Platform',
-    uploadPdf:'📄 Upload PDF',
-    replacePdf:'📄 Replace PDF',
-    uploadAudio:'🎙️ Upload Audio',
-    replaceAudio:'🎙️ Replace',
+    uploadFile:'📎 Upload File',
     uploadingFile:'Uploading...',
     uploadedLocal:'✅ Uploaded',
     fileTooBig:'❌ File too large (max 100MB)',
@@ -572,8 +653,8 @@ const STR = {
 };
 function S(key){ return STR[lang][key] || key; }
 
-const STORAGE_KEY = 'ufuq_platform_state_v4';
-const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
+const STORAGE_KEY = 'ufuq_platform_state_v5';
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 function buildState(){
   const doneMap = {};
@@ -581,10 +662,7 @@ function buildState(){
   const lessonsMap = {};
   courses.forEach(c=>{
     doneMap[c.id] = c.lessons.map(l=>l.done);
-    filesMap[c.id] = c.lessons.map(l=>({
-      pdf: l.pdf ? {name:l.pdf.name, url:l.pdf.url, size:l.pdf.size} : null,
-      audio: l.audio ? {name:l.audio.name, url:l.audio.url, size:l.audio.size} : null,
-    }));
+    filesMap[c.id] = c.lessons.map(l=>l.files || []);
     lessonsMap[c.id] = c.lessons.map(l=>({t:l.t, d:l.d}));
   });
   return { assignments, nextAssignmentId, schedule, nextScheduleId, gradesData, doneMap, filesMap, lessonsMap, lang, currentFaculty };
@@ -607,7 +685,7 @@ function applyState(state){
     courses.forEach(c=>{
       const arr = state.lessonsMap[c.id];
       if(arr && arr.length > 0){
-        c.lessons = arr.map(l=>({t:l.t, d:l.d, done:false}));
+        c.lessons = arr.map(l=>({t:l.t, d:l.d, done:false, files:[]}));
       }
     });
   }
@@ -623,8 +701,7 @@ function applyState(state){
       if(arr){
         c.lessons.forEach((l,i)=>{
           if(arr[i]){
-            if(arr[i].pdf) l.pdf = arr[i].pdf;
-            if(arr[i].audio) l.audio = arr[i].audio;
+            l.files = arr[i];
           }
         });
       }
@@ -669,15 +746,19 @@ function hideAllViews(){
 function showView(view, params={}){
   hideAllViews();
   if(view === 'course'){
+    document.body.classList.add('course-view');
     renderCoursePageContent(params.courseId);
     document.getElementById('coursePage').style.display = 'block';
   }else if(view === 'assignments'){
+    document.body.classList.remove('course-view');
     renderAssignmentsPage();
     document.getElementById('assignmentsPage').style.display = 'block';
   }else if(view === 'grades'){
+    document.body.classList.remove('course-view');
     renderGradesPage();
     document.getElementById('gradesPage').style.display = 'block';
   }else{
+    document.body.classList.remove('course-view');
     document.getElementById('dashboardView').style.display = 'block';
   }
   window.scrollTo({top:0, behavior:'smooth'});
@@ -862,8 +943,6 @@ function renderSchedule(){
   const todayDate = getTodayDate();
   
   let facSchedule = schedule.filter(s=>s.faculty===currentFaculty);
-  
-  // ترتيب حسب الوقت
   facSchedule.sort((a,b)=>a.time.localeCompare(b.time));
   
   const wrap = document.getElementById('schedTimeline');
@@ -1001,10 +1080,13 @@ function saveNewLecture(course){
     return;
   }
   
+  const translated = translate(title);
+  
   course.lessons.push({
-    t: {ar: title, en: title},
+    t: lang === 'ar' ? {ar: title, en: translated} : {ar: translated, en: title},
     d: dur,
-    done: false
+    done: false,
+    files: []
   });
   
   showAddLectureForm = false;
@@ -1025,13 +1107,14 @@ function lecturesHtml(course){
 
 function lectureCardHtml(course, l, i){
   const open = expandedLecture === i;
+  const fileCount = (l.files || []).length;
   return `
     <div class="lecture-card ${open?'open':''}">
       <div class="lecture-head" data-toggle="${i}">
         <input type="checkbox" class="lecture-check" data-check="${i}" ${l.done?'checked':''} onclick="event.stopPropagation()">
-        <span class="lecture-title ${l.done?'done':''}">${lectureLabel(i)}: ${L(l.t)}</span>
+        <span class="lecture-title ${l.done?'done':''}">${lectureLabel(i)}: ${translate(L(l.t))}</span>
         <span class="lecture-dur">${l.d}</span>
-        <span class="lecture-icons">${l.pdf?'📄':''}${l.audio?'🎙️':''}</span>
+        <span class="lecture-icons">${fileCount > 0 ? '📎' : ''}</span>
         <span class="lecture-badge">${open?'−':'+'}</span>
       </div>
       ${open ? `<div class="lecture-body">${lectureContentHtml(course, l, i)}</div>` : ''}
@@ -1069,58 +1152,87 @@ function refreshLectureList(course){
   wireLectureList(course);
 }
 
+function getFileIcon(file){
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(['pdf'].includes(ext)) return '📄';
+  if(['mp3','wav','m4a','ogg'].includes(ext)) return '🎙️';
+  if(['mp4','avi','mov','mkv'].includes(ext)) return '🎬';
+  if(['jpg','jpeg','png','gif','svg'].includes(ext)) return '🖼️';
+  if(['doc','docx'].includes(ext)) return '📝';
+  if(['xls','xlsx'].includes(ext)) return '📊';
+  if(['ppt','pptx'].includes(ext)) return '📽️';
+  if(['zip','rar','7z'].includes(ext)) return '📦';
+  return '📎';
+}
+
 function lectureContentHtml(course, l, i){
-  const pdfLabel = l.pdf ? S('replacePdf') : S('uploadPdf');
-  const audioLabel = l.audio ? S('replaceAudio') : S('uploadAudio');
+  const files = l.files || [];
+  const filesHtml = files.length > 0 ? `
+    <div class="files-grid">
+      ${files.map((f,fi)=>`
+        <a class="attach-chip" href="${f.url}" target="_blank" rel="noopener">
+          <div class="file-icon">${getFileIcon(f)}</div>
+          <div class="file-name">${f.name}</div>
+          <button class="file-del" data-del-file="${i}|${fi}" onclick="event.preventDefault(); event.stopPropagation();" title="✕">✕</button>
+        </a>
+      `).join('')}
+    </div>
+  ` : '';
+  
   return `
     <div class="upload-row">
-      <button type="button" class="upload-btn" id="pdfUploadBtn-${i}">${pdfLabel}</button>
-      <button type="button" class="upload-btn" id="audioUploadBtn-${i}">${audioLabel}</button>
-      <input type="file" accept="application/pdf" id="pdfInput-${i}" style="display:none">
-      <input type="file" accept="audio/*" id="audioInput-${i}" style="display:none">
+      <button type="button" class="upload-btn" id="fileUploadBtn-${i}">${S('uploadFile')}</button>
+      <input type="file" multiple id="fileInput-${i}" style="display:none">
     </div>
     <div class="upload-status" id="uploadStatus-${i}"></div>
-    <div>
-      ${l.pdf ? `<a class="attach-chip" href="${l.pdf.url}" target="_blank" rel="noopener">📄 ${l.pdf.name}</a>` : ''}
-      ${l.audio ? `<div style="margin-top:8px;"><audio controls src="${l.audio.url}" style="width:100%; max-width:400px;"></audio></div>` : ''}
-    </div>
+    ${filesHtml}
   `;
 }
 
 function wireLectureContent(course, li){
-  const pdfInput = document.getElementById(`pdfInput-${li}`);
-  const audioInput = document.getElementById(`audioInput-${li}`);
-  const pdfBtn = document.getElementById(`pdfUploadBtn-${li}`);
-  const audioBtn = document.getElementById(`audioUploadBtn-${li}`);
-  if(!pdfInput) return;
-  pdfBtn.addEventListener('click', ()=>pdfInput.click());
-  audioBtn.addEventListener('click', ()=>audioInput.click());
-  pdfInput.addEventListener('change', (e)=>handleFileUpload(e, course, li, 'pdf'));
-  audioInput.addEventListener('change', (e)=>handleFileUpload(e, course, li, 'audio'));
+  const fileInput = document.getElementById(`fileInput-${li}`);
+  const fileBtn = document.getElementById(`fileUploadBtn-${li}`);
+  if(!fileInput) return;
+  fileBtn.addEventListener('click', ()=>fileInput.click());
+  fileInput.addEventListener('change', (e)=>handleFileUpload(e, course, li));
+  
+  document.querySelectorAll('[data-del-file]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const [lectureIdx, fileIdx] = btn.dataset.delFile.split('|').map(Number);
+      course.lessons[lectureIdx].files.splice(fileIdx, 1);
+      refreshLectureList(course);
+      saveState();
+    });
+  });
 }
 
-async function handleFileUpload(e, course, li, type){
-  const file = e.target.files[0];
-  if(!file) return;
+async function handleFileUpload(e, course, li){
+  const files = Array.from(e.target.files);
+  if(files.length === 0) return;
   const statusEl = document.getElementById(`uploadStatus-${li}`);
 
-  if(file.size > MAX_FILE_SIZE){
-    statusEl.textContent = S('fileTooBig');
-    return;
-  }
+  for(const file of files){
+    if(file.size > MAX_FILE_SIZE){
+      statusEl.textContent = S('fileTooBig');
+      continue;
+    }
 
-  statusEl.textContent = S('uploadingFile');
+    statusEl.textContent = S('uploadingFile');
 
-  try{
-    const url = URL.createObjectURL(file);
-    course.lessons[li][type] = {name:file.name, url, size:file.size};
-    statusEl.textContent = S('uploadedLocal');
-    refreshLectureList(course);
-    saveState();
-  }catch(err){
-    console.error('Upload failed:', err);
-    statusEl.textContent = '❌ ' + err.message;
+    try{
+      const url = URL.createObjectURL(file);
+      if(!course.lessons[li].files) course.lessons[li].files = [];
+      course.lessons[li].files.push({name:file.name, url, size:file.size});
+      statusEl.textContent = S('uploadedLocal');
+    }catch(err){
+      console.error('Upload failed:', err);
+      statusEl.textContent = '❌ ' + err.message;
+    }
   }
+  
+  refreshLectureList(course);
+  saveState();
+  e.target.value = '';
 }
 
 function updateDueStat(){
@@ -1351,6 +1463,15 @@ function applyLanguage(){
   renderSchedule();
   renderAssignmentsList();
   updateDueStat();
+  
+  const currentView = history.state?.view;
+  if(currentView === 'course'){
+    renderCoursePageContent(history.state.params.courseId);
+  }else if(currentView === 'assignments'){
+    renderAssignmentsPage();
+  }else if(currentView === 'grades'){
+    renderGradesPage();
+  }
 }
 
 document.getElementById('langToggle').addEventListener('click', ()=>{
@@ -1367,4 +1488,4 @@ async function initApp(){
 initApp();
 </script>
 </body>
-                                                                               </html>
+  </html>
