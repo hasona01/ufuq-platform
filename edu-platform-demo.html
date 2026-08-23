@@ -169,30 +169,28 @@
   .lesson .l-dur{font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; direction:ltr;}
   .cp-empty{ font-size:13px; color:var(--ink-soft); background:var(--paper); border:1px dashed var(--line); border-radius:10px; padding:16px; text-align:center; }
 
-  /* Lecture list rows (each row navigates to its own page) */
-  .lecture-card{
-    display:flex; align-items:center; gap:10px; padding:13px 14px; cursor:pointer;
-    background:var(--paper); border:1px solid var(--line); border-radius:12px; margin-bottom:10px;
-  }
-  .lecture-card:hover{ border-color:var(--c-page, var(--gold)); }
+  /* Lecture accordion (expands in place) */
+  .lecture-card{ background:var(--paper); border:1px solid var(--line); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+  .lecture-card.open{ border-color:var(--c-page, var(--gold)); }
+  .lecture-head{ display:flex; align-items:center; gap:10px; padding:13px 14px; cursor:pointer; }
   .lecture-check{ width:18px; height:18px; accent-color:var(--c-page, var(--gold)); flex-shrink:0; }
   .lecture-title{ flex:1; font-size:14px; font-weight:600; }
   .lecture-title.done{ text-decoration:line-through; color:var(--ink-soft); }
   .lecture-dur{ font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; direction:ltr; }
-  .lecture-arrow{ font-size:16px; color:var(--c-page, var(--gold)); font-weight:700; }
-  .lecture-icons{ font-size:12px; color:var(--ink-soft); display:flex; gap:4px; }
-  .attach-chip{ display:inline-block; font-size:12px; background:var(--c-bg, var(--gold-soft)); color:var(--c-page, var(--gold)); padding:6px 12px; border-radius:999px; margin-bottom:8px; }
-  .upload-status{ font-size:12px; color:var(--ink-soft); margin:2px 0 8px; }
-
-  /* Standalone lecture page */
-  #lecturePage{ animation:fadeIn .3s ease; }
-  .lecture-hero{
-    background:var(--c-bg, var(--gold-soft)); border-radius:var(--radius); padding:20px 22px;
-    border-right:5px solid var(--c-page, var(--gold)); margin-bottom:24px;
-    display:flex; align-items:center; gap:14px;
+  .lecture-icons{ font-size:17px; display:flex; gap:3px; }
+  .lecture-badge{
+    width:36px; height:36px; border-radius:50%; background:var(--c-bg, var(--gold-soft));
+    color:var(--c-page, var(--gold)); display:flex; align-items:center; justify-content:center;
+    font-size:19px; font-weight:700; flex-shrink:0;
   }
-  .lecture-hero h2{ margin:0 0 2px; font-size:22px; }
-  .lecture-hero .sub{ font-size:12px; color:var(--ink-soft); }
+  .lecture-body{ padding:0 14px 16px; border-top:1px solid var(--line); }
+  .attach-chip{
+    display:inline-flex; align-items:center; gap:6px; font-size:12px; background:var(--c-bg, var(--gold-soft));
+    color:var(--c-page, var(--gold)); padding:6px 12px; border-radius:999px; margin-bottom:8px;
+    text-decoration:none; cursor:pointer;
+  }
+  .attach-chip:hover{ text-decoration:underline; }
+  .upload-status{ font-size:12px; color:var(--ink-soft); margin:2px 0 8px; }
 
   /* Upload */
   .upload-row{ display:flex; gap:10px; flex-wrap:wrap; margin:12px 0 8px; }
@@ -300,6 +298,14 @@
   }
   .grade-input.small{ max-width:56px; }
   .grade-slash{ color:var(--ink-soft); font-size:13px; }
+  .grade-del{
+    background:transparent; border:none; color:var(--ink-soft); font-size:14px; padding:4px 6px; border-radius:6px; flex-shrink:0;
+  }
+  .grade-del:hover{ color:#B0522D; background:#F6E6DB; }
+  .add-quiz-btn{
+    background:transparent; border:1px dashed var(--gc, var(--gold)); color:var(--gc, var(--gold));
+    border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; margin-top:8px;
+  }
 
   footer{text-align:center; padding:24px; font-size:12px; color:var(--ink-soft);}
 </style>
@@ -399,50 +405,58 @@ async function uploadFileToStorage(file, path){
 }
 
 const FACULTIES = {
-  nursing: {label:'🩺 كلية التمريض', short:'التمريض'},
-  cs: {label:'💻 كلية الحاسبات والمعلومات', short:'الحاسبات'},
+  nursing: {label:{ar:'🩺 كلية التمريض', en:'🩺 Nursing'}, short:{ar:'التمريض', en:'Nursing'}},
+  cs: {label:{ar:'💻 كلية الحاسبات والمعلومات', en:'💻 Computer Science'}, short:{ar:'الحاسبات', en:'Computer Science'}},
 };
 
 const THEME = {
   // ===== كلية الحاسبات والمعلومات =====
-  cg:    {c:'#1B7A93', bg:'#DCF0F4', label:'الرسم بالحاسب'},
-  net:   {c:'#6A4FA0', bg:'#ECE5F5', label:'شبكات الحاسب'},
-  field: {c:'#557A46', bg:'#E4EEDF', label:'التدريب الميداني'},
-  os:    {c:'#A67C27', bg:'#F3EAD3', label:'نظم التشغيل'},
-  se:    {c:'#C1542D', bg:'#F6E6DB', label:'هندسة البرمجيات'},
-  vp:    {c:'#A64C82', bg:'#F5E1EC', label:'البرمجة المرئية'},
+  cg:    {c:'#1B7A93', bg:'#DCF0F4', label:{ar:'الرسم بالحاسب', en:'Computer Graphics'}},
+  net:   {c:'#6A4FA0', bg:'#ECE5F5', label:{ar:'شبكات الحاسب', en:'Computer Networks'}},
+  field: {c:'#557A46', bg:'#E4EEDF', label:{ar:'التدريب الميداني', en:'Field Training'}},
+  os:    {c:'#A67C27', bg:'#F3EAD3', label:{ar:'نظم التشغيل', en:'Operating Systems'}},
+  se:    {c:'#C1542D', bg:'#F6E6DB', label:{ar:'هندسة البرمجيات', en:'Software Engineering'}},
+  vp:    {c:'#A64C82', bg:'#F5E1EC', label:{ar:'البرمجة المرئية', en:'Visual Programming'}},
   // ===== كلية التمريض =====
-  ms:    {c:'#B23A48', bg:'#F7E3E5', label:'باطني وجراحي'},
-  path:  {c:'#6B4C6B', bg:'#F2E9EF', label:'علم الأمراض'},
-  pharm: {c:'#8B5E34', bg:'#F1E6D8', label:'علم الأدوية'},
-  crit:  {c:'#C23B2E', bg:'#F8E2DE', label:'حالات حرجة وطوارئ'},
-  nutr:  {c:'#4F7A3D', bg:'#E5EFDF', label:'تغذية علاجية'},
-  surg:  {c:'#3B6E71', bg:'#E1EEEE', label:'جراحة وباطنة عامة'},
-  psych: {c:'#5B6EA5', bg:'#E6E9F3', label:'تمريض نفسي'},
+  hosp:    {c:'#2F4858', bg:'#E1E6EA', label:{ar:'المستشفى', en:'Hospital'}},
+  adultTh: {c:'#B23A48', bg:'#F7E3E5', label:{ar:'تمريض البالغين (نظري)', en:'Adult Theory'}},
+  adultCl: {c:'#C1542D', bg:'#F6E6DB', label:{ar:'تمريض البالغين (عملي)', en:'Adult Clinical'}},
+  pharm:   {c:'#8B5E34', bg:'#F1E6D8', label:{ar:'علم الأدوية', en:'Pharmacology'}},
+  micro:   {c:'#3F7D5C', bg:'#E2F0E9', label:{ar:'الميكروبيولوجي', en:'Microbiology'}},
+  nutr:    {c:'#4F7A3D', bg:'#E5EFDF', label:{ar:'التغذية', en:'Nutrition'}},
+  intmed:  {c:'#6B4C6B', bg:'#F2E9EF', label:{ar:'الباطنة', en:'Internal Medicine'}},
+  comm:    {c:'#2E86AB', bg:'#E1EEF4', label:{ar:'التواصل', en:'Communication'}},
+  eng2:    {c:'#A67C27', bg:'#F3EAD3', label:{ar:'اللغة الإنجليزية 2', en:'English 2'}},
 };
 
 const courses = [
-  // ===== كلية التمريض (7 مواد) =====
+  // ===== كلية التمريض (9 مواد) =====
   {
-    id:'nurs_ms', faculty:'nursing', subject:'ms', code:'NURS 210', title:'تمريض باطني وجراحي', materials:[],
+    id:'nurs_hosp', faculty:'nursing', subject:'hosp', code:'NURS 300', title:{ar:'المستشفى', en:'Hospital'}, materials:[],
     lessons:[
-      {t:'تقييم المريض الباطني', d:'22 د', done:true},
-      {t:'رعاية ما قبل وبعد الجراحة', d:'26 د', done:false},
-      {t:'التعامل مع الجروح والضمادات', d:'20 د', done:false},
-      {t:'مراقبة العلامات الحيوية للمريض الجراحي', d:'18 د', done:false},
+      {t:'التوجيه العام داخل المستشفى', d:'20 د', done:true},
+      {t:'إجراءات السلامة والتحكم في العدوى', d:'22 د', done:false},
+      {t:'التعامل مع فريق العمل الطبي', d:'18 د', done:false},
     ]
   },
   {
-    id:'nurs_path', faculty:'nursing', subject:'path', code:'NURS 215', title:'علم الأمراض', materials:[],
+    id:'nurs_adultTh', faculty:'nursing', subject:'adultTh', code:'NURS 305', title:{ar:'تمريض البالغين - نظري', en:'Adult Theory'}, materials:[],
     lessons:[
-      {t:'مقدمة في الباثولوجيا العامة', d:'20 د', done:true},
-      {t:'الالتهابات وأنواعها', d:'24 د', done:false},
-      {t:'اضطرابات النمو الخلوي', d:'22 د', done:false},
-      {t:'أمراض جهاز الدوران', d:'25 د', done:false},
+      {t:'تقييم المريض البالغ', d:'22 د', done:true},
+      {t:'الأمراض المزمنة الشائعة', d:'26 د', done:false},
+      {t:'التخطيط لرعاية المريض البالغ', d:'20 د', done:false},
     ]
   },
   {
-    id:'nurs_pharm', faculty:'nursing', subject:'pharm', code:'NURS 220', title:'علم الأدوية', materials:[],
+    id:'nurs_adultCl', faculty:'nursing', subject:'adultCl', code:'NURS 306', title:{ar:'تمريض البالغين - عملي', en:'Adult Clinical'}, materials:[],
+    lessons:[
+      {t:'مهارات سريرية أساسية', d:'25 د', done:false},
+      {t:'تطبيق خطة الرعاية عمليًا', d:'24 د', done:false},
+      {t:'التوثيق السريري', d:'18 د', done:false},
+    ]
+  },
+  {
+    id:'nurs_pharm', faculty:'nursing', subject:'pharm', code:'NURS 220', title:{ar:'علم الأدوية', en:'Pharmacology'}, materials:[],
     lessons:[
       {t:'مبادئ علم الأدوية', d:'20 د', done:true},
       {t:'حساب الجرعات الدوائية', d:'25 د', done:true},
@@ -451,45 +465,49 @@ const courses = [
     ]
   },
   {
-    id:'nurs_crit', faculty:'nursing', subject:'crit', code:'NURS 225', title:'تمريض الحالات الحرجة والطوارئ', materials:[],
+    id:'nurs_micro', faculty:'nursing', subject:'micro', code:'NURS 215', title:{ar:'الميكروبيولوجي', en:'Microbiology'}, materials:[],
     lessons:[
-      {t:'مبادئ فرز الحالات (Triage)', d:'20 د', done:false},
-      {t:'الإنعاش القلبي الرئوي الأساسي', d:'28 د', done:false},
-      {t:'التعامل مع حالات الصدمة', d:'22 د', done:false},
-      {t:'مراقبة المريض في العناية المركزة', d:'24 د', done:false},
+      {t:'مقدمة في علم الميكروبات', d:'20 د', done:true},
+      {t:'أنواع البكتيريا وتصنيفها', d:'24 د', done:false},
+      {t:'طرق الوقاية من العدوى الميكروبية', d:'19 د', done:false},
     ]
   },
   {
-    id:'nurs_nutr', faculty:'nursing', subject:'nutr', code:'NURS 230', title:'التغذية والتغذية العلاجية', materials:[],
+    id:'nurs_nutr', faculty:'nursing', subject:'nutr', code:'NURS 230', title:{ar:'التغذية', en:'Nutrition'}, materials:[],
     lessons:[
       {t:'أساسيات التغذية السليمة', d:'18 د', done:true},
       {t:'التغذية العلاجية لمرضى السكر', d:'22 د', done:false},
-      {t:'التغذية الأنبوبية والوريدية', d:'20 د', done:false},
       {t:'تقييم الحالة الغذائية للمريض', d:'19 د', done:false},
     ]
   },
   {
-    id:'nurs_surg', faculty:'nursing', subject:'surg', code:'NURS 235', title:'الجراحة وأمراض الباطنة العامة', materials:[],
+    id:'nurs_intmed', faculty:'nursing', subject:'intmed', code:'NURS 235', title:{ar:'الباطنة', en:'Internal Medicine'}, materials:[],
     lessons:[
-      {t:'مبادئ الجراحة العامة', d:'23 د', done:false},
       {t:'أمراض الجهاز الهضمي', d:'25 د', done:false},
       {t:'أمراض الجهاز البولي', d:'21 د', done:false},
       {t:'التمريض في العيادات الخارجية', d:'17 د', done:false},
     ]
   },
   {
-    id:'nurs_psych', faculty:'nursing', subject:'psych', code:'NURS 240', title:'التمريض النفسي والطب النفسي', materials:[],
+    id:'nurs_comm', faculty:'nursing', subject:'comm', code:'NURS 240', title:{ar:'التواصل', en:'Communication'}, materials:[],
     lessons:[
-      {t:'مقدمة في الصحة النفسية', d:'20 د', done:true},
-      {t:'الاضطرابات القلقية والاكتئابية', d:'24 د', done:false},
-      {t:'التواصل العلاجي مع المريض النفسي', d:'22 د', done:false},
-      {t:'التعامل مع الأزمات النفسية', d:'20 د', done:false},
+      {t:'مهارات التواصل العلاجي', d:'20 د', done:true},
+      {t:'التواصل مع المريض وأسرته', d:'22 د', done:false},
+      {t:'التعامل مع المواقف الصعبة', d:'18 د', done:false},
+    ]
+  },
+  {
+    id:'nurs_eng2', faculty:'nursing', subject:'eng2', code:'ENG 202', title:{ar:'اللغة الإنجليزية 2', en:'English 2'}, materials:[],
+    lessons:[
+      {t:'قواعد اللغة الأساسية', d:'18 د', done:true},
+      {t:'المصطلحات الطبية بالإنجليزي', d:'22 د', done:false},
+      {t:'مهارات الكتابة والقراءة', d:'20 د', done:false},
     ]
   },
 
   // ===== كلية الحاسبات والمعلومات (6 مواد) =====
   {
-    id:'cs_cg', faculty:'cs', subject:'cg', code:'CS 240', title:'الرسم بالحاسب', materials:[],
+    id:'cs_cg', faculty:'cs', subject:'cg', code:'CS 240', title:{ar:'الرسم بالحاسب', en:'Computer Graphics'}, materials:[],
     lessons:[
       {t:'مقدمة عن الرسم بالحاسب', d:'20 د', done:true},
       {t:'خوارزميات رسم الخطوط والدوائر', d:'24 د', done:false},
@@ -499,7 +517,7 @@ const courses = [
     ]
   },
   {
-    id:'cs_net', faculty:'cs', subject:'net', code:'CS 250', title:'شبكات الحاسب', materials:[],
+    id:'cs_net', faculty:'cs', subject:'net', code:'CS 250', title:{ar:'شبكات الحاسب', en:'Computer Networks'}, materials:[],
     lessons:[
       {t:'نموذج OSI', d:'24 د', done:true},
       {t:'بروتوكولات TCP/IP', d:'23 د', done:false},
@@ -508,7 +526,7 @@ const courses = [
     ]
   },
   {
-    id:'cs_field', faculty:'cs', subject:'field', code:'CS 400', title:'التدريب الميداني', materials:[],
+    id:'cs_field', faculty:'cs', subject:'field', code:'CS 400', title:{ar:'التدريب الميداني', en:'Field Training'}, materials:[],
     lessons:[
       {t:'توجيه واختيار جهة التدريب', d:'15 د', done:true},
       {t:'أساسيات بيئة العمل المهنية', d:'18 د', done:false},
@@ -517,7 +535,7 @@ const courses = [
     ]
   },
   {
-    id:'cs_os', faculty:'cs', subject:'os', code:'CS 260', title:'نظم التشغيل', materials:[],
+    id:'cs_os', faculty:'cs', subject:'os', code:'CS 260', title:{ar:'نظم التشغيل', en:'Operating Systems'}, materials:[],
     lessons:[
       {t:'مقدمة عن نظم التشغيل', d:'20 د', done:true},
       {t:'إدارة العمليات (Processes)', d:'24 د', done:false},
@@ -527,7 +545,7 @@ const courses = [
     ]
   },
   {
-    id:'cs_se', faculty:'cs', subject:'se', code:'CS 310', title:'هندسة البرمجيات', materials:[],
+    id:'cs_se', faculty:'cs', subject:'se', code:'CS 310', title:{ar:'هندسة البرمجيات', en:'Software Engineering'}, materials:[],
     lessons:[
       {t:'دورة حياة تطوير البرمجيات', d:'22 د', done:false},
       {t:'جمع وتحليل المتطلبات', d:'20 د', done:false},
@@ -537,7 +555,7 @@ const courses = [
     ]
   },
   {
-    id:'cs_vp', faculty:'cs', subject:'vp', code:'CS 220', title:'البرمجة المرئية', materials:[],
+    id:'cs_vp', faculty:'cs', subject:'vp', code:'CS 220', title:{ar:'البرمجة المرئية', en:'Visual Programming'}, materials:[],
     lessons:[
       {t:'مقدمة في بيئة البرمجة المرئية', d:'20 د', done:true},
       {t:'تصميم الواجهات الرسومية', d:'24 د', done:false},
@@ -548,30 +566,63 @@ const courses = [
 ];
 
 const assignments = [
-  {id:1, title:'تقرير حالة مريض جراحي', course:'تمريض باطني وجراحي', faculty:'nursing', due:'21 أغسطس', urgent:true},
-  {id:2, title:'ورقة عمل: حساب الجرعات الدوائية', course:'علم الأدوية', faculty:'nursing', due:'24 أغسطس', urgent:false},
-  {id:3, title:'خطة تغذية علاجية لمريض سكري', course:'التغذية والتغذية العلاجية', faculty:'nursing', due:'27 أغسطس', urgent:false},
-  {id:4, title:'مشروع رسم مشهد بسيط بالحاسب', course:'الرسم بالحاسب', faculty:'cs', due:'21 أغسطس', urgent:true},
-  {id:5, title:'تقرير عملي: إعداد شبكة محلية', course:'شبكات الحاسب', faculty:'cs', due:'23 أغسطس', urgent:false},
-  {id:6, title:'تسليم تقرير التدريب الميداني', course:'التدريب الميداني', faculty:'cs', due:'26 أغسطس', urgent:false},
+  {id:1, title:'تقرير حالة مريض بالغ', courseId:'nurs_adultCl', faculty:'nursing', due:'21 أغسطس', urgent:true},
+  {id:2, title:'ورقة عمل: حساب الجرعات الدوائية', courseId:'nurs_pharm', faculty:'nursing', due:'24 أغسطس', urgent:false},
+  {id:3, title:'خطة تغذية علاجية لمريض سكري', courseId:'nurs_nutr', faculty:'nursing', due:'27 أغسطس', urgent:false},
+  {id:4, title:'مشروع رسم مشهد بسيط بالحاسب', courseId:'cs_cg', faculty:'cs', due:'21 أغسطس', urgent:true},
+  {id:5, title:'تقرير عملي: إعداد شبكة محلية', courseId:'cs_net', faculty:'cs', due:'23 أغسطس', urgent:false},
+  {id:6, title:'تسليم تقرير التدريب الميداني', courseId:'cs_field', faculty:'cs', due:'26 أغسطس', urgent:false},
 ];
 let nextAssignmentId = 7;
 
 const schedule = [
-  {time:'08:30', name:'تمريض باطني وجراحي', room:'معمل المهارات التمريضية', faculty:'nursing', subject:'ms'},
-  {time:'10:30', name:'علم الأمراض', room:'قاعة ٢٠١', faculty:'nursing', subject:'path'},
-  {time:'13:00', name:'علم الأدوية', room:'قاعة ١١٥', faculty:'nursing', subject:'pharm'},
-  {time:'09:00', name:'الرسم بالحاسب', room:'معمل الحاسبات ٢', faculty:'cs', subject:'cg'},
-  {time:'11:00', name:'نظم التشغيل', room:'مدرج ب٢', faculty:'cs', subject:'os'},
-  {time:'13:30', name:'شبكات الحاسب', room:'معمل الشبكات', faculty:'cs', subject:'net'},
+  {id:1, time:'08:30', courseId:'nurs_adultTh', room:'قاعة ٢٠١', faculty:'nursing'},
+  {id:2, time:'10:30', courseId:'nurs_hosp', room:'المستشفى الجامعي', faculty:'nursing'},
+  {id:3, time:'13:00', courseId:'nurs_pharm', room:'قاعة ١١٥', faculty:'nursing'},
+  {id:4, time:'09:00', courseId:'cs_cg', room:'معمل الحاسبات ٢', faculty:'cs'},
+  {id:5, time:'11:00', courseId:'cs_os', room:'مدرج ب٢', faculty:'cs'},
+  {id:6, time:'13:30', courseId:'cs_net', room:'معمل الشبكات', faculty:'cs'},
 ];
+let nextScheduleId = 7;
 
 let currentFaculty = 'nursing';
+let lang = 'ar';
 
-const ORDINALS = ['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'];
+const ORDINALS = {
+  ar: ['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'],
+  en: ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th'],
+};
 function lectureLabel(i){
-  return 'المحاضرة ' + (ORDINALS[i] || (i+1));
+  const list = ORDINALS[lang];
+  return lang==='ar' ? ('المحاضرة ' + (list[i] || (i+1))) : ('Lecture ' + (list[i] || (i+1)));
 }
+
+function L(val){
+  if(val && typeof val === 'object' && !Array.isArray(val)) return val[lang] ?? val.ar ?? val.en ?? '';
+  return val;
+}
+
+const STR = {
+  ar: {
+    brandSubtitle:'كليتا التمريض والحاسبات والمعلومات', tabDashboard:'لوحة التحكم', tabCourses:'موادّي',
+    tabAssignments:'الواجبات', tabGrades:'الدرجات', dueLabel:'واجبات مستحقة هذا الأسبوع',
+    scheduleTitle:'جدول اليوم', addBtn:'+ إضافة', coursesTitle:'موادّي هذا الفصل', coursesSuffix:'مواد',
+    lecturesTitle:'المحاضرات', courseAssignTitle:'واجبات هذه المادة', back:'→ رجوع', completedSuffix:'مكتمل',
+    lectureSuffix:'محاضرة', gradesHint:'كويزات · ميد تيرم · فاينال — تحطها انت بنفسك', assignBtnFull:'+ إضافة واجب',
+    empty_assign:'مفيش واجبات دلوقتي — دوس "إضافة واجب" لو عايز تضيف واحد', empty_courseAssign:'لا توجد واجبات مستحقة لهذه المادة حاليًا',
+    empty_grades:'مفيش مواد لعرض درجاتها', empty_schedule:'مفيش محاضرات مضافة للجدول — دوس "+ إضافة"',
+  },
+  en: {
+    brandSubtitle:'Nursing & Computer Science Faculties', tabDashboard:'Dashboard', tabCourses:'My Courses',
+    tabAssignments:'Assignments', tabGrades:'Grades', dueLabel:'Assignments due this week',
+    scheduleTitle:"Today's Schedule", addBtn:'+ Add', coursesTitle:'My Courses This Semester', coursesSuffix:'courses',
+    lecturesTitle:'Lectures', courseAssignTitle:'Course Assignments', back:'← Back', completedSuffix:'completed',
+    lectureSuffix:'lectures', gradesHint:'Quizzes · Midterm · Final — enter your own scores', assignBtnFull:'+ Add Assignment',
+    empty_assign:'No assignments yet — tap "Add Assignment" to add one', empty_courseAssign:'No assignments due for this course right now',
+    empty_grades:'No courses to show grades for', empty_schedule:'No classes added to the schedule yet — tap "+ Add"',
+  },
+};
+function S(key){ return STR[lang][key] || key; }
 
 /* ===== حفظ التعديلات: على الإنترنت (Firebase) مع نسخة احتياطية محلية ===== */
 const STORAGE_KEY = 'ufuq_platform_state_v1';
@@ -707,18 +758,18 @@ function renderCourses(){
     card.innerHTML = `
       <div class="top">
         <div>
-          <h3>${course.title}</h3>
+          <h3>${L(course.title)}</h3>
           <span class="code">${course.code}</span>
         </div>
-        <span class="tag">${th.label}</span>
+        <span class="tag">${L(th.label)}</span>
       </div>
       <div class="progress-track"><div class="progress-fill" style="width:${p}%"></div></div>
-      <div class="meta"><span>${p}% مكتمل</span><span>${course.lessons.length} محاضرة</span></div>
+      <div class="meta"><span>${p}% ${S('completedSuffix')}</span><span>${course.lessons.length} ${S('lectureSuffix')}</span></div>
     `;
     card.addEventListener('click', ()=>openCourse(course.id));
     grid.appendChild(card);
   });
-  document.getElementById('courseCount').textContent = facCourses.length + ' مواد';
+  document.getElementById('courseCount').textContent = facCourses.length + ' ' + S('coursesSuffix');
   renderGradesList(facCourses);
 }
 
@@ -727,7 +778,7 @@ const gradesData = {};
 function getCourseGrades(courseId){
   if(!gradesData[courseId]){
     gradesData[courseId] = {
-      quiz:    {score:'', max:20},
+      quizzes: [{label:'Quiz 1', score:'', max:10}],
       midterm: {score:'', max:30},
       final:   {score:'', max:50},
     };
@@ -736,11 +787,14 @@ function getCourseGrades(courseId){
 }
 
 function computeTotal(g){
-  const parts = ['quiz','midterm','final'];
   let scoreSum = 0, maxSum = 0;
-  parts.forEach(p=>{
-    const s = parseFloat(g[p].score);
-    const m = parseFloat(g[p].max);
+  (g.quizzes || []).forEach(q=>{
+    const s = parseFloat(q.score), m = parseFloat(q.max);
+    if(!isNaN(m) && m > 0) maxSum += m;
+    if(!isNaN(s)) scoreSum += s;
+  });
+  ['midterm','final'].forEach(p=>{
+    const s = parseFloat(g[p].score), m = parseFloat(g[p].max);
     if(!isNaN(m) && m > 0) maxSum += m;
     if(!isNaN(s)) scoreSum += s;
   });
@@ -748,13 +802,14 @@ function computeTotal(g){
   return {scoreSum, maxSum, pct: Math.round((scoreSum/maxSum)*100)};
 }
 
-function gradeRowHtml(courseId, part, label, obj){
+function gradeRowHtml(courseId, part, label, obj, extra=''){
   return `
     <div class="grade-row">
       <span class="grade-label">${label}</span>
-      <input type="number" class="grade-input" placeholder="الدرجة" value="${obj.score}" data-grade="${courseId}|${part}|score" inputmode="decimal">
+      <input type="number" class="grade-input" placeholder="${lang==='ar'?'الدرجة':'Score'}" value="${obj.score}" data-grade="${courseId}|${part}|score" inputmode="decimal">
       <span class="grade-slash">/</span>
-      <input type="number" class="grade-input small" placeholder="من" value="${obj.max}" data-grade="${courseId}|${part}|max" inputmode="decimal">
+      <input type="number" class="grade-input small" placeholder="${lang==='ar'?'من':'Max'}" value="${obj.max}" data-grade="${courseId}|${part}|max" inputmode="decimal">
+      ${extra}
     </div>`;
 }
 
@@ -763,7 +818,7 @@ function renderGradesList(facCourses){
   const wrap = document.getElementById('gradesList');
   if(!wrap) return;
   if(list.length === 0){
-    wrap.innerHTML = `<div class="cp-empty">مفيش مواد لعرض درجاتها</div>`;
+    wrap.innerHTML = `<div class="cp-empty">${S('empty_grades')}</div>`;
     return;
   }
 
@@ -771,27 +826,63 @@ function renderGradesList(facCourses){
     const th = THEME[course.subject];
     const g = getCourseGrades(course.id);
     const total = computeTotal(g);
+    const quizRows = g.quizzes.map((q,qi)=>gradeRowHtml(
+      course.id, `quiz-${qi}`, q.label, q,
+      `<button class="grade-del" data-del-quiz="${course.id}|${qi}" title="✕">✕</button>`
+    )).join('');
     return `
       <div class="grade-card" style="--gc:${th.c}; --gcbg:${th.bg}">
         <div class="grade-card-head">
-          <span class="grade-course-title">${course.title}</span>
+          <span class="grade-course-title">${L(course.title)}</span>
           <span class="grade-total" id="total-${course.id}">${total ? `${total.scoreSum} / ${total.maxSum} (${total.pct}%)` : '—'}</span>
         </div>
-        <div class="grade-rows">
-          ${gradeRowHtml(course.id, 'quiz', 'كويزات', g.quiz)}
-          ${gradeRowHtml(course.id, 'midterm', 'ميد تيرم', g.midterm)}
-          ${gradeRowHtml(course.id, 'final', 'فاينال', g.final)}
+        <div class="grade-rows" id="quizRows-${course.id}">${quizRows}</div>
+        <button class="add-quiz-btn" data-add-quiz="${course.id}">${lang==='ar'?'+ إضافة كويز':'+ Add Quiz'}</button>
+        <div class="grade-rows" style="margin-top:10px;">
+          ${gradeRowHtml(course.id, 'midterm', lang==='ar'?'ميد تيرم':'Midterm', g.midterm)}
+          ${gradeRowHtml(course.id, 'final', lang==='ar'?'فاينال':'Final', g.final)}
         </div>
       </div>`;
   }).join('');
 
+  function updateTotalDisplay(courseId){
+    const total = computeTotal(gradesData[courseId]);
+    const totalEl = document.getElementById(`total-${courseId}`);
+    if(totalEl) totalEl.textContent = total ? `${total.scoreSum} / ${total.maxSum} (${total.pct}%)` : '—';
+  }
+
   wrap.querySelectorAll('[data-grade]').forEach(inp=>{
     inp.addEventListener('input', ()=>{
       const [courseId, part, field] = inp.dataset.grade.split('|');
-      gradesData[courseId][part][field] = inp.value;
-      const total = computeTotal(gradesData[courseId]);
-      const totalEl = document.getElementById(`total-${courseId}`);
-      if(totalEl) totalEl.textContent = total ? `${total.scoreSum} / ${total.maxSum} (${total.pct}%)` : '—';
+      if(part.startsWith('quiz-')){
+        const qi = +part.split('-')[1];
+        gradesData[courseId].quizzes[qi][field] = inp.value;
+      }else{
+        gradesData[courseId][part][field] = inp.value;
+      }
+      updateTotalDisplay(courseId);
+      saveState();
+    });
+  });
+
+  wrap.querySelectorAll('[data-add-quiz]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const courseId = btn.dataset.addQuiz;
+      const n = gradesData[courseId].quizzes.length + 1;
+      gradesData[courseId].quizzes.push({label: (lang==='ar'?'كويز ':'Quiz ') + n, score:'', max:10});
+      renderGradesList(list);
+      saveState();
+    });
+  });
+
+  wrap.querySelectorAll('[data-del-quiz]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const [courseId, qi] = btn.dataset.delQuiz.split('|');
+      gradesData[courseId].quizzes.splice(+qi, 1);
+      if(gradesData[courseId].quizzes.length === 0){
+        gradesData[courseId].quizzes.push({label: lang==='ar'?'كويز 1':'Quiz 1', score:'', max:10});
+      }
+      renderGradesList(list);
       saveState();
     });
   });
@@ -800,10 +891,10 @@ function renderGradesList(facCourses){
 function renderGradesPage(){
   const page = document.getElementById('gradesPage');
   page.innerHTML = `
-    <button class="back-btn" id="gradesBack">→ رجوع</button>
+    <button class="back-btn" id="gradesBack">${S('back')}</button>
     <div class="section-head">
-      <h2>الدرجات — ${FACULTIES[currentFaculty].short}</h2>
-      <span>كويزات · ميد تيرم · فاينال — تحطها انت بنفسك</span>
+      <h2>${S('tabGrades')} — ${L(FACULTIES[currentFaculty].short)}</h2>
+      <span>${S('gradesHint')}</span>
     </div>
     <div id="gradesList"></div>
   `;
@@ -850,12 +941,13 @@ function renderCoursePageContent(courseId){
   const coursePage = document.getElementById('coursePage');
   coursePage.style.setProperty('--c-page', th.c);
   coursePage.style.setProperty('--c-bg', th.bg);
+  expandedLecture = null;
 
-  const ownAssignments = assignments.filter(a => a.course === course.title);
+  const ownAssignments = assignments.filter(a => a.courseId === course.id);
 
   function assignHtml(){
     if(ownAssignments.length === 0){
-      return `<div class="cp-empty">لا توجد واجبات مستحقة لهذه المادة حاليًا</div>`;
+      return `<div class="cp-empty">${S('empty_courseAssign')}</div>`;
     }
     return ownAssignments.map(a=>`
       <div class="assign">
@@ -866,19 +958,19 @@ function renderCoursePageContent(courseId){
   }
 
   coursePage.innerHTML = `
-    <button class="back-btn" id="backBtn">→ رجوع</button>
+    <button class="back-btn" id="backBtn">${S('back')}</button>
     <div class="course-hero">
-      <span class="tag">${th.label}</span>
-      <h2>${course.title}</h2>
-      <div class="sub">${course.code} · ${course.lessons.length} محاضرة · <span id="cpPct">${pct(course)}%</span> مكتمل</div>
+      <span class="tag">${L(th.label)}</span>
+      <h2>${L(course.title)}</h2>
+      <div class="sub">${course.code} · ${course.lessons.length} ${S('lectureSuffix')} · <span id="cpPct">${pct(course)}%</span> ${S('completedSuffix')}</div>
       <div class="progress-track"><div class="progress-fill" id="cpProgressFill" style="width:${pct(course)}%"></div></div>
     </div>
     <div class="cp-section">
-      <h3>المحاضرات</h3>
+      <h3>${S('lecturesTitle')}</h3>
       <div id="lectureList">${lecturesHtml(course)}</div>
     </div>
     <div class="cp-section">
-      <h3>واجبات هذه المادة</h3>
+      <h3>${S('courseAssignTitle')}</h3>
       <div class="assign-list">${assignHtml()}</div>
     </div>
   `;
@@ -891,28 +983,36 @@ function openCourse(id){
   navigate('course', {courseId: id});
 }
 
-/* ===== Lecture list (each lecture = its own PDF + audio + quiz) ===== */
+/* ===== Lecture accordion (each lecture expands in place with its own PDF + audio) ===== */
+
+let expandedLecture = null;
 
 function lecturesHtml(course){
   return course.lessons.map((l,i)=>lectureCardHtml(course,l,i)).join('');
 }
 
 function lectureCardHtml(course, l, i){
+  const open = expandedLecture === i;
   return `
-    <div class="lecture-card" data-open="${i}">
-      <input type="checkbox" class="lecture-check" data-check="${i}" ${l.done?'checked':''}>
-      <span class="lecture-title ${l.done?'done':''}">${lectureLabel(i)}: ${l.t}</span>
-      <span class="lecture-dur">${l.d}</span>
-      <span class="lecture-icons">${l.pdf?'📄':''}${l.audio?'🎙️':''}${l.quiz?'✅':''}</span>
-      <span class="lecture-arrow">‹</span>
+    <div class="lecture-card ${open?'open':''}">
+      <div class="lecture-head" data-toggle="${i}">
+        <input type="checkbox" class="lecture-check" data-check="${i}" ${l.done?'checked':''}>
+        <span class="lecture-title ${l.done?'done':''}">${lectureLabel(i)}: ${l.t}</span>
+        <span class="lecture-dur">${l.d}</span>
+        <span class="lecture-icons">${l.pdf?'📄':''}${l.audio?'🎙️':''}</span>
+        <span class="lecture-badge">${open?'−':'+'}</span>
+      </div>
+      ${open ? `<div class="lecture-body">${lectureContentHtml(course, l, i)}</div>` : ''}
     </div>`;
 }
 
 function wireLectureList(course){
-  document.querySelectorAll('[data-open]').forEach(el=>{
+  document.querySelectorAll('[data-toggle]').forEach(el=>{
     el.addEventListener('click', (e)=>{
       if(e.target.closest('.lecture-check')) return;
-      openLecture(course, +el.dataset.open);
+      const i = +el.dataset.toggle;
+      expandedLecture = (expandedLecture === i) ? null : i;
+      refreshLectureList(course);
     });
   });
   document.querySelectorAll('[data-check]').forEach(el=>{
@@ -921,101 +1021,51 @@ function wireLectureList(course){
       const i = +el.dataset.check;
       course.lessons[i].done = el.checked;
       renderCourses();
-      document.getElementById('lectureList').innerHTML = lecturesHtml(course);
-      wireLectureList(course);
+      refreshLectureList(course);
       document.getElementById('cpPct').textContent = pct(course) + '%';
       document.getElementById('cpProgressFill').style.width = pct(course) + '%';
       saveState();
     });
   });
+  if(expandedLecture !== null){
+    wireLectureContent(course, expandedLecture);
+  }
 }
 
-/* ===== Standalone lecture page ===== */
+function refreshLectureList(course){
+  document.getElementById('lectureList').innerHTML = lecturesHtml(course);
+  wireLectureList(course);
+}
 
 function lectureContentHtml(course, l, i){
   return `
     <div class="upload-row">
-      <button type="button" class="upload-btn" id="pdfUploadBtn">📄 ${l.pdf ? 'استبدال PDF' : 'رفع PDF المحاضرة'}</button>
-      <button type="button" class="upload-btn" id="audioUploadBtn">🎙️ ${l.audio ? 'استبدال التسجيل' : 'رفع تسجيل صوتي'}</button>
+      <button type="button" class="upload-btn" id="pdfUploadBtn">📄 ${l.pdf ? (lang==='ar'?'استبدال PDF':'Replace PDF') : (lang==='ar'?'رفع PDF المحاضرة':'Upload Lecture PDF')}</button>
+      <button type="button" class="upload-btn" id="audioUploadBtn">🎙️ ${l.audio ? (lang==='ar'?'استبدال التسجيل':'Replace Recording') : (lang==='ar'?'رفع تسجيل صوتي':'Upload Audio')}</button>
       <input type="file" accept="application/pdf" id="pdfInput" style="display:none">
       <input type="file" accept="audio/*" id="audioInput" style="display:none">
     </div>
     <div class="upload-status" id="uploadStatus"></div>
-    ${l.pdf ? `<div class="attach-chip">📄 ${l.pdf.name}</div>` : ''}
+    ${l.pdf ? `<a class="attach-chip" href="${l.pdf.url}" target="_blank" rel="noopener">📄 ${l.pdf.name} ↗</a>` : ''}
     ${l.audio ? `<audio controls src="${l.audio.url}"></audio>` : ''}
     <div class="quiz-area">
       <div class="quiz-hint">
-        📚 <strong>عايز كويز على المحاضرة دي؟</strong><br>
-        افتح شات مع كلود، ارفعله نفس ملف الـ PDF، واطلب منه:
-        <em>"اعملي كويز 20 اختياري + صح وخطأ + مقالي + مصطلحات على المحاضرة دي"</em> — هيطلعلك الكويز فورًا في الشات.
-      </div>
-      <div id="quizWrap">${l.quiz ? renderFullQuizHtml(l.quiz) : ''}</div>
-    </div>
-  `;
-}
-
-function renderLecturePageContent(courseId, li){
-  const course = courses.find(c=>c.id===courseId);
-  const l = course.lessons[li];
-  const th = THEME[course.subject];
-  const lecturePage = document.getElementById('lecturePage');
-  lecturePage.style.setProperty('--c-page', th.c);
-  lecturePage.style.setProperty('--c-bg', th.bg);
-
-  lecturePage.innerHTML = `
-    <button class="back-btn" id="lectureBack">→ رجوع لـ ${course.title}</button>
-    <div class="lecture-hero">
-      <input type="checkbox" class="lecture-check" id="heroCheck" ${l.done?'checked':''}>
-      <div>
-        <h2 id="heroTitle" class="${l.done?'done':''}">${lectureLabel(li)}: ${l.t}</h2>
-        <div class="sub">${course.code} · ${l.d}</div>
+        📚 <strong>${lang==='ar'?'عايز كويز على المحاضرة دي؟':'Want a quiz on this lecture?'}</strong><br>
+        ${lang==='ar' ? 'افتح شات مع كلود، ارفعله نفس ملف الـ PDF، واطلب منه:' : 'Open a chat with Claude, upload the same PDF, and ask:'}
+        <em>${lang==='ar' ? '"اعملي كويز 20 اختياري + صح وخطأ + مقالي + مصطلحات"' : '"Make a 20-question MCQ + true/false + essay + terms quiz"'}</em>
       </div>
     </div>
-    <div id="lectureContent">${lectureContentHtml(course, l, li)}</div>
   `;
-
-  lecturePage.querySelector('#lectureBack').addEventListener('click', ()=>history.back());
-  lecturePage.querySelector('#heroCheck').addEventListener('change', (e)=>{
-    l.done = e.target.checked;
-    document.getElementById('heroTitle').classList.toggle('done', l.done);
-    renderCourses();
-    saveState();
-  });
-
-  wireLectureContent(course, li);
-}
-
-function openLecture(course, li){
-  navigate('lecture', {courseId: course.id, li});
-}
-
-function refreshLectureContent(course, li){
-  document.getElementById('lectureContent').innerHTML = lectureContentHtml(course, course.lessons[li], li);
-  wireLectureContent(course, li);
 }
 
 function wireLectureContent(course, li){
-  const l = course.lessons[li];
   const pdfInput = document.getElementById('pdfInput');
   const audioInput = document.getElementById('audioInput');
+  if(!pdfInput) return;
   document.getElementById('pdfUploadBtn').addEventListener('click', ()=>pdfInput.click());
   document.getElementById('audioUploadBtn').addEventListener('click', ()=>audioInput.click());
   pdfInput.addEventListener('change', (e)=>handlePdfUpload(e, course, li));
   audioInput.addEventListener('change', (e)=>handleAudioUpload(e, course, li));
-  const objSubmit = document.querySelector('[data-obj-submit]');
-  if(objSubmit) objSubmit.addEventListener('click', ()=>gradeObjective(course, li));
-  document.querySelectorAll('[data-reveal-essay]').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      document.getElementById(`essayPoints-${el.dataset.revealEssay}`).style.display = 'block';
-      el.style.display = 'none';
-    });
-  });
-  document.querySelectorAll('[data-reveal-term]').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      document.getElementById(`termDef-${el.dataset.revealTerm}`).style.display = 'block';
-      el.style.display = 'none';
-    });
-  });
 }
 
 /* ===== PDF / audio upload (uploaded to Firebase Storage for cross-device persistence) ===== */
@@ -1026,15 +1076,15 @@ async function handlePdfUpload(e, course, li){
   const statusEl = document.getElementById('uploadStatus');
 
   if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
-    statusEl.textContent = 'الملف ده مش PDF، اختار ملف بصيغة .pdf';
+    statusEl.textContent = lang==='ar' ? 'الملف ده مش PDF، اختار ملف بصيغة .pdf' : 'This is not a PDF file. Choose a .pdf file.';
     return;
   }
   if(file.size > 25 * 1024 * 1024){
-    statusEl.textContent = 'الملف كبير أكتر من اللازم (الحد الأقصى ٢٥ ميجا).';
+    statusEl.textContent = lang==='ar' ? 'الملف كبير أكتر من اللازم (الحد الأقصى ٢٥ ميجا).' : 'File is too large (25MB max).';
     return;
   }
 
-  statusEl.textContent = 'جارٍ رفع الملف…';
+  statusEl.textContent = lang==='ar' ? 'جارٍ رفع الملف…' : 'Uploading…';
   try{
     let url;
     if(storage){
@@ -1043,13 +1093,12 @@ async function handlePdfUpload(e, course, li){
       url = URL.createObjectURL(file);
     }
     course.lessons[li].pdf = {name:file.name, url};
-    course.lessons[li].quiz = null;
-    statusEl.textContent = storage ? '' : 'تم الرفع، لكن التخزين الدائم لسه مش مفعّل — الملف هيتفقد لو قفلت الصفحة (كلّم اللي عامل المنصة عشان يفعّل Firebase Storage).';
-    refreshLectureContent(course, li);
+    statusEl.textContent = storage ? '' : (lang==='ar' ? 'تم الرفع، لكن التخزين الدائم لسه مش مفعّل — الملف هيتفقد لو قفلت الصفحة.' : 'Uploaded, but permanent storage isn\'t enabled yet — the file will be lost on reload.');
+    refreshLectureList(course);
     saveState();
   }catch(err){
     console.error('PDF upload failed:', err);
-    statusEl.textContent = 'حصل خطأ أثناء رفع الملف: ' + err.message;
+    statusEl.textContent = (lang==='ar'?'حصل خطأ أثناء رفع الملف: ':'Upload error: ') + err.message;
   }
 }
 
@@ -1057,7 +1106,7 @@ async function handleAudioUpload(e, course, li){
   const file = e.target.files[0];
   if(!file) return;
   const statusEl = document.getElementById('uploadStatus');
-  statusEl.textContent = 'جارٍ رفع التسجيل…';
+  statusEl.textContent = lang==='ar' ? 'جارٍ رفع التسجيل…' : 'Uploading…';
   try{
     let url;
     if(storage){
@@ -1066,12 +1115,12 @@ async function handleAudioUpload(e, course, li){
       url = URL.createObjectURL(file);
     }
     course.lessons[li].audio = {name:file.name, url};
-    statusEl.textContent = storage ? '' : 'تم الرفع، لكن التخزين الدائم لسه مش مفعّل — الملف هيتفقد لو قفلت الصفحة.';
-    refreshLectureContent(course, li);
+    statusEl.textContent = storage ? '' : (lang==='ar' ? 'تم الرفع، لكن التخزين الدائم لسه مش مفعّل — الملف هيتفقد لو قفلت الصفحة.' : 'Uploaded, but permanent storage isn\'t enabled yet — the file will be lost on reload.');
+    refreshLectureList(course);
     saveState();
   }catch(err){
     console.error('Audio upload failed:', err);
-    statusEl.textContent = 'حصل خطأ أثناء رفع الملف: ' + err.message;
+    statusEl.textContent = (lang==='ar'?'حصل خطأ أثناء رفع الملف: ':'Upload error: ') + err.message;
   }
 }
 
