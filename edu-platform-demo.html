@@ -992,7 +992,7 @@ async function saveState(){
       await setDoc(stateDocRef(), state);
     }catch(e){
       console.error('Firebase save failed:', e);
-      showNotification('⚠️', lang==='ar' ? 'فشل الحفظ على الإنترنت — هيتحفظ على الجهاز ده بس. السبب غالبًا: صلاحيات Firestore' : 'Cloud save failed — saved locally only. Likely cause: Firestore rules', 5000);
+      showNotification('⚠️ Firebase', (e.code || '') + ' — ' + (e.message || String(e)), 8000);
     }
   }
 }
@@ -1005,7 +1005,7 @@ async function loadState(){
       if(snap.exists()) state = snap.data();
     }catch(e){
       console.error('Firebase load failed:', e);
-      showNotification('⚠️', lang==='ar' ? 'فشل تحميل البيانات من الإنترنت' : 'Failed to load cloud data', 5000);
+      showNotification('⚠️ Firebase', (e.code || '') + ' — ' + (e.message || String(e)), 8000);
     }
   }
   if(!state){
@@ -1983,4 +1983,4 @@ async function initApp(){
 initApp();
 </script>
 </body>
-  </html>
+    </html>
