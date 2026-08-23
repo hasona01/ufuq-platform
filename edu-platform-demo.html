@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>أفق — منصة الطالب الجامعي</title>
 
-<!-- PWA: يخلي المنصة قابلة للإضافة للشاشة الرئيسية -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1F6F5C">
 <meta name="mobile-web-app-capable" content="yes">
@@ -26,18 +25,11 @@
     --line: #DED4BE;
     --gold: #1F6F5C;
     --gold-soft: #DCEDE7;
-    --cs: #3B5BA5;
-    --cs-bg: #E5EBF6;
-    --math: #C1542D;
-    --math-bg: #F6E6DB;
-    --lit: #8B4F86;
-    --lit-bg: #F3E4F1;
-    --phys: #2E8B57;
-    --phys-bg: #E1F1E7;
     --radius: 14px;
   }
   *{box-sizing:border-box;}
   body{margin:0; background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans Arabic', sans-serif; -webkit-font-smoothing:antialiased;}
+  body.ltr{direction:ltr;}
   h1,h2,h3,.display{font-family:'Amiri', serif;}
   .mono{font-family:'IBM Plex Mono', monospace; direction:ltr; display:inline-block;}
   button{font-family:inherit; cursor:pointer;}
@@ -57,10 +49,17 @@
   }
   .brand-text h1{margin:0; font-size:19px; font-weight:700;}
   .brand-text p{margin:0; font-size:11px; color:var(--ink-soft); letter-spacing:.5px;}
+  .header-right{display:flex; align-items:center; gap:12px;}
+  .lang-switch{
+    background:var(--gold-soft); border:1.5px solid var(--gold); border-radius:999px;
+    padding:7px 14px; font-size:13px; font-weight:700; color:var(--gold);
+    transition:.2s;
+  }
+  .lang-switch:hover{background:var(--gold); color:#fff;}
   .avatar{
     width:36px; height:36px; border-radius:50%; background:var(--gold-soft);
     color:var(--gold); display:flex; align-items:center; justify-content:center;
-    font-weight:600; border:1px solid var(--gold);
+    font-weight:600; border:1px solid var(--gold); font-size:13px;
   }
 
   /* ===== Layout ===== */
@@ -75,13 +74,16 @@
     background:transparent; color:var(--ink-soft); font-size:14px; font-weight:500;
     text-align:right; transition:.15s;
   }
+  body.ltr .tab{border-radius:999px 0 0 999px; border-left:1px solid transparent; border-right:none;}
   .tab .dot{width:8px; height:8px; border-radius:50%; background:var(--line); flex-shrink:0;}
   .tab.active{background:var(--paper); color:var(--ink); font-weight:700; border-color:var(--line); box-shadow:2px 0 0 var(--gold) inset;}
+  body.ltr .tab.active{box-shadow:-2px 0 0 var(--gold) inset;}
   .tab.active .dot{background:var(--gold);}
   .tab:hover{background:var(--paper); color:var(--ink);}
   @media (max-width:800px){
     nav.binder{flex-direction:row; overflow-x:auto; padding-bottom:4px;}
     .tab{white-space:nowrap; border-radius:999px; border-left:1px solid transparent;}
+    body.ltr .tab{border-radius:999px; border-right:1px solid transparent;}
   }
 
   main{min-width:0;}
@@ -95,12 +97,17 @@
   }
   .stat-card .label{font-size:12px; color:var(--ink-soft); margin-bottom:6px;}
   .stat-card .value{font-size:26px; font-weight:700; font-family:'IBM Plex Mono',monospace; direction:ltr; text-align:right;}
+  body.ltr .stat-card .value{text-align:left;}
   .stat-card .value small{font-size:14px; font-weight:400; color:var(--ink-soft);}
 
   section{margin-bottom:30px;}
-  .section-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px;}
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;}
   .section-head h2{font-size:20px; margin:0;}
   .section-head span{font-size:12px; color:var(--ink-soft);}
+  .section-head .add-btn{
+    background:var(--gold); color:#fff; border:none; border-radius:999px; padding:7px 16px;
+    font-size:12.5px; font-weight:600;
+  }
 
   /* Faculty switcher */
   .faculty-switch{ display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
@@ -112,9 +119,12 @@
 
   /* Timeline (today's schedule) */
   .timeline{position:relative; padding-right:20px;}
+  body.ltr .timeline{padding-right:0; padding-left:20px;}
   .timeline::before{content:""; position:absolute; right:6px; top:6px; bottom:6px; width:2px; background:var(--line);}
+  body.ltr .timeline::before{right:auto; left:6px;}
   .t-item{position:relative; display:flex; gap:14px; align-items:flex-start; padding-bottom:20px;}
   .t-item::before{content:""; position:absolute; right:-1px; top:4px; width:10px; height:10px; border-radius:50%; background:var(--gold); border:2px solid var(--bg);}
+  body.ltr .t-item::before{right:auto; left:-1px;}
   .t-time{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); width:56px; flex-shrink:0; direction:ltr; text-align:left;}
   .t-card{
     flex:1; background:var(--paper); border:1px solid var(--line); border-radius:10px;
@@ -122,6 +132,10 @@
   }
   .t-card .name{font-weight:600; font-size:14px;}
   .t-card .room{font-size:12px; color:var(--ink-soft);}
+  .t-card .t-del{
+    background:transparent; border:none; color:var(--ink-soft); font-size:14px; padding:4px 6px; border-radius:6px;
+  }
+  .t-card .t-del:hover{ color:#B0522D; background:#F6E6DB; }
   .badge{font-size:11px; padding:3px 9px; border-radius:999px; font-weight:600; white-space:nowrap;}
 
   /* Course cards */
@@ -131,6 +145,7 @@
     padding:16px; border-right:5px solid var(--c); cursor:pointer; transition:.15s;
     display:flex; flex-direction:column; gap:10px;
   }
+  body.ltr .course-card{border-right:1px solid var(--line); border-left:5px solid var(--c);}
   .course-card:hover{transform:translateY(-2px); box-shadow:0 6px 18px rgba(30,42,56,.08);}
   .course-card .top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
   .course-card h3{margin:0; font-size:16px; font-weight:700; font-family:'IBM Plex Sans Arabic';}
@@ -152,6 +167,7 @@
     background:var(--c-bg, var(--gold-soft)); border-radius:var(--radius); padding:22px 22px 20px;
     border-right:5px solid var(--c-page, var(--gold)); margin-bottom:26px;
   }
+  body.ltr .course-hero{border-right:1px solid transparent; border-left:5px solid var(--c-page, var(--gold));}
   .course-hero .tag{ background:var(--paper); color:var(--c-page, var(--gold)); }
   .course-hero h2{ margin:8px 0 2px; font-size:26px; }
   .course-hero .sub{ font-size:13px; color:var(--ink-soft); margin-bottom:14px; }
@@ -159,94 +175,43 @@
   .course-hero .progress-fill{ background:var(--c-page, var(--gold)); }
   .cp-section{ margin-bottom:26px; }
   .cp-section h3{ font-size:16px; margin:0 0 12px; }
-  .lesson{
-    display:flex; align-items:center; gap:12px; background:var(--paper); border:1px solid var(--line);
-    border-radius:10px; padding:12px 14px; margin-bottom:8px;
-  }
-  .lesson input{width:18px; height:18px; accent-color:var(--c-page, var(--gold)); flex-shrink:0;}
-  .lesson .l-name{flex:1; font-size:14px; font-weight:500;}
-  .lesson.done .l-name{text-decoration:line-through; color:var(--ink-soft);}
-  .lesson .l-dur{font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; direction:ltr;}
   .cp-empty{ font-size:13px; color:var(--ink-soft); background:var(--paper); border:1px dashed var(--line); border-radius:10px; padding:16px; text-align:center; }
 
-  /* Lecture accordion (expands in place) */
-  .lecture-card{ background:var(--paper); border:1px solid var(--line); border-radius:12px; margin-bottom:10px; overflow:hidden; }
+  /* Lecture accordion */
+  .lecture-card{ 
+    background:var(--paper); border:1px solid var(--line); border-radius:12px; margin-bottom:10px; overflow:hidden;
+    transition:.2s;
+  }
   .lecture-card.open{ border-color:var(--c-page, var(--gold)); }
   .lecture-head{ display:flex; align-items:center; gap:10px; padding:13px 14px; cursor:pointer; }
-  .lecture-check{ width:18px; height:18px; accent-color:var(--c-page, var(--gold)); flex-shrink:0; }
+  .lecture-check{ width:18px; height:18px; accent-color:var(--c-page, var(--gold)); flex-shrink:0; cursor:pointer; }
   .lecture-title{ flex:1; font-size:14px; font-weight:600; }
   .lecture-title.done{ text-decoration:line-through; color:var(--ink-soft); }
   .lecture-dur{ font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; direction:ltr; }
   .lecture-icons{ font-size:17px; display:flex; gap:3px; }
   .lecture-badge{
-    width:36px; height:36px; border-radius:50%; background:var(--c-bg, var(--gold-soft));
+    width:42px; height:42px; border-radius:50%; background:var(--c-bg, var(--gold-soft));
     color:var(--c-page, var(--gold)); display:flex; align-items:center; justify-content:center;
-    font-size:19px; font-weight:700; flex-shrink:0;
+    font-size:24px; font-weight:700; flex-shrink:0; transition:.2s;
   }
-  .lecture-body{ padding:0 14px 16px; border-top:1px solid var(--line); }
+  .lecture-body{ padding:14px 14px 16px; border-top:1px solid var(--line); animation:slideDown .3s ease; }
+  @keyframes slideDown{ from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);} }
+
   .attach-chip{
     display:inline-flex; align-items:center; gap:6px; font-size:12px; background:var(--c-bg, var(--gold-soft));
-    color:var(--c-page, var(--gold)); padding:6px 12px; border-radius:999px; margin-bottom:8px;
-    text-decoration:none; cursor:pointer;
+    color:var(--c-page, var(--gold)); padding:6px 12px; border-radius:999px; margin:0 4px 8px 0;
+    text-decoration:none; cursor:pointer; border:1px solid transparent;
   }
-  .attach-chip:hover{ text-decoration:underline; }
-  .upload-status{ font-size:12px; color:var(--ink-soft); margin:2px 0 8px; }
+  .attach-chip:hover{ border-color:var(--c-page, var(--gold)); }
 
   /* Upload */
-  .upload-row{ display:flex; gap:10px; flex-wrap:wrap; margin:12px 0 8px; }
+  .upload-row{ display:flex; gap:10px; flex-wrap:wrap; margin:0 0 12px; }
   .upload-btn{
     display:inline-flex; align-items:center; gap:8px; background:var(--paper); border:1.5px dashed var(--c-page, var(--gold));
     color:var(--c-page, var(--gold)); border-radius:10px; padding:9px 14px; font-size:12.5px; font-weight:600;
   }
   .upload-btn:hover{ background:var(--c-bg, var(--gold-soft)); }
-
-  /* Quiz */
-  .quiz-area{ margin-top:6px; }
-  .quiz-btn{
-    background:var(--c-page, var(--gold)); color:#fff; border:none; border-radius:8px; padding:9px 14px;
-    font-size:12.5px; font-weight:600;
-  }
-  .quiz-btn:disabled{ opacity:.45; }
-  .quiz-status{ font-size:12px; color:var(--ink-soft); margin-top:8px; }
-  .quiz-hint{
-    background:var(--c-bg, var(--gold-soft)); border:1px solid var(--c-page, var(--gold));
-    border-radius:10px; padding:14px 16px; font-size:13px; line-height:1.8; color:var(--ink);
-  }
-  .quiz-hint em{ color:var(--c-page, var(--gold)); font-style:normal; font-weight:600; }
-  .quiz-block{ margin-top:14px; border-top:1px solid var(--line); padding-top:14px; }
-  .quiz-h{ font-size:13px; color:var(--c-page, var(--gold)); margin:18px 0 10px; }
-  .quiz-h:first-child{ margin-top:0; }
-  .quiz-q{ margin-bottom:12px; }
-  .quiz-q .q-text{ font-size:13.5px; font-weight:600; margin-bottom:7px; }
-  .quiz-q .q-opt{
-    display:block; background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:9px 12px;
-    font-size:13px; margin-bottom:6px; cursor:pointer;
-  }
-  .quiz-q .q-opt input{ margin-left:8px; accent-color:var(--c-page, var(--gold)); }
-  .quiz-q .q-opt.correct{ border-color:#2E8B57; background:#E1F1E7; }
-  .quiz-q .q-opt.wrong{ border-color:#C1542D; background:#F6E6DB; }
-  .quiz-submit{
-    background:var(--c-page, var(--gold)); color:#fff; border:none; border-radius:999px; padding:10px 22px;
-    font-size:13px; font-weight:700; margin-top:4px;
-  }
-  .quiz-score{ font-size:15px; font-weight:700; margin-top:12px; }
-
-  .essay-box{
-    width:100%; border:1px solid var(--line); border-radius:8px; padding:10px 12px; font-size:13px;
-    font-family:inherit; resize:vertical; background:var(--bg); margin-bottom:8px;
-  }
-  .reveal-btn{
-    background:transparent; border:1px solid var(--c-page, var(--gold)); color:var(--c-page, var(--gold));
-    border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600;
-  }
-  .reveal-box{
-    margin-top:10px; background:var(--c-bg, var(--gold-soft)); border-radius:8px; padding:10px 14px;
-    font-size:13px; line-height:1.7; list-style-position:inside;
-  }
-
-  .terms-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
-  .term-card{ background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:12px 14px; }
-  .term-name{ font-weight:700; font-size:14px; margin-bottom:8px; }
+  .upload-status{ font-size:11.5px; color:var(--ink-soft); margin:0 0 10px; line-height:1.5; }
 
   /* Assignments */
   .assign-list{display:flex; flex-direction:column; gap:8px;}
@@ -269,23 +234,25 @@
     background:var(--gold); color:#fff; border:none; border-radius:999px; padding:7px 16px;
     font-size:12.5px; font-weight:600;
   }
-  .assign-form{
+  .assign-form, .schedule-form{
     background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:16px;
     margin-bottom:14px; display:flex; flex-direction:column; gap:10px;
   }
-  .assign-form input, .assign-form select{
+  .assign-form input, .assign-form select, .schedule-form input, .schedule-form select{
     border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:13px;
     font-family:inherit; background:var(--bg); color:var(--ink); width:100%;
   }
-  .assign-form label{ font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; }
-  .assign-form .form-actions{ display:flex; gap:10px; margin-top:4px; }
-  .assign-form .btn-save{ background:var(--gold); color:#fff; border:none; border-radius:999px; padding:9px 18px; font-size:13px; font-weight:700; }
-  .assign-form .btn-cancel{ background:transparent; border:1px solid var(--line); color:var(--ink-soft); border-radius:999px; padding:9px 18px; font-size:13px; }
+  .assign-form label, .schedule-form label{ font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; }
+  .assign-form .form-actions, .schedule-form .form-actions{ display:flex; gap:10px; margin-top:4px; }
+  .assign-form .btn-save, .schedule-form .btn-save{ background:var(--gold); color:#fff; border:none; border-radius:999px; padding:9px 18px; font-size:13px; font-weight:700; }
+  .assign-form .btn-cancel, .schedule-form .btn-cancel{ background:transparent; border:1px solid var(--line); color:var(--ink-soft); border-radius:999px; padding:9px 18px; font-size:13px; }
 
+  /* Grades */
   .grade-card{
     background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:14px 16px;
     margin-bottom:12px; border-right:4px solid var(--gc, var(--gold));
   }
+  body.ltr .grade-card{border-right:1px solid var(--line); border-left:4px solid var(--gc, var(--gold));}
   .grade-card-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
   .grade-course-title{ font-size:14px; font-weight:700; }
   .grade-total{ font-size:13px; font-weight:700; font-family:'IBM Plex Mono',monospace; direction:ltr; color:var(--gc, var(--gold)); }
@@ -314,21 +281,25 @@
 
 <header>
   <div class="brand">
-    <div class="seal">أ</div>
+    <div class="seal" id="sealLetter">أ</div>
     <div class="brand-text">
-      <h1>أُفـق</h1>
-      <p>كليتا التمريض والحاسبات والمعلومات</p>
+      <h1 id="brandTitle">أُفـق</h1>
+      <p id="brandSubtitle">منصة الطالب الجامعي</p>
     </div>
   </div>
-  <div class="avatar">س ع</div>
+  <div class="header-right">
+    <button class="lang-switch" id="langToggle">EN</button>
+    <div class="avatar" id="avatarInitials">د ح</div>
+  </div>
 </header>
 
 <div class="app">
   <nav class="binder">
-    <button class="tab active" data-tab="dashboard"><span class="dot"></span>لوحة التحكم</button>
-    <button class="tab" data-tab="coursesSection"><span class="dot"></span>موادّي</button>
-    <button class="tab" data-tab="assignmentsSection"><span class="dot"></span>الواجبات</button>
-    <button class="tab" data-tab="gradesSection"><span class="dot"></span>الدرجات</button>
+    <button class="tab active" data-tab="dashboard"><span class="dot"></span><span class="tab-label">لوحة التحكم</span></button>
+    <button class="tab" data-tab="coursesSection"><span class="dot"></span><span class="tab-label">موادّي</span></button>
+    <button class="tab" data-tab="scheduleSection"><span class="dot"></span><span class="tab-label">جدول المذاكرة</span></button>
+    <button class="tab" data-tab="assignmentsSection"><span class="dot"></span><span class="tab-label">الواجبات</span></button>
+    <button class="tab" data-tab="gradesSection"><span class="dot"></span><span class="tab-label">الدرجات</span></button>
   </nav>
 
   <main>
@@ -337,45 +308,32 @@
 
     <div class="stats">
       <div class="stat-card">
-        <div class="label">واجبات مستحقة هذا الأسبوع</div>
+        <div class="label" id="statLabel">واجبات مستحقة هذا الأسبوع</div>
         <div class="value" id="dueStat">—</div>
       </div>
     </div>
 
-    <section id="scheduleSection">
-      <div class="section-head">
-        <h2>جدول اليوم — الأربعاء</h2>
-        <span>19 أغسطس</span>
-      </div>
-      <div class="timeline" id="timelineWrap"></div>
-    </section>
-
     <section id="coursesSection">
       <div class="section-head">
-        <h2>موادّي هذا الفصل</h2>
-        <span id="courseCount">4 مواد</span>
+        <h2 id="coursesTitle">موادّي هذا الفصل</h2>
+        <span id="courseCount">0 مواد</span>
       </div>
       <div class="courses" id="courseGrid"></div>
     </section>
    </div>
 
    <div id="coursePage" style="display:none;"></div>
-   <div id="lecturePage" style="display:none;"></div>
+   <div id="schedulePageView" style="display:none;"></div>
    <div id="assignmentsPage" style="display:none;"></div>
    <div id="gradesPage" style="display:none;"></div>
   </main>
 </div>
 
-<footer>نموذج تجريبي — تفاعلي بالكامل، بدون تسجيل دخول حقيقي</footer>
+<footer id="footerText">منصة أُفق — نموذج تجريبي تفاعلي</footer>
 
 <script type="module">
-// ============================================================
-// Firebase — لحفظ البيانات على الإنترنت عشان تتزامن بين أي جهاز
-// ⚙️ حط بيانات مشروعك من Firebase Console بدل القيم دي (شوف التعليمات)
-// ============================================================
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "REPLACE_ME",
@@ -387,40 +345,29 @@ const firebaseConfig = {
 };
 
 let db = null;
-let storage = null;
 if(firebaseConfig.apiKey !== "REPLACE_ME"){
   try{
     const app = initializeApp(firebaseConfig);
     db = getFirestore(app);
-    storage = getStorage(app);
-  }catch(e){ console.error('تعذّر تفعيل Firebase:', e); }
+  }catch(e){ console.error('Firebase init error:', e); }
 }
 const stateDocRef = () => doc(db, 'ufuq', 'state');
 
-async function uploadFileToStorage(file, path){
-  if(!storage) return null;
-  const fileRef = ref(storage, path);
-  await uploadBytes(fileRef, file);
-  return await getDownloadURL(fileRef);
-}
-
 const FACULTIES = {
-  nursing: {label:{ar:'🩺 كلية التمريض', en:'🩺 Nursing'}, short:{ar:'التمريض', en:'Nursing'}},
-  cs: {label:{ar:'💻 كلية الحاسبات والمعلومات', en:'💻 Computer Science'}, short:{ar:'الحاسبات', en:'Computer Science'}},
+  nursing: {label:{ar:'التمريض', en:'Nursing'}, short:{ar:'تمريض', en:'Nursing'}},
+  cs: {label:{ar:'الحاسبات والمعلومات', en:'Computer Science'}, short:{ar:'حاسبات', en:'CS'}},
 };
 
 const THEME = {
-  // ===== كلية الحاسبات والمعلومات =====
   cg:    {c:'#1B7A93', bg:'#DCF0F4', label:{ar:'الرسم بالحاسب', en:'Computer Graphics'}},
   net:   {c:'#6A4FA0', bg:'#ECE5F5', label:{ar:'شبكات الحاسب', en:'Computer Networks'}},
   field: {c:'#557A46', bg:'#E4EEDF', label:{ar:'التدريب الميداني', en:'Field Training'}},
   os:    {c:'#A67C27', bg:'#F3EAD3', label:{ar:'نظم التشغيل', en:'Operating Systems'}},
   se:    {c:'#C1542D', bg:'#F6E6DB', label:{ar:'هندسة البرمجيات', en:'Software Engineering'}},
   vp:    {c:'#A64C82', bg:'#F5E1EC', label:{ar:'البرمجة المرئية', en:'Visual Programming'}},
-  // ===== كلية التمريض =====
   hosp:    {c:'#2F4858', bg:'#E1E6EA', label:{ar:'المستشفى', en:'Hospital'}},
-  adultTh: {c:'#B23A48', bg:'#F7E3E5', label:{ar:'تمريض البالغين (نظري)', en:'Adult Theory'}},
-  adultCl: {c:'#C1542D', bg:'#F6E6DB', label:{ar:'تمريض البالغين (عملي)', en:'Adult Clinical'}},
+  adultTh: {c:'#B23A48', bg:'#F7E3E5', label:{ar:'تمريض البالغين (نظري)', en:'Adult Nursing (Theory)'}},
+  adultCl: {c:'#C1542D', bg:'#F6E6DB', label:{ar:'تمريض البالغين (عملي)', en:'Adult Nursing (Clinical)'}},
   pharm:   {c:'#8B5E34', bg:'#F1E6D8', label:{ar:'علم الأدوية', en:'Pharmacology'}},
   micro:   {c:'#3F7D5C', bg:'#E2F0E9', label:{ar:'الميكروبيولوجي', en:'Microbiology'}},
   nutr:    {c:'#4F7A3D', bg:'#E5EFDF', label:{ar:'التغذية', en:'Nutrition'}},
@@ -430,160 +377,113 @@ const THEME = {
 };
 
 const courses = [
-  // ===== كلية التمريض (9 مواد) =====
-  {
-    id:'nurs_hosp', faculty:'nursing', subject:'hosp', code:'NURS 300', title:{ar:'المستشفى', en:'Hospital'}, materials:[],
-    lessons:[
-      {t:'التوجيه العام داخل المستشفى', d:'20 د', done:true},
-      {t:'إجراءات السلامة والتحكم في العدوى', d:'22 د', done:false},
-      {t:'التعامل مع فريق العمل الطبي', d:'18 د', done:false},
+  {id:'nurs_hosp', faculty:'nursing', subject:'hosp', code:'NURS 300', title:{ar:'المستشفى', en:'Hospital'}, lessons:[
+      {t:{ar:'التوجيه العام داخل المستشفى', en:'General Hospital Orientation'}, d:'20 د', done:true},
+      {t:{ar:'إجراءات السلامة والتحكم في العدوى', en:'Safety & Infection Control'}, d:'22 د', done:false},
+      {t:{ar:'التعامل مع فريق العمل الطبي', en:'Working with Medical Team'}, d:'18 د', done:false},
     ]
   },
-  {
-    id:'nurs_adultTh', faculty:'nursing', subject:'adultTh', code:'NURS 305', title:{ar:'تمريض البالغين - نظري', en:'Adult Theory'}, materials:[],
-    lessons:[
-      {t:'تقييم المريض البالغ', d:'22 د', done:true},
-      {t:'الأمراض المزمنة الشائعة', d:'26 د', done:false},
-      {t:'التخطيط لرعاية المريض البالغ', d:'20 د', done:false},
+  {id:'nurs_adultTh', faculty:'nursing', subject:'adultTh', code:'NURS 305', title:{ar:'تمريض البالغين - نظري', en:'Adult Nursing - Theory'}, lessons:[
+      {t:{ar:'تقييم المريض البالغ', en:'Adult Patient Assessment'}, d:'22 د', done:true},
+      {t:{ar:'الأمراض المزمنة الشائعة', en:'Common Chronic Diseases'}, d:'26 د', done:false},
+      {t:{ar:'التخطيط لرعاية المريض البالغ', en:'Care Planning for Adults'}, d:'20 د', done:false},
     ]
   },
-  {
-    id:'nurs_adultCl', faculty:'nursing', subject:'adultCl', code:'NURS 306', title:{ar:'تمريض البالغين - عملي', en:'Adult Clinical'}, materials:[],
-    lessons:[
-      {t:'مهارات سريرية أساسية', d:'25 د', done:false},
-      {t:'تطبيق خطة الرعاية عمليًا', d:'24 د', done:false},
-      {t:'التوثيق السريري', d:'18 د', done:false},
+  {id:'nurs_adultCl', faculty:'nursing', subject:'adultCl', code:'NURS 306', title:{ar:'تمريض البالغين - عملي', en:'Adult Nursing - Clinical'}, lessons:[
+      {t:{ar:'مهارات سريرية أساسية', en:'Basic Clinical Skills'}, d:'25 د', done:false},
+      {t:{ar:'تطبيق خطة الرعاية عمليًا', en:'Applying Care Plan'}, d:'24 د', done:false},
+      {t:{ar:'التوثيق السريري', en:'Clinical Documentation'}, d:'18 د', done:false},
     ]
   },
-  {
-    id:'nurs_pharm', faculty:'nursing', subject:'pharm', code:'NURS 220', title:{ar:'علم الأدوية', en:'Pharmacology'}, materials:[],
-    lessons:[
-      {t:'مبادئ علم الأدوية', d:'20 د', done:true},
-      {t:'حساب الجرعات الدوائية', d:'25 د', done:true},
-      {t:'أدوية القلب والأوعية الدموية', d:'23 د', done:false},
-      {t:'المضادات الحيوية', d:'21 د', done:false},
+  {id:'nurs_pharm', faculty:'nursing', subject:'pharm', code:'NURS 220', title:{ar:'علم الأدوية', en:'Pharmacology'}, lessons:[
+      {t:{ar:'مبادئ علم الأدوية', en:'Principles of Pharmacology'}, d:'20 د', done:true},
+      {t:{ar:'حساب الجرعات الدوائية', en:'Drug Dosage Calculation'}, d:'25 د', done:true},
+      {t:{ar:'أدوية القلب والأوعية الدموية', en:'Cardiovascular Drugs'}, d:'23 د', done:false},
+      {t:{ar:'المضادات الحيوية', en:'Antibiotics'}, d:'21 د', done:false},
     ]
   },
-  {
-    id:'nurs_micro', faculty:'nursing', subject:'micro', code:'NURS 215', title:{ar:'الميكروبيولوجي', en:'Microbiology'}, materials:[],
-    lessons:[
-      {t:'مقدمة في علم الميكروبات', d:'20 د', done:true},
-      {t:'أنواع البكتيريا وتصنيفها', d:'24 د', done:false},
-      {t:'طرق الوقاية من العدوى الميكروبية', d:'19 د', done:false},
+  {id:'nurs_micro', faculty:'nursing', subject:'micro', code:'NURS 215', title:{ar:'الميكروبيولوجي', en:'Microbiology'}, lessons:[
+      {t:{ar:'مقدمة في علم الميكروبات', en:'Introduction to Microbiology'}, d:'20 د', done:true},
+      {t:{ar:'أنواع البكتيريا وتصنيفها', en:'Bacteria Types & Classification'}, d:'24 د', done:false},
+      {t:{ar:'طرق الوقاية من العدوى الميكروبية', en:'Infection Prevention Methods'}, d:'19 د', done:false},
     ]
   },
-  {
-    id:'nurs_nutr', faculty:'nursing', subject:'nutr', code:'NURS 230', title:{ar:'التغذية', en:'Nutrition'}, materials:[],
-    lessons:[
-      {t:'أساسيات التغذية السليمة', d:'18 د', done:true},
-      {t:'التغذية العلاجية لمرضى السكر', d:'22 د', done:false},
-      {t:'تقييم الحالة الغذائية للمريض', d:'19 د', done:false},
+  {id:'nurs_nutr', faculty:'nursing', subject:'nutr', code:'NURS 230', title:{ar:'التغذية', en:'Nutrition'}, lessons:[
+      {t:{ar:'أساسيات التغذية السليمة', en:'Fundamentals of Nutrition'}, d:'18 د', done:true},
+      {t:{ar:'التغذية العلاجية لمرضى السكر', en:'Therapeutic Nutrition for Diabetics'}, d:'22 د', done:false},
+      {t:{ar:'تقييم الحالة الغذائية للمريض', en:'Nutritional Assessment'}, d:'19 د', done:false},
     ]
   },
-  {
-    id:'nurs_intmed', faculty:'nursing', subject:'intmed', code:'NURS 235', title:{ar:'الباطنة', en:'Internal Medicine'}, materials:[],
-    lessons:[
-      {t:'أمراض الجهاز الهضمي', d:'25 د', done:false},
-      {t:'أمراض الجهاز البولي', d:'21 د', done:false},
-      {t:'التمريض في العيادات الخارجية', d:'17 د', done:false},
+  {id:'nurs_intmed', faculty:'nursing', subject:'intmed', code:'NURS 235', title:{ar:'الباطنة', en:'Internal Medicine'}, lessons:[
+      {t:{ar:'أمراض الجهاز الهضمي', en:'Gastrointestinal Diseases'}, d:'25 د', done:false},
+      {t:{ar:'أمراض الجهاز البولي', en:'Urinary System Diseases'}, d:'21 د', done:false},
+      {t:{ar:'التمريض في العيادات الخارجية', en:'Outpatient Nursing'}, d:'17 د', done:false},
     ]
   },
-  {
-    id:'nurs_comm', faculty:'nursing', subject:'comm', code:'NURS 240', title:{ar:'التواصل', en:'Communication'}, materials:[],
-    lessons:[
-      {t:'مهارات التواصل العلاجي', d:'20 د', done:true},
-      {t:'التواصل مع المريض وأسرته', d:'22 د', done:false},
-      {t:'التعامل مع المواقف الصعبة', d:'18 د', done:false},
+  {id:'nurs_comm', faculty:'nursing', subject:'comm', code:'NURS 240', title:{ar:'التواصل', en:'Communication'}, lessons:[
+      {t:{ar:'مهارات التواصل العلاجي', en:'Therapeutic Communication Skills'}, d:'20 د', done:true},
+      {t:{ar:'التواصل مع المريض وأسرته', en:'Communicating with Patient & Family'}, d:'22 د', done:false},
+      {t:{ar:'التعامل مع المواقف الصعبة', en:'Handling Difficult Situations'}, d:'18 د', done:false},
     ]
   },
-  {
-    id:'nurs_eng2', faculty:'nursing', subject:'eng2', code:'ENG 202', title:{ar:'اللغة الإنجليزية 2', en:'English 2'}, materials:[],
-    lessons:[
-      {t:'قواعد اللغة الأساسية', d:'18 د', done:true},
-      {t:'المصطلحات الطبية بالإنجليزي', d:'22 د', done:false},
-      {t:'مهارات الكتابة والقراءة', d:'20 د', done:false},
+  {id:'nurs_eng2', faculty:'nursing', subject:'eng2', code:'ENG 202', title:{ar:'اللغة الإنجليزية 2', en:'English 2'}, lessons:[
+      {t:{ar:'قواعد اللغة الأساسية', en:'Basic Grammar'}, d:'18 د', done:true},
+      {t:{ar:'المصطلحات الطبية بالإنجليزي', en:'Medical Terminology in English'}, d:'22 د', done:false},
+      {t:{ar:'مهارات الكتابة والقراءة', en:'Writing & Reading Skills'}, d:'20 د', done:false},
     ]
   },
-
-  // ===== كلية الحاسبات والمعلومات (6 مواد) =====
-  {
-    id:'cs_cg', faculty:'cs', subject:'cg', code:'CS 240', title:{ar:'الرسم بالحاسب', en:'Computer Graphics'}, materials:[],
-    lessons:[
-      {t:'مقدمة عن الرسم بالحاسب', d:'20 د', done:true},
-      {t:'خوارزميات رسم الخطوط والدوائر', d:'24 د', done:false},
-      {t:'التحويلات الهندسية ثنائية الأبعاد', d:'22 د', done:false},
-      {t:'نماذج الألوان والإضاءة', d:'19 د', done:false},
-      {t:'تمثيل الأجسام ثلاثية الأبعاد', d:'26 د', done:false},
+  {id:'cs_cg', faculty:'cs', subject:'cg', code:'CS 240', title:{ar:'الرسم بالحاسب', en:'Computer Graphics'}, lessons:[
+      {t:{ar:'مقدمة عن الرسم بالحاسب', en:'Introduction to Computer Graphics'}, d:'20 د', done:true},
+      {t:{ar:'خوارزميات رسم الخطوط والدوائر', en:'Line & Circle Drawing Algorithms'}, d:'24 د', done:false},
+      {t:{ar:'التحويلات الهندسية ثنائية الأبعاد', en:'2D Geometric Transformations'}, d:'22 د', done:false},
+      {t:{ar:'نماذج الألوان والإضاءة', en:'Color & Lighting Models'}, d:'19 د', done:false},
+      {t:{ar:'تمثيل الأجسام ثلاثية الأبعاد', en:'3D Object Representation'}, d:'26 د', done:false},
     ]
   },
-  {
-    id:'cs_net', faculty:'cs', subject:'net', code:'CS 250', title:{ar:'شبكات الحاسب', en:'Computer Networks'}, materials:[],
-    lessons:[
-      {t:'نموذج OSI', d:'24 د', done:true},
-      {t:'بروتوكولات TCP/IP', d:'23 د', done:false},
-      {t:'عنونة IP والتوجيه', d:'25 د', done:false},
-      {t:'أساسيات أمن الشبكات', d:'20 د', done:false},
+  {id:'cs_net', faculty:'cs', subject:'net', code:'CS 250', title:{ar:'شبكات الحاسب', en:'Computer Networks'}, lessons:[
+      {t:{ar:'نموذج OSI', en:'OSI Model'}, d:'24 د', done:true},
+      {t:{ar:'بروتوكولات TCP/IP', en:'TCP/IP Protocols'}, d:'23 د', done:false},
+      {t:{ar:'عنونة IP والتوجيه', en:'IP Addressing & Routing'}, d:'25 د', done:false},
+      {t:{ar:'أساسيات أمن الشبكات', en:'Network Security Basics'}, d:'20 د', done:false},
     ]
   },
-  {
-    id:'cs_field', faculty:'cs', subject:'field', code:'CS 400', title:{ar:'التدريب الميداني', en:'Field Training'}, materials:[],
-    lessons:[
-      {t:'توجيه واختيار جهة التدريب', d:'15 د', done:true},
-      {t:'أساسيات بيئة العمل المهنية', d:'18 د', done:false},
-      {t:'كتابة تقرير التدريب', d:'20 د', done:false},
-      {t:'عرض تقديمي لمشروع التدريب', d:'17 د', done:false},
+  {id:'cs_field', faculty:'cs', subject:'field', code:'CS 400', title:{ar:'التدريب الميداني', en:'Field Training'}, lessons:[
+      {t:{ar:'توجيه واختيار جهة التدريب', en:'Training Site Selection'}, d:'15 د', done:true},
+      {t:{ar:'أساسيات بيئة العمل المهنية', en:'Professional Work Environment Basics'}, d:'18 د', done:false},
+      {t:{ar:'كتابة تقرير التدريب', en:'Writing Training Report'}, d:'20 د', done:false},
+      {t:{ar:'عرض تقديمي لمشروع التدريب', en:'Training Project Presentation'}, d:'17 د', done:false},
     ]
   },
-  {
-    id:'cs_os', faculty:'cs', subject:'os', code:'CS 260', title:{ar:'نظم التشغيل', en:'Operating Systems'}, materials:[],
-    lessons:[
-      {t:'مقدمة عن نظم التشغيل', d:'20 د', done:true},
-      {t:'إدارة العمليات (Processes)', d:'24 د', done:false},
-      {t:'خوارزميات الجدولة (Scheduling)', d:'23 د', done:false},
-      {t:'إدارة الذاكرة', d:'22 د', done:false},
-      {t:'أنظمة الملفات', d:'19 د', done:false},
+  {id:'cs_os', faculty:'cs', subject:'os', code:'CS 260', title:{ar:'نظم التشغيل', en:'Operating Systems'}, lessons:[
+      {t:{ar:'مقدمة عن نظم التشغيل', en:'Introduction to Operating Systems'}, d:'20 د', done:true},
+      {t:{ar:'إدارة العمليات (Processes)', en:'Process Management'}, d:'24 د', done:false},
+      {t:{ar:'خوارزميات الجدولة (Scheduling)', en:'Scheduling Algorithms'}, d:'23 د', done:false},
+      {t:{ar:'إدارة الذاكرة', en:'Memory Management'}, d:'22 د', done:false},
+      {t:{ar:'أنظمة الملفات', en:'File Systems'}, d:'19 د', done:false},
     ]
   },
-  {
-    id:'cs_se', faculty:'cs', subject:'se', code:'CS 310', title:{ar:'هندسة البرمجيات', en:'Software Engineering'}, materials:[],
-    lessons:[
-      {t:'دورة حياة تطوير البرمجيات', d:'22 د', done:false},
-      {t:'جمع وتحليل المتطلبات', d:'20 د', done:false},
-      {t:'أنماط التصميم (Design Patterns)', d:'27 د', done:false},
-      {t:'الاختبار البرمجي', d:'19 د', done:false},
-      {t:'إدارة الإصدارات باستخدام Git', d:'18 د', done:false},
+  {id:'cs_se', faculty:'cs', subject:'se', code:'CS 310', title:{ar:'هندسة البرمجيات', en:'Software Engineering'}, lessons:[
+      {t:{ar:'دورة حياة تطوير البرمجيات', en:'Software Development Life Cycle'}, d:'22 د', done:false},
+      {t:{ar:'جمع وتحليل المتطلبات', en:'Requirements Gathering & Analysis'}, d:'20 د', done:false},
+      {t:{ar:'أنماط التصميم (Design Patterns)', en:'Design Patterns'}, d:'27 د', done:false},
+      {t:{ar:'الاختبار البرمجي', en:'Software Testing'}, d:'19 د', done:false},
+      {t:{ar:'إدارة الإصدارات باستخدام Git', en:'Version Control with Git'}, d:'18 د', done:false},
     ]
   },
-  {
-    id:'cs_vp', faculty:'cs', subject:'vp', code:'CS 220', title:{ar:'البرمجة المرئية', en:'Visual Programming'}, materials:[],
-    lessons:[
-      {t:'مقدمة في بيئة البرمجة المرئية', d:'20 د', done:true},
-      {t:'تصميم الواجهات الرسومية', d:'24 د', done:false},
-      {t:'ربط الأحداث (Events) بالعناصر', d:'22 د', done:false},
-      {t:'الاتصال بقواعد البيانات من الواجهة', d:'25 د', done:false},
+  {id:'cs_vp', faculty:'cs', subject:'vp', code:'CS 220', title:{ar:'البرمجة المرئية', en:'Visual Programming'}, lessons:[
+      {t:{ar:'مقدمة في بيئة البرمجة المرئية', en:'Introduction to Visual Programming'}, d:'20 د', done:true},
+      {t:{ar:'تصميم الواجهات الرسومية', en:'GUI Design'}, d:'24 د', done:false},
+      {t:{ar:'ربط الأحداث (Events) بالعناصر', en:'Event Handling'}, d:'22 د', done:false},
+      {t:{ar:'الاتصال بقواعد البيانات من الواجهة', en:'Database Connection from UI'}, d:'25 د', done:false},
     ]
   },
 ];
 
-const assignments = [
-  {id:1, title:'تقرير حالة مريض بالغ', courseId:'nurs_adultCl', faculty:'nursing', due:'21 أغسطس', urgent:true},
-  {id:2, title:'ورقة عمل: حساب الجرعات الدوائية', courseId:'nurs_pharm', faculty:'nursing', due:'24 أغسطس', urgent:false},
-  {id:3, title:'خطة تغذية علاجية لمريض سكري', courseId:'nurs_nutr', faculty:'nursing', due:'27 أغسطس', urgent:false},
-  {id:4, title:'مشروع رسم مشهد بسيط بالحاسب', courseId:'cs_cg', faculty:'cs', due:'21 أغسطس', urgent:true},
-  {id:5, title:'تقرير عملي: إعداد شبكة محلية', courseId:'cs_net', faculty:'cs', due:'23 أغسطس', urgent:false},
-  {id:6, title:'تسليم تقرير التدريب الميداني', courseId:'cs_field', faculty:'cs', due:'26 أغسطس', urgent:false},
-];
-let nextAssignmentId = 7;
+const assignments = [];
+let nextAssignmentId = 1;
 
-const schedule = [
-  {id:1, time:'08:30', courseId:'nurs_adultTh', room:'قاعة ٢٠١', faculty:'nursing'},
-  {id:2, time:'10:30', courseId:'nurs_hosp', room:'المستشفى الجامعي', faculty:'nursing'},
-  {id:3, time:'13:00', courseId:'nurs_pharm', room:'قاعة ١١٥', faculty:'nursing'},
-  {id:4, time:'09:00', courseId:'cs_cg', room:'معمل الحاسبات ٢', faculty:'cs'},
-  {id:5, time:'11:00', courseId:'cs_os', room:'مدرج ب٢', faculty:'cs'},
-  {id:6, time:'13:30', courseId:'cs_net', room:'معمل الشبكات', faculty:'cs'},
-];
-let nextScheduleId = 7;
+const schedule = [];
+let nextScheduleId = 1;
 
 let currentFaculty = 'nursing';
 let lang = 'ar';
@@ -604,28 +504,67 @@ function L(val){
 
 const STR = {
   ar: {
-    brandSubtitle:'كليتا التمريض والحاسبات والمعلومات', tabDashboard:'لوحة التحكم', tabCourses:'موادّي',
-    tabAssignments:'الواجبات', tabGrades:'الدرجات', dueLabel:'واجبات مستحقة هذا الأسبوع',
-    scheduleTitle:'جدول اليوم', addBtn:'+ إضافة', coursesTitle:'موادّي هذا الفصل', coursesSuffix:'مواد',
-    lecturesTitle:'المحاضرات', courseAssignTitle:'واجبات هذه المادة', back:'→ رجوع', completedSuffix:'مكتمل',
-    lectureSuffix:'محاضرة', gradesHint:'كويزات · ميد تيرم · فاينال — تحطها انت بنفسك', assignBtnFull:'+ إضافة واجب',
-    empty_assign:'مفيش واجبات دلوقتي — دوس "إضافة واجب" لو عايز تضيف واحد', empty_courseAssign:'لا توجد واجبات مستحقة لهذه المادة حاليًا',
-    empty_grades:'مفيش مواد لعرض درجاتها', empty_schedule:'مفيش محاضرات مضافة للجدول — دوس "+ إضافة"',
+    brandSubtitle:'منصة الطالب الجامعي',
+    tabDashboard:'لوحة التحكم', tabCourses:'موادّي', tabSchedule:'جدول المذاكرة',
+    tabAssignments:'الواجبات', tabGrades:'الدرجات', 
+    dueLabel:'واجبات مستحقة هذا الأسبوع',
+    scheduleTitle:'جدول المذاكرة', 
+    addBtn:'+ إضافة', 
+    coursesTitle:'موادّي هذا الفصل', 
+    coursesSuffix:'مواد',
+    lecturesTitle:'المحاضرات', 
+    courseAssignTitle:'واجبات هذه المادة', 
+    back:'→ رجوع', 
+    completedSuffix:'مكتمل',
+    lectureSuffix:'محاضرة', 
+    gradesHint:'كويزات · ميد تيرم · فاينال — انت اللي بتحط الدرجات', 
+    assignBtnFull:'+ إضافة واجب',
+    empty_assign:'مفيش واجبات — دوس "إضافة واجب"', 
+    empty_courseAssign:'لا توجد واجبات لهذه المادة',
+    empty_grades:'مفيش مواد', 
+    empty_schedule:'مفيش جدول — دوس "إضافة"',
+    footerText:'منصة أُفق — نموذج تجريبي تفاعلي',
+    uploadPdf:'📄 رفع PDF',
+    replacePdf:'📄 استبدال PDF',
+    uploadAudio:'🎙️ رفع تسجيل',
+    replaceAudio:'🎙️ استبدال',
+    uploadingFile:'جارٍ رفع الملف...',
+    uploadedLocal:'✅ تم الرفع محليًا (الملف هيضيع لو قفلت الصفحة — فعّل Firebase للحفظ الدائم)',
+    fileTooBig:'❌ الملف كبير جدًا — حاول ملف أصغر من 10 ميجا',
   },
   en: {
-    brandSubtitle:'Nursing & Computer Science Faculties', tabDashboard:'Dashboard', tabCourses:'My Courses',
-    tabAssignments:'Assignments', tabGrades:'Grades', dueLabel:'Assignments due this week',
-    scheduleTitle:"Today's Schedule", addBtn:'+ Add', coursesTitle:'My Courses This Semester', coursesSuffix:'courses',
-    lecturesTitle:'Lectures', courseAssignTitle:'Course Assignments', back:'← Back', completedSuffix:'completed',
-    lectureSuffix:'lectures', gradesHint:'Quizzes · Midterm · Final — enter your own scores', assignBtnFull:'+ Add Assignment',
-    empty_assign:'No assignments yet — tap "Add Assignment" to add one', empty_courseAssign:'No assignments due for this course right now',
-    empty_grades:'No courses to show grades for', empty_schedule:'No classes added to the schedule yet — tap "+ Add"',
+    brandSubtitle:'Student Platform',
+    tabDashboard:'Dashboard', tabCourses:'My Courses', tabSchedule:'Study Schedule',
+    tabAssignments:'Assignments', tabGrades:'Grades', 
+    dueLabel:'Assignments due this week',
+    scheduleTitle:'Study Schedule', 
+    addBtn:'+ Add', 
+    coursesTitle:'My Courses This Semester', 
+    coursesSuffix:'courses',
+    lecturesTitle:'Lectures', 
+    courseAssignTitle:'Course Assignments', 
+    back:'← Back', 
+    completedSuffix:'completed',
+    lectureSuffix:'lectures', 
+    gradesHint:'Quizzes · Midterm · Final — you enter scores', 
+    assignBtnFull:'+ Add Assignment',
+    empty_assign:'No assignments — tap "Add Assignment"', 
+    empty_courseAssign:'No assignments for this course',
+    empty_grades:'No courses', 
+    empty_schedule:'No schedule — tap "Add"',
+    footerText:'Ufuq Platform — Interactive Demo',
+    uploadPdf:'📄 Upload PDF',
+    replacePdf:'📄 Replace PDF',
+    uploadAudio:'🎙️ Upload Audio',
+    replaceAudio:'🎙️ Replace',
+    uploadingFile:'Uploading...',
+    uploadedLocal:'✅ Uploaded locally (file will be lost on reload — enable Firebase for permanent storage)',
+    fileTooBig:'❌ File too large — try a file smaller than 10MB',
   },
 };
 function S(key){ return STR[lang][key] || key; }
 
-/* ===== حفظ التعديلات: على الإنترنت (Firebase) مع نسخة احتياطية محلية ===== */
-const STORAGE_KEY = 'ufuq_platform_state_v1';
+const STORAGE_KEY = 'ufuq_platform_state_v3';
 
 function buildState(){
   const doneMap = {};
@@ -633,11 +572,11 @@ function buildState(){
   courses.forEach(c=>{
     doneMap[c.id] = c.lessons.map(l=>l.done);
     filesMap[c.id] = c.lessons.map(l=>({
-      pdf: l.pdf ? {name:l.pdf.name, url:l.pdf.url} : null,
-      audio: l.audio ? {name:l.audio.name, url:l.audio.url} : null,
+      pdf: l.pdf ? {name:l.pdf.name, url:l.pdf.url, size:l.pdf.size} : null,
+      audio: l.audio ? {name:l.audio.name, url:l.audio.url, size:l.audio.size} : null,
     }));
   });
-  return { assignments, nextAssignmentId, gradesData, doneMap, filesMap };
+  return { assignments, nextAssignmentId, schedule, nextScheduleId, gradesData, doneMap, filesMap, lang, currentFaculty };
 }
 
 function applyState(state){
@@ -646,18 +585,17 @@ function applyState(state){
     assignments.length = 0;
     state.assignments.forEach(a=>assignments.push(a));
   }
-  if(typeof state.nextAssignmentId === 'number'){
-    nextAssignmentId = state.nextAssignmentId;
+  if(typeof state.nextAssignmentId === 'number') nextAssignmentId = state.nextAssignmentId;
+  if(Array.isArray(state.schedule)){
+    schedule.length = 0;
+    state.schedule.forEach(s=>schedule.push(s));
   }
-  if(state.gradesData){
-    Object.assign(gradesData, state.gradesData);
-  }
+  if(typeof state.nextScheduleId === 'number') nextScheduleId = state.nextScheduleId;
+  if(state.gradesData) Object.assign(gradesData, state.gradesData);
   if(state.doneMap){
     courses.forEach(c=>{
       const arr = state.doneMap[c.id];
-      if(arr){
-        c.lessons.forEach((l,i)=>{ if(arr[i] !== undefined) l.done = arr[i]; });
-      }
+      if(arr) c.lessons.forEach((l,i)=>{ if(arr[i] !== undefined) l.done = arr[i]; });
     });
   }
   if(state.filesMap){
@@ -673,15 +611,16 @@ function applyState(state){
       }
     });
   }
+  if(state.lang) lang = state.lang;
+  if(state.currentFaculty) currentFaculty = state.currentFaculty;
 }
-
 
 async function saveState(){
   const state = buildState();
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){ console.error('تعذّر الحفظ محليًا:', e); }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
   if(db){
     try{ await setDoc(stateDocRef(), state); }
-    catch(e){ console.error('تعذّر الحفظ على الإنترنت (هيفضل محفوظ على الجهاز ده بس):', e); }
+    catch(e){}
   }
 }
 
@@ -691,19 +630,18 @@ async function loadState(){
     try{
       const snap = await getDoc(stateDocRef());
       if(snap.exists()) state = snap.data();
-    }catch(e){ console.error('تعذّر التحميل من الإنترنت، هنجرب النسخة المحلية:', e); }
+    }catch(e){}
   }
   if(!state){
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
       if(raw) state = JSON.parse(raw);
-    }catch(e){ console.error('تعذّر تحميل البيانات المحفوظة محليًا:', e); }
+    }catch(e){}
   }
   applyState(state);
 }
 
-/* ===== نظام التنقل بين الصفحات (يدعم زرار الرجوع في الموبايل) ===== */
-const VIEW_IDS = ['dashboardView','coursePage','lecturePage','assignmentsPage','gradesPage'];
+const VIEW_IDS = ['dashboardView','coursePage','schedulePageView','assignmentsPage','gradesPage'];
 
 function hideAllViews(){
   VIEW_IDS.forEach(id=>{ document.getElementById(id).style.display = 'none'; });
@@ -714,9 +652,9 @@ function showView(view, params={}){
   if(view === 'course'){
     renderCoursePageContent(params.courseId);
     document.getElementById('coursePage').style.display = 'block';
-  }else if(view === 'lecture'){
-    renderLecturePageContent(params.courseId, params.li);
-    document.getElementById('lecturePage').style.display = 'block';
+  }else if(view === 'schedule'){
+    renderSchedulePage();
+    document.getElementById('schedulePageView').style.display = 'block';
   }else if(view === 'assignments'){
     renderAssignmentsPage();
     document.getElementById('assignmentsPage').style.display = 'block';
@@ -778,7 +716,7 @@ const gradesData = {};
 function getCourseGrades(courseId){
   if(!gradesData[courseId]){
     gradesData[courseId] = {
-      quizzes: [{label:'Quiz 1', score:'', max:10}],
+      quizzes: [{label:(lang==='ar'?'كويز 1':'Quiz 1'), score:'', max:10}],
       midterm: {score:'', max:30},
       final:   {score:'', max:50},
     };
@@ -902,35 +840,114 @@ function renderGradesPage(){
   renderGradesList();
 }
 
-function renderTimeline(){
-  const wrap = document.getElementById('timelineWrap');
-  const items = schedule.filter(s=>s.faculty===currentFaculty).sort((a,b)=>a.time.localeCompare(b.time));
-  wrap.innerHTML = items.map(s=>{
-    const th = THEME[s.subject];
-    return `
-      <div class="t-item">
-        <div class="t-time">${s.time}</div>
-        <div class="t-card">
-          <div><div class="name">${s.name}</div><div class="room">${s.room}</div></div>
-          <span class="badge" style="background:${th.bg}; color:${th.c};">${th.label}</span>
-        </div>
-      </div>`;
-  }).join('');
+function renderSchedulePage(){
+  const page = document.getElementById('schedulePageView');
+  const facSchedule = schedule.filter(s=>s.faculty===currentFaculty).sort((a,b)=>a.time.localeCompare(b.time));
+  page.innerHTML = `
+    <button class="back-btn" id="schedBack">${S('back')}</button>
+    <div class="section-head">
+      <h2>${S('scheduleTitle')} — ${L(FACULTIES[currentFaculty].short)}</h2>
+      <button class="add-btn" id="addSchedBtn">${S('addBtn')}</button>
+    </div>
+    <div id="schedForm" class="schedule-form" style="display:none;"></div>
+    <div class="timeline" id="schedTimeline">
+      ${facSchedule.length === 0 ? `<div class="cp-empty">${S('empty_schedule')}</div>` : 
+        facSchedule.map(s=>{
+          const course = courses.find(c=>c.id===s.courseId);
+          const th = THEME[course.subject];
+          return `
+          <div class="t-item">
+            <div class="t-time">${s.time}</div>
+            <div class="t-card">
+              <div>
+                <div class="name">${s.day} · ${s.date}</div>
+                <div class="room">${L(course.title)}</div>
+              </div>
+              <button class="t-del" data-del-sched="${s.id}" title="✕">✕</button>
+            </div>
+          </div>`;
+        }).join('')
+      }
+    </div>
+  `;
+  page.querySelector('#schedBack').addEventListener('click', ()=>history.back());
+  page.querySelector('#addSchedBtn').addEventListener('click', ()=>{
+    const formEl = document.getElementById('schedForm');
+    if(formEl.style.display === 'flex') closeScheduleForm();
+    else openScheduleForm();
+  });
+  page.querySelectorAll('[data-del-sched]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = +btn.dataset.delSched;
+      const idx = schedule.findIndex(s=>s.id===id);
+      if(idx !== -1) schedule.splice(idx, 1);
+      renderSchedulePage();
+      saveState();
+    });
+  });
+}
+
+function openScheduleForm(){
+  const facCourses = courses.filter(c=>c.faculty===currentFaculty);
+  const formEl = document.getElementById('schedForm');
+  formEl.innerHTML = `
+    <input type="text" id="newSchedDay" placeholder="${lang==='ar'?'اليوم (مثلاً: الأحد)':'Day (e.g. Sunday)'}">
+    <input type="text" id="newSchedDate" placeholder="${lang==='ar'?'التاريخ (مثلاً: 20 أغسطس)':'Date (e.g. Aug 20)'}">
+    <input type="time" id="newSchedTime">
+    <select id="newSchedCourse">
+      ${facCourses.map(c=>`<option value="${c.id}">${L(c.title)}</option>`).join('')}
+    </select>
+    <div class="form-actions">
+      <button class="btn-save" id="saveSchedBtn">${lang==='ar'?'حفظ':'Save'}</button>
+      <button class="btn-cancel" id="cancelSchedBtn">${lang==='ar'?'إلغاء':'Cancel'}</button>
+    </div>
+  `;
+  formEl.style.display = 'flex';
+  document.getElementById('saveSchedBtn').addEventListener('click', saveNewSchedule);
+  document.getElementById('cancelSchedBtn').addEventListener('click', closeScheduleForm);
+}
+
+function closeScheduleForm(){
+  const formEl = document.getElementById('schedForm');
+  if(!formEl) return;
+  formEl.style.display = 'none';
+  formEl.innerHTML = '';
+}
+
+function saveNewSchedule(){
+  const day = document.getElementById('newSchedDay').value.trim();
+  const date = document.getElementById('newSchedDate').value.trim();
+  const time = document.getElementById('newSchedTime').value.trim();
+  const courseId = document.getElementById('newSchedCourse').value;
+
+  if(!day || !date || !time){
+    alert(lang==='ar' ? 'املي كل الحقول' : 'Fill all fields');
+    return;
+  }
+
+  schedule.push({
+    id: nextScheduleId++,
+    day, date, time, courseId,
+    faculty: currentFaculty
+  });
+  closeScheduleForm();
+  renderSchedulePage();
+  saveState();
 }
 
 function renderFacultySwitch(){
   const wrap = document.getElementById('facultySwitch');
   wrap.innerHTML = Object.entries(FACULTIES).map(([key, f])=>`
-    <button class="fac-btn ${key===currentFaculty?'active':''}" data-fac="${key}">${f.label}</button>
+    <button class="fac-btn ${key===currentFaculty?'active':''}" data-fac="${key}">${L(f.label)}</button>
   `).join('');
   wrap.querySelectorAll('.fac-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       currentFaculty = btn.dataset.fac;
       renderFacultySwitch();
       renderCourses();
-      renderTimeline();
       renderAssignmentsList();
       updateDueStat();
+      saveState();
     });
   });
 }
@@ -951,7 +968,7 @@ function renderCoursePageContent(courseId){
     }
     return ownAssignments.map(a=>`
       <div class="assign">
-        <div class="info"><span class="a-title">${a.title}</span></div>
+        <div class="info"><span class="a-title">${L(a.title)}</span></div>
         <span class="due" style="color:${a.urgent?th.c:'#5B6472'}">${a.due}</span>
       </div>
     `).join('');
@@ -983,8 +1000,6 @@ function openCourse(id){
   navigate('course', {courseId: id});
 }
 
-/* ===== Lecture accordion (each lecture expands in place with its own PDF + audio) ===== */
-
 let expandedLecture = null;
 
 function lecturesHtml(course){
@@ -996,8 +1011,8 @@ function lectureCardHtml(course, l, i){
   return `
     <div class="lecture-card ${open?'open':''}">
       <div class="lecture-head" data-toggle="${i}">
-        <input type="checkbox" class="lecture-check" data-check="${i}" ${l.done?'checked':''}>
-        <span class="lecture-title ${l.done?'done':''}">${lectureLabel(i)}: ${l.t}</span>
+        <input type="checkbox" class="lecture-check" data-check="${i}" ${l.done?'checked':''} onclick="event.stopPropagation()">
+        <span class="lecture-title ${l.done?'done':''}">${lectureLabel(i)}: ${L(l.t)}</span>
         <span class="lecture-dur">${l.d}</span>
         <span class="lecture-icons">${l.pdf?'📄':''}${l.audio?'🎙️':''}</span>
         <span class="lecture-badge">${open?'−':'+'}</span>
@@ -1009,15 +1024,13 @@ function lectureCardHtml(course, l, i){
 function wireLectureList(course){
   document.querySelectorAll('[data-toggle]').forEach(el=>{
     el.addEventListener('click', (e)=>{
-      if(e.target.closest('.lecture-check')) return;
       const i = +el.dataset.toggle;
       expandedLecture = (expandedLecture === i) ? null : i;
       refreshLectureList(course);
     });
   });
   document.querySelectorAll('[data-check]').forEach(el=>{
-    el.addEventListener('click', (e)=>{
-      e.stopPropagation();
+    el.addEventListener('change', (e)=>{
       const i = +el.dataset.check;
       course.lessons[i].done = el.checked;
       renderCourses();
@@ -1038,177 +1051,57 @@ function refreshLectureList(course){
 }
 
 function lectureContentHtml(course, l, i){
+  const pdfLabel = l.pdf ? S('replacePdf') : S('uploadPdf');
+  const audioLabel = l.audio ? S('replaceAudio') : S('uploadAudio');
   return `
     <div class="upload-row">
-      <button type="button" class="upload-btn" id="pdfUploadBtn">📄 ${l.pdf ? (lang==='ar'?'استبدال PDF':'Replace PDF') : (lang==='ar'?'رفع PDF المحاضرة':'Upload Lecture PDF')}</button>
-      <button type="button" class="upload-btn" id="audioUploadBtn">🎙️ ${l.audio ? (lang==='ar'?'استبدال التسجيل':'Replace Recording') : (lang==='ar'?'رفع تسجيل صوتي':'Upload Audio')}</button>
-      <input type="file" accept="application/pdf" id="pdfInput" style="display:none">
-      <input type="file" accept="audio/*" id="audioInput" style="display:none">
+      <button type="button" class="upload-btn" id="pdfUploadBtn-${i}">${pdfLabel}</button>
+      <button type="button" class="upload-btn" id="audioUploadBtn-${i}">${audioLabel}</button>
+      <input type="file" accept="application/pdf" id="pdfInput-${i}" style="display:none">
+      <input type="file" accept="audio/*" id="audioInput-${i}" style="display:none">
     </div>
-    <div class="upload-status" id="uploadStatus"></div>
-    ${l.pdf ? `<a class="attach-chip" href="${l.pdf.url}" target="_blank" rel="noopener">📄 ${l.pdf.name} ↗</a>` : ''}
-    ${l.audio ? `<audio controls src="${l.audio.url}"></audio>` : ''}
-    <div class="quiz-area">
-      <div class="quiz-hint">
-        📚 <strong>${lang==='ar'?'عايز كويز على المحاضرة دي؟':'Want a quiz on this lecture?'}</strong><br>
-        ${lang==='ar' ? 'افتح شات مع كلود، ارفعله نفس ملف الـ PDF، واطلب منه:' : 'Open a chat with Claude, upload the same PDF, and ask:'}
-        <em>${lang==='ar' ? '"اعملي كويز 20 اختياري + صح وخطأ + مقالي + مصطلحات"' : '"Make a 20-question MCQ + true/false + essay + terms quiz"'}</em>
-      </div>
+    <div class="upload-status" id="uploadStatus-${i}"></div>
+    <div>
+      ${l.pdf ? `<a class="attach-chip" href="${l.pdf.url}" target="_blank" rel="noopener">📄 ${l.pdf.name}</a>` : ''}
+      ${l.audio ? `<div style="margin-top:8px;"><audio controls src="${l.audio.url}" style="width:100%; max-width:400px;"></audio></div>` : ''}
     </div>
   `;
 }
 
 function wireLectureContent(course, li){
-  const pdfInput = document.getElementById('pdfInput');
-  const audioInput = document.getElementById('audioInput');
+  const pdfInput = document.getElementById(`pdfInput-${li}`);
+  const audioInput = document.getElementById(`audioInput-${li}`);
+  const pdfBtn = document.getElementById(`pdfUploadBtn-${li}`);
+  const audioBtn = document.getElementById(`audioUploadBtn-${li}`);
   if(!pdfInput) return;
-  document.getElementById('pdfUploadBtn').addEventListener('click', ()=>pdfInput.click());
-  document.getElementById('audioUploadBtn').addEventListener('click', ()=>audioInput.click());
-  pdfInput.addEventListener('change', (e)=>handlePdfUpload(e, course, li));
-  audioInput.addEventListener('change', (e)=>handleAudioUpload(e, course, li));
+  pdfBtn.addEventListener('click', ()=>pdfInput.click());
+  audioBtn.addEventListener('click', ()=>audioInput.click());
+  pdfInput.addEventListener('change', (e)=>handleFileUpload(e, course, li, 'pdf'));
+  audioInput.addEventListener('change', (e)=>handleFileUpload(e, course, li, 'audio'));
 }
 
-/* ===== PDF / audio upload (uploaded to Firebase Storage for cross-device persistence) ===== */
-
-async function handlePdfUpload(e, course, li){
+async function handleFileUpload(e, course, li, type){
   const file = e.target.files[0];
   if(!file) return;
-  const statusEl = document.getElementById('uploadStatus');
+  const statusEl = document.getElementById(`uploadStatus-${li}`);
 
-  if(file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')){
-    statusEl.textContent = lang==='ar' ? 'الملف ده مش PDF، اختار ملف بصيغة .pdf' : 'This is not a PDF file. Choose a .pdf file.';
-    return;
-  }
-  if(file.size > 25 * 1024 * 1024){
-    statusEl.textContent = lang==='ar' ? 'الملف كبير أكتر من اللازم (الحد الأقصى ٢٥ ميجا).' : 'File is too large (25MB max).';
+  if(file.size > 10 * 1024 * 1024){
+    statusEl.textContent = S('fileTooBig');
     return;
   }
 
-  statusEl.textContent = lang==='ar' ? 'جارٍ رفع الملف…' : 'Uploading…';
+  statusEl.textContent = S('uploadingFile');
+
   try{
-    let url;
-    if(storage){
-      url = await uploadFileToStorage(file, `uploads/${course.id}/${li}/pdf-${Date.now()}-${file.name}`);
-    }else{
-      url = URL.createObjectURL(file);
-    }
-    course.lessons[li].pdf = {name:file.name, url};
-    statusEl.textContent = storage ? '' : (lang==='ar' ? 'تم الرفع، لكن التخزين الدائم لسه مش مفعّل — الملف هيتفقد لو قفلت الصفحة.' : 'Uploaded, but permanent storage isn\'t enabled yet — the file will be lost on reload.');
+    const url = URL.createObjectURL(file);
+    course.lessons[li][type] = {name:file.name, url, size:file.size};
+    statusEl.textContent = S('uploadedLocal');
     refreshLectureList(course);
     saveState();
   }catch(err){
-    console.error('PDF upload failed:', err);
-    statusEl.textContent = (lang==='ar'?'حصل خطأ أثناء رفع الملف: ':'Upload error: ') + err.message;
+    console.error('Upload failed:', err);
+    statusEl.textContent = '❌ ' + err.message;
   }
-}
-
-async function handleAudioUpload(e, course, li){
-  const file = e.target.files[0];
-  if(!file) return;
-  const statusEl = document.getElementById('uploadStatus');
-  statusEl.textContent = lang==='ar' ? 'جارٍ رفع التسجيل…' : 'Uploading…';
-  try{
-    let url;
-    if(storage){
-      url = await uploadFileToStorage(file, `uploads/${course.id}/${li}/audio-${Date.now()}-${file.name}`);
-    }else{
-      url = URL.createObjectURL(file);
-    }
-    course.lessons[li].audio = {name:file.name, url};
-    statusEl.textContent = storage ? '' : (lang==='ar' ? 'تم الرفع، لكن التخزين الدائم لسه مش مفعّل — الملف هيتفقد لو قفلت الصفحة.' : 'Uploaded, but permanent storage isn\'t enabled yet — the file will be lost on reload.');
-    refreshLectureList(course);
-    saveState();
-  }catch(err){
-    console.error('Audio upload failed:', err);
-    statusEl.textContent = (lang==='ar'?'حصل خطأ أثناء رفع الملف: ':'Upload error: ') + err.message;
-  }
-}
-
-/* ===== Quiz rendering & grading (kept for display purposes if a quiz object is ever set) ===== */
-
-function renderFullQuizHtml(quiz){
-  const mcqHtml = quiz.mcq.map((q,qi)=>`
-    <div class="quiz-q" data-kind="mcq" data-qi="${qi}">
-      <div class="q-text">${qi+1}. ${q.question}</div>
-      ${q.options.map((opt,oi)=>`
-        <label class="q-opt">
-          <input type="radio" name="mcq-${qi}" value="${oi}"> ${opt}
-        </label>
-      `).join('')}
-    </div>
-  `).join('');
-
-  const tfHtml = quiz.tf.map((q,ti)=>`
-    <div class="quiz-q" data-kind="tf" data-ti="${ti}">
-      <div class="q-text">${ti+1}. ${q.statement}</div>
-      <label class="q-opt"><input type="radio" name="tf-${ti}" value="true"> صح</label>
-      <label class="q-opt"><input type="radio" name="tf-${ti}" value="false"> خطأ</label>
-    </div>
-  `).join('');
-
-  const essayHtml = quiz.essay.map((q,ei)=>`
-    <div class="quiz-q">
-      <div class="q-text">${ei+1}. ${q.question}</div>
-      <textarea class="essay-box" rows="3" placeholder="اكتب إجابتك هنا للمراجعة الذاتية…"></textarea>
-      <button class="reveal-btn" data-reveal-essay="${ei}">إظهار النقاط المتوقعة</button>
-      <ul class="reveal-box" id="essayPoints-${ei}" style="display:none">
-        ${q.points.map(p=>`<li>${p}</li>`).join('')}
-      </ul>
-    </div>
-  `).join('');
-
-  const termsHtml = quiz.terms.map((t,ti)=>`
-    <div class="term-card">
-      <div class="term-name">${t.term}</div>
-      <button class="reveal-btn" data-reveal-term="${ti}">إظهار التعريف</button>
-      <div class="reveal-box" id="termDef-${ti}" style="display:none">${t.definition}</div>
-    </div>
-  `).join('');
-
-  return `
-    <div class="quiz-block">
-      <h4 class="quiz-h">القسم الأول — اختيار من متعدد (${quiz.mcq.length})</h4>
-      ${mcqHtml}
-      <h4 class="quiz-h">القسم الثاني — صح أو خطأ (${quiz.tf.length})</h4>
-      ${tfHtml}
-      <button class="quiz-submit" data-obj-submit="1">تسليم القسم الموضوعي</button>
-      <div class="quiz-score" id="quizScore"></div>
-
-      <h4 class="quiz-h">القسم الثالث — أسئلة مقالية</h4>
-      ${essayHtml}
-
-      <h4 class="quiz-h">القسم الرابع — مصطلحات</h4>
-      <div class="terms-grid">${termsHtml}</div>
-    </div>`;
-}
-
-function gradeObjective(course, li){
-  const quiz = course.lessons[li].quiz;
-  let correct = 0, total = quiz.mcq.length + quiz.tf.length;
-
-  quiz.mcq.forEach((q, qi)=>{
-    const selected = document.querySelector(`input[name="mcq-${qi}"]:checked`);
-    const optsEls = document.querySelectorAll(`.quiz-q[data-kind="mcq"][data-qi="${qi}"] .q-opt`);
-    optsEls.forEach((el, oi)=>{
-      if(oi === q.answerIndex) el.classList.add('correct');
-      else if(selected && +selected.value === oi) el.classList.add('wrong');
-    });
-    if(selected && +selected.value === q.answerIndex) correct++;
-  });
-
-  quiz.tf.forEach((q, ti)=>{
-    const selected = document.querySelector(`input[name="tf-${ti}"]:checked`);
-    const optsEls = document.querySelectorAll(`.quiz-q[data-kind="tf"][data-ti="${ti}"] .q-opt`);
-    const correctVal = q.answer ? 'true' : 'false';
-    optsEls.forEach(el=>{
-      const val = el.querySelector('input').value;
-      if(val === correctVal) el.classList.add('correct');
-      else if(selected && selected.value === val) el.classList.add('wrong');
-    });
-    if(selected && selected.value === correctVal) correct++;
-  });
-
-  document.getElementById('quizScore').textContent = `النتيجة: ${correct} من ${total}`;
 }
 
 function updateDueStat(){
@@ -1221,20 +1114,22 @@ function renderAssignmentsList(){
   if(!list) return;
   const facAssignments = assignments.filter(a=>a.faculty===currentFaculty);
   if(facAssignments.length === 0){
-    list.innerHTML = `<div class="cp-empty">مفيش واجبات دلوقتي — دوس "إضافة واجب" لو عايز تضيف واحد</div>`;
+    list.innerHTML = `<div class="cp-empty">${S('empty_assign')}</div>`;
   }else{
-    list.innerHTML = facAssignments.map(a=>`
+    list.innerHTML = facAssignments.map(a=>{
+      const course = courses.find(c=>c.id===a.courseId);
+      return `
       <div class="assign">
         <div class="info">
-          <span class="a-title">${a.title}</span>
-          <span class="a-course">${a.course}</span>
+          <span class="a-title">${L(a.title)}</span>
+          <span class="a-course">${L(course.title)}</span>
         </div>
         <div class="a-right">
           <span class="due" style="color:${a.urgent?'#B0522D':'#5B6472'}">${a.due}</span>
           <button class="a-delete" data-del-assign="${a.id}" title="حذف">✕</button>
         </div>
       </div>
-    `).join('');
+    `;}).join('');
     list.querySelectorAll('[data-del-assign]').forEach(btn=>{
       btn.addEventListener('click', ()=>deleteAssignment(+btn.dataset.delAssign));
     });
@@ -1245,10 +1140,10 @@ function renderAssignmentsList(){
 function renderAssignmentsPage(){
   const page = document.getElementById('assignmentsPage');
   page.innerHTML = `
-    <button class="back-btn" id="assignBack">→ رجوع</button>
+    <button class="back-btn" id="assignBack">${S('back')}</button>
     <div class="section-head">
-      <h2>واجبات ${FACULTIES[currentFaculty].short}</h2>
-      <button class="add-btn" id="addAssignBtn">+ إضافة واجب</button>
+      <h2>${S('tabAssignments')} — ${L(FACULTIES[currentFaculty].short)}</h2>
+      <button class="add-btn" id="addAssignBtn">${S('assignBtnFull')}</button>
     </div>
     <div id="assignForm" class="assign-form" style="display:none;"></div>
     <div class="assign-list" id="assignList"></div>
@@ -1273,15 +1168,15 @@ function openAssignForm(){
   const facCourses = courses.filter(c=>c.faculty===currentFaculty);
   const formEl = document.getElementById('assignForm');
   formEl.innerHTML = `
-    <input type="text" id="newAssignTitle" placeholder="عنوان الواجب">
+    <input type="text" id="newAssignTitle" placeholder="${lang==='ar'?'عنوان الواجب':'Assignment Title'}">
     <select id="newAssignCourse">
-      ${facCourses.map(c=>`<option value="${c.title}">${c.title}</option>`).join('')}
+      ${facCourses.map(c=>`<option value="${c.id}">${L(c.title)}</option>`).join('')}
     </select>
-    <input type="text" id="newAssignDue" placeholder="تاريخ التسليم (مثلاً: 30 أغسطس)">
-    <label><input type="checkbox" id="newAssignUrgent"> عاجل</label>
+    <input type="text" id="newAssignDue" placeholder="${lang==='ar'?'تاريخ التسليم (مثلاً: 30 أغسطس)':'Due Date (e.g. Aug 30)'}">
+    <label><input type="checkbox" id="newAssignUrgent"> ${lang==='ar'?'عاجل':'Urgent'}</label>
     <div class="form-actions">
-      <button class="btn-save" id="saveAssignBtn">حفظ</button>
-      <button class="btn-cancel" id="cancelAssignBtn">إلغاء</button>
+      <button class="btn-save" id="saveAssignBtn">${lang==='ar'?'حفظ':'Save'}</button>
+      <button class="btn-cancel" id="cancelAssignBtn">${lang==='ar'?'إلغاء':'Cancel'}</button>
     </div>
   `;
   formEl.style.display = 'flex';
@@ -1297,17 +1192,29 @@ function closeAssignForm(){
 }
 
 function saveNewAssignment(){
-  const title = document.getElementById('newAssignTitle').value.trim();
-  const course = document.getElementById('newAssignCourse').value;
-  const due = document.getElementById('newAssignDue').value.trim();
-  const urgent = document.getElementById('newAssignUrgent').checked;
+  const titleInput = document.getElementById('newAssignTitle');
+  const courseSelect = document.getElementById('newAssignCourse');
+  const dueInput = document.getElementById('newAssignDue');
+  const urgentCheck = document.getElementById('newAssignUrgent');
 
-  if(!title || !due){
-    alert('اكتب عنوان الواجب وتاريخ التسليم');
+  const titleVal = titleInput.value.trim();
+  const courseId = courseSelect.value;
+  const dueVal = dueInput.value.trim();
+  const urgentVal = urgentCheck.checked;
+
+  if(!titleVal || !dueVal){
+    alert(lang==='ar' ? 'اكتب عنوان الواجب وتاريخ التسليم' : 'Enter title and due date');
     return;
   }
 
-  assignments.push({id: nextAssignmentId++, title, course, faculty: currentFaculty, due, urgent});
+  assignments.push({
+    id: nextAssignmentId++, 
+    title: {ar:titleVal, en:titleVal}, 
+    courseId, 
+    faculty: currentFaculty, 
+    due: dueVal, 
+    urgent: urgentVal
+  });
   closeAssignForm();
   renderAssignmentsList();
   saveState();
@@ -1319,7 +1226,9 @@ document.querySelectorAll('.tab').forEach(tab=>{
     tab.classList.add('active');
 
     const targetId = tab.dataset.tab;
-    if(targetId === 'assignmentsSection'){
+    if(targetId === 'scheduleSection'){
+      navigate('schedule');
+    }else if(targetId === 'assignmentsSection'){
       navigate('assignments');
     }else if(targetId === 'gradesSection'){
       navigate('grades');
@@ -1335,9 +1244,8 @@ document.querySelectorAll('.tab').forEach(tab=>{
   });
 });
 
-// إبراز التاب الصح لما يتغيّر الـ view (زرار رجوع الموبايل مثلاً)
 function syncActiveTab(view){
-  const map = {dashboard:'dashboard', assignments:'assignmentsSection', grades:'gradesSection'};
+  const map = {dashboard:'dashboard', schedule:'scheduleSection', assignments:'assignmentsSection', grades:'gradesSection'};
   const targetTab = map[view];
   document.querySelectorAll('.tab').forEach(t=>{
     t.classList.toggle('active', targetTab && t.dataset.tab === targetTab);
@@ -1348,16 +1256,44 @@ window.addEventListener('popstate', (e)=>{
   syncActiveTab(state.view);
 });
 
-async function initApp(){
-  await loadState();
+function applyLanguage(){
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr';
+  document.body.classList.toggle('ltr', lang==='en');
+
+  document.getElementById('sealLetter').textContent = lang==='ar' ? 'أ' : 'U';
+  document.getElementById('brandTitle').textContent = lang==='ar' ? 'أُفـق' : 'Ufuq';
+  document.getElementById('brandSubtitle').textContent = S('brandSubtitle');
+  document.getElementById('avatarInitials').textContent = lang==='ar' ? 'د ح' : 'DS';
+  document.getElementById('langToggle').textContent = lang==='ar' ? 'EN' : 'عربي';
+
+  document.getElementById('statLabel').textContent = S('dueLabel');
+  document.getElementById('coursesTitle').textContent = S('coursesTitle');
+  document.getElementById('footerText').textContent = S('footerText');
+
+  const tabLabels = ['tabDashboard','tabCourses','tabSchedule','tabAssignments','tabGrades'];
+  document.querySelectorAll('.tab-label').forEach((el,i)=>{
+    el.textContent = S(tabLabels[i]);
+  });
+
   renderFacultySwitch();
   renderCourses();
-  renderTimeline();
   renderAssignmentsList();
   updateDueStat();
+}
+
+document.getElementById('langToggle').addEventListener('click', ()=>{
+  lang = lang==='ar' ? 'en' : 'ar';
+  applyLanguage();
+  saveState();
+});
+
+async function initApp(){
+  await loadState();
+  applyLanguage();
   history.replaceState({view:'dashboard', params:{}}, '', '#dashboard');
 }
 initApp();
 </script>
 </body>
-</html>
+          </html>
