@@ -908,7 +908,8 @@ function buildState(){
   const notesMap = {};
   courses.forEach(c=>{
     doneMap[c.id] = c.lessons.map(l=>l.done);
-    filesMap[c.id] = c.lessons.map(l=>l.files || []);
+    filesMap[c.id] = {};
+    c.lessons.forEach((l,i)=>{ filesMap[c.id][i] = l.files || []; });
     lessonsMap[c.id] = c.lessons.map(l=>({t:l.t, d:l.d}));
     notesMap[c.id] = c.lessons.map(l=>l.notes || '');
   });
@@ -952,10 +953,10 @@ function applyState(state){
   }
   if(state.filesMap){
     courses.forEach(c=>{
-      const arr = state.filesMap[c.id];
-      if(arr){
+      const obj = state.filesMap[c.id];
+      if(obj){
         c.lessons.forEach((l,i)=>{
-          if(arr[i]) l.files = arr[i];
+          if(obj[i]) l.files = obj[i];
         });
       }
     });
@@ -1983,4 +1984,4 @@ async function initApp(){
 initApp();
 </script>
 </body>
-    </html>
+  </html>
