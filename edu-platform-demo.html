@@ -178,6 +178,14 @@
   .t-card .t-del:hover{ color:#B0522D; background:#F6E6DB; }
   .badge{font-size:11px; padding:3px 9px; border-radius:999px; font-weight:600; white-space:nowrap;}
 
+  /* Day group divider in schedule */
+  .day-divider{
+    display:flex; align-items:center; gap:10px; margin:18px 0 10px;
+    font-size:13px; font-weight:700; color:var(--gold);
+  }
+  .day-divider:first-child{ margin-top:0; }
+  .day-divider::after{ content:""; flex:1; height:1px; background:var(--line); }
+
   /* Course cards */
   .courses{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px;}
   .course-card{
@@ -344,6 +352,30 @@
   .assign-form .btn-save, .schedule-form .btn-save{ background:var(--gold); color:#fff; border:none; border-radius:999px; padding:9px 18px; font-size:13px; font-weight:700; }
   .assign-form .btn-cancel, .schedule-form .btn-cancel{ background:transparent; border:1px solid var(--line); color:var(--ink-soft); border-radius:999px; padding:9px 18px; font-size:13px; }
 
+  /* Day checkboxes in schedule form */
+  .day-checks{ display:flex; flex-wrap:wrap; gap:8px; }
+  .day-check-item{
+    display:flex; align-items:center; gap:5px; background:var(--bg); border:1px solid var(--line);
+    border-radius:999px; padding:6px 12px; font-size:12.5px; cursor:pointer;
+  }
+  .day-check-item input{ accent-color:var(--gold); }
+
+  /* Exams */
+  .exam-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:12px 16px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;
+    border-right:4px solid var(--ex, var(--gold));
+  }
+  body.ltr .exam-card{border-right:1px solid var(--line); border-left:4px solid var(--ex, var(--gold));}
+  .exam-card .info{display:flex; flex-direction:column; gap:3px;}
+  .exam-card .e-course{font-weight:600; font-size:14px;}
+  .exam-card .e-meta{font-size:11.5px; color:var(--ink-soft); display:flex; gap:8px; align-items:center;}
+  .exam-type-badge{font-size:10.5px; padding:2px 8px; border-radius:999px; font-weight:700; background:var(--exbg, var(--gold-soft)); color:var(--ex, var(--gold));}
+  .exam-card .e-date{font-size:13px; font-weight:700; font-family:'IBM Plex Mono',monospace; direction:ltr; color:var(--ex, var(--gold));}
+  .exam-card .e-right{display:flex; align-items:center; gap:10px;}
+  .exam-card .e-delete{background:transparent; border:none; color:var(--ink-soft); font-size:16px; padding:4px 6px; border-radius:6px;}
+  .exam-card .e-delete:hover{ color:#B0522D; background:#F6E6DB; }
+
   /* Grades */
   .grade-card{
     background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:14px 16px;
@@ -425,6 +457,15 @@
       <div class="timeline" id="schedTimeline"></div>
     </section>
 
+    <section id="examsSection">
+      <div class="section-head">
+        <h2 id="examsTitle">جدول الامتحانات</h2>
+        <button class="add-btn" id="addExamBtn">+ إضافة</button>
+      </div>
+      <div id="examForm" class="schedule-form" style="display:none;"></div>
+      <div id="examsList"></div>
+    </section>
+
     <section id="coursesSection">
       <div class="section-head">
         <h2 id="coursesTitle">موادّي هذا الفصل</h2>
@@ -452,12 +493,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "REPLACE_ME",
-  authDomain: "REPLACE_ME",
-  projectId: "REPLACE_ME",
-  storageBucket: "REPLACE_ME",
-  messagingSenderId: "REPLACE_ME",
-  appId: "REPLACE_ME"
+  apiKey: "AIzaSyCGYp76VlTgqkAOwBqFF6mDxPctsZLT2IM",
+  authDomain: "ufuq-platform.firebaseapp.com",
+  projectId: "ufuq-platform",
+  storageBucket: "ufuq-platform.firebasestorage.app",
+  messagingSenderId: "903928758427",
+  appId: "1:903928758427:web:fea27ceac828ef7101463e"
 };
 
 let db = null;
@@ -565,6 +606,9 @@ let nextAssignmentId = 1;
 const schedule = [];
 let nextScheduleId = 1;
 
+const exams = [];
+let nextExamId = 1;
+
 let currentFaculty = 'nursing';
 let lang = 'ar';
 let darkMode = false;
@@ -573,9 +617,8 @@ let currentView = {view: 'dashboard', params: {}};
 const DAYS_AR = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
-function getTodayName(){
-  const d = new Date();
-  return lang==='ar' ? DAYS_AR[d.getDay()] : DAYS_EN[d.getDay()];
+function dayName(dayIndex){
+  return lang==='ar' ? DAYS_AR[dayIndex] : DAYS_EN[dayIndex];
 }
 
 function getTodayDate(){
@@ -585,6 +628,30 @@ function getTodayDate(){
   const day = d.getDate();
   const month = lang==='ar' ? months_ar[d.getMonth()] : months_en[d.getMonth()];
   return lang==='ar' ? `${day} ${month}` : `${month} ${day}`;
+}
+
+function formatDateStr(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  const months_ar = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const months_en = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const day = d.getDate();
+  const month = lang==='ar' ? months_ar[d.getMonth()] : months_en[d.getMonth()];
+  const year = d.getFullYear();
+  return lang==='ar' ? `${day} ${month} ${year}` : `${month} ${day}, ${year}`;
+}
+
+/* المسافة بالدقايق من دلوقتي لحد أقرب حدوث لليوم ده والوقت ده (جدول أسبوعي متكرر) */
+function minutesUntilNext(dayIndex, timeStr){
+  const now = new Date();
+  const [h,m] = timeStr.split(':').map(Number);
+  const currentDay = now.getDay();
+  const currentMinutes = now.getHours()*60 + now.getMinutes();
+  const targetMinutes = h*60 + (m||0);
+  let dayDiff = (dayIndex - currentDay + 7) % 7;
+  let total = dayDiff*24*60 + (targetMinutes - currentMinutes);
+  if(total < 0) total += 7*24*60;
+  return total;
 }
 
 const ORDINALS = {
@@ -678,6 +745,7 @@ const STR = {
     tabAssignments:'الواجبات', tabGrades:'الدرجات', 
     dueLabel:'واجبات مستحقة',
     scheduleTitle:'جدول المذاكرة', 
+    examsTitle:'جدول الامتحانات',
     addBtn:'+ إضافة', 
     coursesTitle:'موادّي هذا الفصل', 
     coursesSuffix:'مواد',
@@ -692,6 +760,7 @@ const STR = {
     empty_courseAssign:'لا توجد واجبات',
     empty_grades:'مفيش مواد', 
     empty_schedule:'مفيش جدول — دوس "+ إضافة"',
+    empty_exams:'لسه مفيش امتحانات مضافة',
     footerText:'منصة أُفق',
     uploadFile:'📎 رفع ملف',
     uploadingFile:'جارٍ الرفع...',
@@ -707,6 +776,9 @@ const STR = {
     importSuccess:'✅ تم استيراد البيانات بنجاح',
     notifUpcoming:'📌 تنبيه: واجبات قريبة!',
     notifUrgent:'لديك {count} واجب مستحق خلال 3 أيام',
+    chooseDays:'اختار الأيام',
+    midterm:'ميد تيرم', final:'فاينال',
+    examDate:'التاريخ', examTime:'الوقت (اختياري)', examLocation:'المكان (اختياري)',
   },
   en: {
     brandSubtitle:'Student Platform',
@@ -714,6 +786,7 @@ const STR = {
     tabAssignments:'Assignments', tabGrades:'Grades', 
     dueLabel:'Due Assignments',
     scheduleTitle:'Study Schedule', 
+    examsTitle:'Exam Schedule',
     addBtn:'+ Add', 
     coursesTitle:'My Courses', 
     coursesSuffix:'courses',
@@ -728,6 +801,7 @@ const STR = {
     empty_courseAssign:'No assignments',
     empty_grades:'No courses', 
     empty_schedule:'No schedule — tap "+ Add"',
+    empty_exams:'No exams added yet',
     footerText:'Ufuq Platform',
     uploadFile:'📎 Upload File',
     uploadingFile:'Uploading...',
@@ -743,11 +817,14 @@ const STR = {
     importSuccess:'✅ Data imported successfully',
     notifUpcoming:'📌 Alert: Upcoming Assignments!',
     notifUrgent:'You have {count} assignment(s) due within 3 days',
+    chooseDays:'Choose Days',
+    midterm:'Midterm', final:'Final',
+    examDate:'Date', examTime:'Time (optional)', examLocation:'Location (optional)',
   },
 };
 function S(key){ return STR[lang][key] || key; }
 
-const STORAGE_KEY = 'ufuq_platform_state_v7';
+const STORAGE_KEY = 'ufuq_platform_state_v8';
 const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 // ===== Notification System =====
@@ -764,12 +841,8 @@ function hideNotification(){
 }
 
 function checkUpcomingAssignments(){
-  const today = new Date();
-  const threeDaysLater = new Date(today.getTime() + 3 * 24 * 60 * 60 * 1000);
-  
   const urgentAssignments = assignments.filter(a => {
     if(a.faculty !== currentFaculty) return false;
-    // بسّطنا: أي واجب urgent = true يعتبر قريب
     return a.urgent;
   });
   
@@ -840,7 +913,7 @@ function buildState(){
     notesMap[c.id] = c.lessons.map(l=>l.notes || '');
   });
   return { 
-    assignments, nextAssignmentId, schedule, nextScheduleId, gradesData, 
+    assignments, nextAssignmentId, schedule, nextScheduleId, exams, nextExamId, gradesData, 
     doneMap, filesMap, lessonsMap, notesMap, lang, currentFaculty, currentView, darkMode
   };
 }
@@ -857,6 +930,11 @@ function applyState(state){
     state.schedule.forEach(s=>schedule.push(s));
   }
   if(typeof state.nextScheduleId === 'number') nextScheduleId = state.nextScheduleId;
+  if(Array.isArray(state.exams)){
+    exams.length = 0;
+    state.exams.forEach(x=>exams.push(x));
+  }
+  if(typeof state.nextExamId === 'number') nextExamId = state.nextExamId;
   if(state.gradesData) Object.assign(gradesData, state.gradesData);
   if(state.lessonsMap){
     courses.forEach(c=>{
@@ -1132,33 +1210,42 @@ function renderGradesPage(){
   renderGradesList();
 }
 
+/* ===== جدول المذاكرة الأسبوعي (متعدد الأيام + فواصل + ترتيب حسب الأقرب) ===== */
+
 function renderSchedule(){
-  const today = getTodayName();
-  const todayDate = getTodayDate();
-  
   let facSchedule = schedule.filter(s=>s.faculty===currentFaculty);
-  facSchedule.sort((a,b)=>a.time.localeCompare(b.time));
-  
+  facSchedule = facSchedule.map(s=>({...s, _dist: minutesUntilNext(s.dayIndex, s.time)}));
+  facSchedule.sort((a,b)=> a._dist - b._dist || a.time.localeCompare(b.time));
+
   const wrap = document.getElementById('schedTimeline');
   if(facSchedule.length === 0){
     wrap.innerHTML = `<div class="cp-empty">${S('empty_schedule')}</div>`;
     return;
   }
-  
-  wrap.innerHTML = facSchedule.map(s=>{
+
+  let html = '';
+  let lastDay = null;
+  facSchedule.forEach(s=>{
     const course = courses.find(c=>c.id===s.courseId);
-    return `
-    <div class="t-item">
-      <div class="t-time">${s.time}</div>
-      <div class="t-card">
-        <div class="t-info">
-          <div class="name">${s.day || today} · ${s.date || todayDate}</div>
-          <div class="room">${L(course.title)}</div>
+    if(!course) return;
+    if(s.dayIndex !== lastDay){
+      html += `<div class="day-divider">${dayName(s.dayIndex)}</div>`;
+      lastDay = s.dayIndex;
+    }
+    const th = THEME[course.subject];
+    html += `
+      <div class="t-item">
+        <div class="t-time">${s.time}</div>
+        <div class="t-card">
+          <div class="t-info">
+            <div class="name">${L(course.title)}</div>
+            <div class="room">${L(th.label)}</div>
+          </div>
+          <button class="t-del" data-del-sched="${s.id}" title="✕">✕</button>
         </div>
-        <button class="t-del" data-del-sched="${s.id}" title="✕">✕</button>
-      </div>
-    </div>`;
-  }).join('');
+      </div>`;
+  });
+  wrap.innerHTML = html;
 
   wrap.querySelectorAll('[data-del-sched]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -1171,6 +1258,179 @@ function renderSchedule(){
   });
 }
 
+function openScheduleForm(){
+  const facCourses = courses.filter(c=>c.faculty===currentFaculty);
+  const formEl = document.getElementById('schedForm');
+
+  const dayChecks = DAYS_AR.map((_,i)=>`
+    <label class="day-check-item">
+      <input type="checkbox" class="sched-day-check" value="${i}"> ${dayName(i)}
+    </label>
+  `).join('');
+
+  formEl.innerHTML = `
+    <div>
+      <div style="font-size:12px; color:var(--ink-soft); margin-bottom:6px;">${S('chooseDays')}</div>
+      <div class="day-checks">${dayChecks}</div>
+    </div>
+    <input type="time" id="newSchedTime">
+    <select id="newSchedCourse">
+      ${facCourses.map(c=>`<option value="${c.id}">${L(c.title)}</option>`).join('')}
+    </select>
+    <div class="form-actions">
+      <button class="btn-save" id="saveSchedBtn">${lang==='ar'?'حفظ':'Save'}</button>
+      <button class="btn-cancel" id="cancelSchedBtn">${lang==='ar'?'إلغاء':'Cancel'}</button>
+    </div>
+  `;
+  formEl.style.display = 'flex';
+  document.getElementById('saveSchedBtn').addEventListener('click', saveNewSchedule);
+  document.getElementById('cancelSchedBtn').addEventListener('click', closeScheduleForm);
+}
+
+function closeScheduleForm(){
+  const formEl = document.getElementById('schedForm');
+  if(!formEl) return;
+  formEl.style.display = 'none';
+  formEl.innerHTML = '';
+}
+
+function saveNewSchedule(){
+  const checkedDays = Array.from(document.querySelectorAll('.sched-day-check:checked')).map(el=>+el.value);
+  const time = document.getElementById('newSchedTime').value.trim();
+  const courseId = document.getElementById('newSchedCourse').value;
+
+  if(checkedDays.length === 0){
+    alert(lang==='ar' ? 'اختار يوم واحد على الأقل' : 'Select at least one day');
+    return;
+  }
+  if(!time){
+    alert(lang==='ar' ? 'اختار الوقت' : 'Select time');
+    return;
+  }
+
+  checkedDays.forEach(dayIndex=>{
+    schedule.push({
+      id: nextScheduleId++,
+      dayIndex, time, courseId,
+      faculty: currentFaculty
+    });
+  });
+  closeScheduleForm();
+  renderSchedule();
+  saveState();
+}
+
+document.getElementById('addSchedBtn').addEventListener('click', ()=>{
+  const formEl = document.getElementById('schedForm');
+  if(formEl.style.display === 'flex') closeScheduleForm();
+  else openScheduleForm();
+});
+
+/* ===== جدول الامتحانات (ميد تيرم / فاينال) ===== */
+
+function renderExams(){
+  const wrap = document.getElementById('examsList');
+  let facExams = exams.filter(x=>x.faculty===currentFaculty);
+  facExams.sort((a,b)=> (a.date+ (a.time||'')).localeCompare(b.date + (b.time||'')));
+
+  if(facExams.length === 0){
+    wrap.innerHTML = `<div class="cp-empty">${S('empty_exams')}</div>`;
+    return;
+  }
+
+  wrap.innerHTML = facExams.map(x=>{
+    const course = courses.find(c=>c.id===x.courseId);
+    if(!course) return '';
+    const isMid = x.type === 'midterm';
+    const exColor = isMid ? '#A67C27' : '#B23A48';
+    const exBg = isMid ? '#F3EAD3' : '#F7E3E5';
+    return `
+      <div class="exam-card" style="--ex:${exColor}; --exbg:${exBg}">
+        <div class="info">
+          <span class="e-course">${L(course.title)}</span>
+          <div class="e-meta">
+            <span class="exam-type-badge">${isMid ? S('midterm') : S('final')}</span>
+            ${x.time ? `<span>${x.time}</span>` : ''}
+            ${x.location ? `<span>· ${x.location}</span>` : ''}
+          </div>
+        </div>
+        <div class="e-right">
+          <span class="e-date">${formatDateStr(x.date)}</span>
+          <button class="e-delete" data-del-exam="${x.id}" title="✕">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+
+  wrap.querySelectorAll('[data-del-exam]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = +btn.dataset.delExam;
+      const idx = exams.findIndex(x=>x.id===id);
+      if(idx !== -1) exams.splice(idx, 1);
+      renderExams();
+      saveState();
+    });
+  });
+}
+
+function openExamForm(){
+  const facCourses = courses.filter(c=>c.faculty===currentFaculty);
+  const formEl = document.getElementById('examForm');
+  formEl.innerHTML = `
+    <select id="newExamCourse">
+      ${facCourses.map(c=>`<option value="${c.id}">${L(c.title)}</option>`).join('')}
+    </select>
+    <select id="newExamType">
+      <option value="midterm">${S('midterm')}</option>
+      <option value="final">${S('final')}</option>
+    </select>
+    <input type="date" id="newExamDate">
+    <input type="time" id="newExamTime" placeholder="${S('examTime')}">
+    <input type="text" id="newExamLocation" placeholder="${S('examLocation')}">
+    <div class="form-actions">
+      <button class="btn-save" id="saveExamBtn">${lang==='ar'?'حفظ':'Save'}</button>
+      <button class="btn-cancel" id="cancelExamBtn">${lang==='ar'?'إلغاء':'Cancel'}</button>
+    </div>
+  `;
+  formEl.style.display = 'flex';
+  document.getElementById('saveExamBtn').addEventListener('click', saveNewExam);
+  document.getElementById('cancelExamBtn').addEventListener('click', closeExamForm);
+}
+
+function closeExamForm(){
+  const formEl = document.getElementById('examForm');
+  if(!formEl) return;
+  formEl.style.display = 'none';
+  formEl.innerHTML = '';
+}
+
+function saveNewExam(){
+  const courseId = document.getElementById('newExamCourse').value;
+  const type = document.getElementById('newExamType').value;
+  const date = document.getElementById('newExamDate').value;
+  const time = document.getElementById('newExamTime').value.trim();
+  const location = document.getElementById('newExamLocation').value.trim();
+
+  if(!date){
+    alert(lang==='ar' ? 'اختار التاريخ' : 'Select date');
+    return;
+  }
+
+  exams.push({
+    id: nextExamId++,
+    courseId, type, date, time, location,
+    faculty: currentFaculty
+  });
+  closeExamForm();
+  renderExams();
+  saveState();
+}
+
+document.getElementById('addExamBtn').addEventListener('click', ()=>{
+  const formEl = document.getElementById('examForm');
+  if(formEl.style.display === 'flex') closeExamForm();
+  else openExamForm();
+});
+
 function renderFacultySwitch(){
   const wrap = document.getElementById('facultySwitch');
   wrap.innerHTML = Object.entries(FACULTIES).map(([key, f])=>`
@@ -1182,6 +1442,7 @@ function renderFacultySwitch(){
       renderFacultySwitch();
       renderCourses();
       renderSchedule();
+      renderExams();
       renderAssignmentsList();
       updateDueStat();
       checkUpcomingAssignments();
@@ -1604,64 +1865,6 @@ function saveNewAssignment(){
   saveState();
 }
 
-function openScheduleForm(){
-  const facCourses = courses.filter(c=>c.faculty===currentFaculty);
-  const formEl = document.getElementById('schedForm');
-  
-  const today = getTodayName();
-  const todayDate = getTodayDate();
-  
-  formEl.innerHTML = `
-    <input type="text" id="newSchedDay" placeholder="${lang==='ar'?'اليوم (افتراضيًا: اليوم)':'Day (default: today)'}" value="${today}">
-    <input type="text" id="newSchedDate" placeholder="${lang==='ar'?'التاريخ (افتراضيًا: اليوم)':'Date (default: today)'}" value="${todayDate}">
-    <input type="time" id="newSchedTime">
-    <select id="newSchedCourse">
-      ${facCourses.map(c=>`<option value="${c.id}">${L(c.title)}</option>`).join('')}
-    </select>
-    <div class="form-actions">
-      <button class="btn-save" id="saveSchedBtn">${lang==='ar'?'حفظ':'Save'}</button>
-      <button class="btn-cancel" id="cancelSchedBtn">${lang==='ar'?'إلغاء':'Cancel'}</button>
-    </div>
-  `;
-  formEl.style.display = 'flex';
-  document.getElementById('saveSchedBtn').addEventListener('click', saveNewSchedule);
-  document.getElementById('cancelSchedBtn').addEventListener('click', closeScheduleForm);
-}
-
-function closeScheduleForm(){
-  const formEl = document.getElementById('schedForm');
-  if(!formEl) return;
-  formEl.style.display = 'none';
-  formEl.innerHTML = '';
-}
-
-function saveNewSchedule(){
-  const day = document.getElementById('newSchedDay').value.trim() || getTodayName();
-  const date = document.getElementById('newSchedDate').value.trim() || getTodayDate();
-  const time = document.getElementById('newSchedTime').value.trim();
-  const courseId = document.getElementById('newSchedCourse').value;
-
-  if(!time){
-    alert(lang==='ar' ? 'اختار الوقت' : 'Select time');
-    return;
-  }
-
-  schedule.push({
-    id: nextScheduleId++,
-    day, date, time, courseId,
-    faculty: currentFaculty
-  });
-  closeScheduleForm();
-  renderSchedule();
-  saveState();
-}
-
-document.getElementById('addSchedBtn').addEventListener('click', ()=>{
-  const formEl = document.getElementById('schedForm');
-  if(formEl.style.display === 'flex') closeScheduleForm();
-  else openScheduleForm();
-});
-
 document.querySelectorAll('.tab').forEach(tab=>{
   tab.addEventListener('click', ()=>{
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
@@ -1703,6 +1906,7 @@ function applyLanguage(){
 
   document.getElementById('statLabel').textContent = S('dueLabel');
   document.getElementById('scheduleTitle').textContent = S('scheduleTitle');
+  document.getElementById('examsTitle').textContent = S('examsTitle');
   document.getElementById('coursesTitle').textContent = S('coursesTitle');
   document.getElementById('footerText').textContent = S('footerText');
 
@@ -1714,6 +1918,7 @@ function applyLanguage(){
   renderFacultySwitch();
   renderCourses();
   renderSchedule();
+  renderExams();
   renderAssignmentsList();
   updateDueStat();
   
@@ -1748,4 +1953,4 @@ async function initApp(){
 initApp();
 </script>
 </body>
-</html>
+        </html>
