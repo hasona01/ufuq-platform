@@ -614,6 +614,9 @@ let lang = 'ar';
 let darkMode = false;
 let currentView = {view: 'dashboard', params: {}};
 
+/* معرّف فريد لكل جهاز/متصفح — بنستخدمه عشان نفرّق تحديثاتنا احنا عن تحديثات جهاز تاني */
+const CLIENT_ID = 'c' + Math.random().toString(36).slice(2) + Date.now();
+
 const DAYS_AR = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
@@ -857,7 +860,7 @@ function toggleDarkMode(){
   darkMode = !darkMode;
   document.body.classList.toggle('dark-mode', darkMode);
   document.getElementById('themeToggle').textContent = darkMode ? '☀️' : '🌙';
-  saveState();
+  saveLocalPrefs();
 }
 
 document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
@@ -913,9 +916,10 @@ function buildState(){
     lessonsMap[c.id] = c.lessons.map(l=>({t:l.t, d:l.d}));
     notesMap[c.id] = c.lessons.map(l=>l.notes || '');
   });
-  return { 
-    assignments, nextAssignmentId, schedule, nextScheduleId, exams, nextExamId, gradesData, 
-    doneMap, filesMap, lessonsMap, notesMap, lang, currentFaculty, currentView, darkMode
+  return {
+    _writerId: CLIENT_ID,
+    assignments, nextAssignmentId, schedule, nextScheduleId, exams, nextExamId, gradesData,
+    doneMap, filesMap, lessonsMap, notesMap
   };
 }
 
@@ -971,23 +975,36 @@ function applyState(state){
       }
     });
   }
-  if(state.lang) lang = state.lang;
-  if(state.currentFaculty) currentFaculty = state.currentFaculty;
-  if(state.currentView) currentView = state.currentView;
-  if(state.darkMode !== undefined){
-    darkMode = state.darkMode;
-    document.body.classList.toggle('dark-mode', darkMode);
-    document.getElementById('themeToggle').textContent = darkMode ? '☀️' : '🌙';
-  }
 }
 
-let lastSyncedJSON = '';
+/* ===== تفضيلات شخصية لكل جهاز — بتتخزن محليًا بس، مش بتتزامن مع حد ===== */
+const LOCAL_PREFS_KEY = 'ufuq_local_prefs_v1';
+
+function saveLocalPrefs(){
+  try{
+    localStorage.setItem(LOCAL_PREFS_KEY, JSON.stringify({lang, darkMode, currentFaculty, currentView}));
+  }catch(e){ console.error('Local prefs save failed:', e); }
+}
+
+function loadLocalPrefs(){
+  try{
+    const raw = localStorage.getItem(LOCAL_PREFS_KEY);
+    if(!raw) return;
+    const p = JSON.parse(raw);
+    if(p.lang) lang = p.lang;
+    if(p.darkMode !== undefined){
+      darkMode = p.darkMode;
+      document.body.classList.toggle('dark-mode', darkMode);
+      document.getElementById('themeToggle').textContent = darkMode ? '☀️' : '🌙';
+    }
+    if(p.currentFaculty) currentFaculty = p.currentFaculty;
+    if(p.currentView) currentView = p.currentView;
+  }catch(e){ console.error('Local prefs load failed:', e); }
+}
 
 async function saveState(){
   const state = buildState();
-  const json = JSON.stringify(state);
-  lastSyncedJSON = json;
-  try{ localStorage.setItem(STORAGE_KEY, json); }catch(e){ console.error('Local save failed:', e); }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){ console.error('Local save failed:', e); }
   if(db){
     try{
       await setDoc(stateDocRef(), state);
@@ -1016,7 +1033,21 @@ async function loadState(){
     }catch(e){ console.error('Local load failed:', e); }
   }
   applyState(state);
-  lastSyncedJSON = JSON.stringify(buildState());
+}
+
+function refreshSharedViews(){
+  renderCourses();
+  renderSchedule();
+  renderExams();
+  renderAssignmentsList();
+  updateDueStat();
+  if(currentView.view === 'course'){
+    renderCoursePageContent(currentView.params.courseId);
+  }else if(currentView.view === 'assignments'){
+    renderAssignmentsPage();
+  }else if(currentView.view === 'grades'){
+    renderGradesPage();
+  }
 }
 
 function startRealtimeSync(){
@@ -1024,11 +1055,9 @@ function startRealtimeSync(){
   onSnapshot(stateDocRef(), (snap)=>{
     if(!snap.exists()) return;
     const remoteData = snap.data();
-    const remoteJSON = JSON.stringify(remoteData);
-    if(remoteJSON === lastSyncedJSON) return; // ده تحديث احنا اللي عملناه، تجاهله
-    lastSyncedJSON = remoteJSON;
+    if(remoteData._writerId === CLIENT_ID) return; // ده تحديث احنا اللي عملناه، تجاهله
     applyState(remoteData);
-    applyLanguage();
+    refreshSharedViews();
     showNotification('🔄', lang==='ar' ? 'اتحدثت البيانات من جهاز تاني' : 'Data updated from another device', 3000);
   }, (err)=>{
     console.error('Realtime sync error:', err);
@@ -1063,7 +1092,7 @@ function showView(view, params={}){
     document.getElementById('dashboardView').style.display = 'block';
   }
   window.scrollTo({top:0, behavior:'smooth'});
-  saveState();
+  saveLocalPrefs();
 }
 
 function navigate(view, params={}){
@@ -1476,7 +1505,7 @@ function renderFacultySwitch(){
       renderAssignmentsList();
       updateDueStat();
       checkUpcomingAssignments();
-      saveState();
+      saveLocalPrefs();
     });
   });
 }
@@ -1964,10 +1993,11 @@ function applyLanguage(){
 document.getElementById('langToggle').addEventListener('click', ()=>{
   lang = lang==='ar' ? 'en' : 'ar';
   applyLanguage();
-  saveState();
+  saveLocalPrefs();
 });
 
 async function initApp(){
+  loadLocalPrefs();
   await loadState();
   applyLanguage();
   
@@ -1984,4 +2014,4 @@ async function initApp(){
 initApp();
 </script>
 </body>
-  </html>
+        </html>
