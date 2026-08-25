@@ -270,6 +270,18 @@
   .attach-chip:hover .file-del{ opacity:1; }
   .attach-chip .file-del:hover{ color:#B0522D; background:#fff; }
 
+  /* PDF Viewer */
+  .pdf-viewer{
+    width:100%; height:600px; border:1px solid var(--line); border-radius:10px;
+    margin:10px 0; background:var(--paper);
+  }
+  .pdf-controls{
+    display:flex; gap:10px; align-items:center; margin-bottom:10px;
+  }
+  .pdf-controls button{
+    background:var(--gold); color:#fff; border:none; border-radius:6px;
+    padding:6px 12px; font-size:12px; font-weight:600;
+  }
   .reading-mode-toggle{
     background:transparent; border:1.5px solid var(--gold); color:var(--gold);
     border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; margin-bottom:10px;
@@ -478,7 +490,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGYp76VlTgqkAOwBqFF6mDxPctsZLT2IM",
@@ -497,46 +509,6 @@ if(firebaseConfig.apiKey !== "REPLACE_ME"){
   }catch(e){ console.error('Firebase init error:', e); }
 }
 const stateDocRef = () => doc(db, 'ufuq', 'state');
-
-/* تخزين الملفات نفسها جوه Firestore (مجاني تمامًا، بدون Storage) — محدود بحجم صغير لكل ملف */
-function fileToBase64(file){
-  return new Promise((resolve, reject)=>{
-    const r = new FileReader();
-    r.onload = () => resolve(r.result.split(',')[1]);
-    r.onerror = () => reject(new Error(lang==='ar' ? 'تعذّرت قراءة الملف' : 'Could not read file'));
-    r.readAsDataURL(file);
-  });
-}
-
-async function uploadFileToFirestore(file){
-  const base64 = await fileToBase64(file);
-  const fileId = 'f' + Date.now() + Math.random().toString(36).slice(2,8);
-  await setDoc(doc(db, 'files', fileId), {
-    name: file.name, type: file.type || '', size: file.size, data: base64
-  });
-  return fileId;
-}
-
-async function openStoredFile(fileId, fallbackType, fallbackName){
-  try{
-    const snap = await getDoc(doc(db, 'files', fileId));
-    if(!snap.exists()){
-      alert(lang==='ar' ? 'الملف مش موجود (يمكن اتحذف)' : 'File not found (may have been deleted)');
-      return;
-    }
-    const data = snap.data();
-    const byteChars = atob(data.data);
-    const byteNumbers = new Array(byteChars.length);
-    for(let i=0; i<byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], {type: data.type || fallbackType || 'application/octet-stream'});
-    const url = URL.createObjectURL(blob);
-    window.open(url, '_blank');
-  }catch(err){
-    console.error('Open file failed:', err);
-    alert((lang==='ar' ? 'تعذّر فتح الملف: ' : 'Could not open file: ') + err.message);
-  }
-}
 
 const FACULTIES = {
   nursing: {label:{ar:'التمريض', en:'Nursing'}, short:{ar:'تمريض', en:'Nursing'}},
@@ -641,9 +613,6 @@ let currentFaculty = 'nursing';
 let lang = 'ar';
 let darkMode = false;
 let currentView = {view: 'dashboard', params: {}};
-
-/* معرّف فريد لكل جهاز/متصفح — بنستخدمه عشان نفرّق تحديثاتنا احنا عن تحديثات جهاز تاني */
-const CLIENT_ID = 'c' + Math.random().toString(36).slice(2) + Date.now();
 
 const DAYS_AR = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -796,7 +765,7 @@ const STR = {
     uploadFile:'📎 رفع ملف',
     uploadingFile:'جارٍ الرفع...',
     uploadedLocal:'✅ تم الرفع',
-    fileTooBig:'❌ الملف كبير جدًا (الحد الأقصى ٧٠٠ كيلوبايت — التخزين مجاني بدون بطاقة، فمحدود لملفات صغيرة زي شرائح الـ PDF)',
+    fileTooBig:'❌ الملف كبير جدًا (أكبر من 100 ميجا)',
     addLecture:'+ إضافة محاضرة',
     notes:'ملاحظات',
     saveNotes:'حفظ الملاحظات',
@@ -837,7 +806,7 @@ const STR = {
     uploadFile:'📎 Upload File',
     uploadingFile:'Uploading...',
     uploadedLocal:'✅ Uploaded',
-    fileTooBig:'❌ File too large (max 700KB — free storage without a card, best for small PDFs)',
+    fileTooBig:'❌ File too large (max 100MB)',
     addLecture:'+ Add Lecture',
     notes:'Notes',
     saveNotes:'Save Notes',
@@ -856,7 +825,7 @@ const STR = {
 function S(key){ return STR[lang][key] || key; }
 
 const STORAGE_KEY = 'ufuq_platform_state_v8';
-const MAX_FILE_SIZE = 700 * 1024;
+const MAX_FILE_SIZE = 100 * 1024 * 1024;
 
 // ===== Notification System =====
 function showNotification(title, body, duration = 5000){
@@ -888,7 +857,7 @@ function toggleDarkMode(){
   darkMode = !darkMode;
   document.body.classList.toggle('dark-mode', darkMode);
   document.getElementById('themeToggle').textContent = darkMode ? '☀️' : '🌙';
-  saveLocalPrefs();
+  saveState();
 }
 
 document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
@@ -939,15 +908,13 @@ function buildState(){
   const notesMap = {};
   courses.forEach(c=>{
     doneMap[c.id] = c.lessons.map(l=>l.done);
-    filesMap[c.id] = {};
-    c.lessons.forEach((l,i)=>{ filesMap[c.id][i] = l.files || []; });
+    filesMap[c.id] = c.lessons.map(l=>l.files || []);
     lessonsMap[c.id] = c.lessons.map(l=>({t:l.t, d:l.d}));
     notesMap[c.id] = c.lessons.map(l=>l.notes || '');
   });
-  return {
-    _writerId: CLIENT_ID,
-    assignments, nextAssignmentId, schedule, nextScheduleId, exams, nextExamId, gradesData,
-    doneMap, filesMap, lessonsMap, notesMap
+  return { 
+    assignments, nextAssignmentId, schedule, nextScheduleId, exams, nextExamId, gradesData, 
+    doneMap, filesMap, lessonsMap, notesMap, lang, currentFaculty, currentView, darkMode
   };
 }
 
@@ -985,10 +952,10 @@ function applyState(state){
   }
   if(state.filesMap){
     courses.forEach(c=>{
-      const obj = state.filesMap[c.id];
-      if(obj){
+      const arr = state.filesMap[c.id];
+      if(arr){
         c.lessons.forEach((l,i)=>{
-          if(obj[i]) l.files = obj[i];
+          if(arr[i]) l.files = arr[i];
         });
       }
     });
@@ -1003,43 +970,22 @@ function applyState(state){
       }
     });
   }
-}
-
-/* ===== تفضيلات شخصية لكل جهاز — بتتخزن محليًا بس، مش بتتزامن مع حد ===== */
-const LOCAL_PREFS_KEY = 'ufuq_local_prefs_v1';
-
-function saveLocalPrefs(){
-  try{
-    localStorage.setItem(LOCAL_PREFS_KEY, JSON.stringify({lang, darkMode, currentFaculty, currentView}));
-  }catch(e){ console.error('Local prefs save failed:', e); }
-}
-
-function loadLocalPrefs(){
-  try{
-    const raw = localStorage.getItem(LOCAL_PREFS_KEY);
-    if(!raw) return;
-    const p = JSON.parse(raw);
-    if(p.lang) lang = p.lang;
-    if(p.darkMode !== undefined){
-      darkMode = p.darkMode;
-      document.body.classList.toggle('dark-mode', darkMode);
-      document.getElementById('themeToggle').textContent = darkMode ? '☀️' : '🌙';
-    }
-    if(p.currentFaculty) currentFaculty = p.currentFaculty;
-    if(p.currentView) currentView = p.currentView;
-  }catch(e){ console.error('Local prefs load failed:', e); }
+  if(state.lang) lang = state.lang;
+  if(state.currentFaculty) currentFaculty = state.currentFaculty;
+  if(state.currentView) currentView = state.currentView;
+  if(state.darkMode !== undefined){
+    darkMode = state.darkMode;
+    document.body.classList.toggle('dark-mode', darkMode);
+    document.getElementById('themeToggle').textContent = darkMode ? '☀️' : '🌙';
+  }
 }
 
 async function saveState(){
   const state = buildState();
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){ console.error('Local save failed:', e); }
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
   if(db){
-    try{
-      await setDoc(stateDocRef(), state);
-    }catch(e){
-      console.error('Firebase save failed:', e);
-      showNotification('⚠️ Firebase', (e.code || '') + ' — ' + (e.message || String(e)), 8000);
-    }
+    try{ await setDoc(stateDocRef(), state); }
+    catch(e){}
   }
 }
 
@@ -1049,54 +995,15 @@ async function loadState(){
     try{
       const snap = await getDoc(stateDocRef());
       if(snap.exists()) state = snap.data();
-    }catch(e){
-      console.error('Firebase load failed:', e);
-      showNotification('⚠️ Firebase', (e.code || '') + ' — ' + (e.message || String(e)), 8000);
-    }
+    }catch(e){}
   }
   if(!state){
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
       if(raw) state = JSON.parse(raw);
-    }catch(e){ console.error('Local load failed:', e); }
+    }catch(e){}
   }
   applyState(state);
-}
-
-function refreshSharedViews(){
-  renderCourses();
-  renderSchedule();
-  renderExams();
-  renderAssignmentsList();
-  updateDueStat();
-  if(currentView.view === 'course'){
-    renderCoursePageContent(currentView.params.courseId);
-  }else if(currentView.view === 'assignments'){
-    renderAssignmentsPage();
-  }else if(currentView.view === 'grades'){
-    renderGradesPage();
-  }
-}
-
-let lastRemoteNotifTime = 0;
-
-function startRealtimeSync(){
-  if(!db) return;
-  onSnapshot(stateDocRef(), (snap)=>{
-    if(!snap.exists()) return;
-    const remoteData = snap.data();
-    if(remoteData._writerId === CLIENT_ID) return; // ده تحديث احنا اللي عملناه، تجاهله
-    applyState(remoteData);
-    refreshSharedViews();
-    const now = Date.now();
-    if(now - lastRemoteNotifTime > 4000){
-      lastRemoteNotifTime = now;
-      showNotification('🔄', lang==='ar' ? 'اتحدثت البيانات من جهاز تاني' : 'Data updated from another device', 3000);
-    }
-  }, (err)=>{
-    console.error('Realtime sync error:', err);
-    showNotification('⚠️', lang==='ar' ? 'انقطعت المزامنة الفورية' : 'Realtime sync disconnected', 4000);
-  });
 }
 
 const VIEW_IDS = ['dashboardView','coursePage','assignmentsPage','gradesPage'];
@@ -1108,8 +1015,6 @@ function hideAllViews(){
 function showView(view, params={}){
   hideAllViews();
   currentView = {view, params};
-  expandedLecture = null;
-  showAddLectureForm = false;
   
   if(view === 'course'){
     document.body.classList.add('course-view');
@@ -1128,7 +1033,7 @@ function showView(view, params={}){
     document.getElementById('dashboardView').style.display = 'block';
   }
   window.scrollTo({top:0, behavior:'smooth'});
-  saveLocalPrefs();
+  saveState();
 }
 
 function navigate(view, params={}){
@@ -1254,7 +1159,6 @@ function renderGradesList(facCourses){
     if(totalEl) totalEl.textContent = total ? `${total.scoreSum} / ${total.maxSum} (${total.pct}%)` : '—';
   }
 
-  let gradeSaveTimer = null;
   wrap.querySelectorAll('[data-grade]').forEach(inp=>{
     inp.addEventListener('input', ()=>{
       const [courseId, part, field] = inp.dataset.grade.split('|');
@@ -1265,8 +1169,7 @@ function renderGradesList(facCourses){
         gradesData[courseId][part][field] = inp.value;
       }
       updateTotalDisplay(courseId);
-      clearTimeout(gradeSaveTimer);
-      gradeSaveTimer = setTimeout(()=>{ saveState(); }, 900);
+      saveState();
     });
   });
 
@@ -1543,7 +1446,7 @@ function renderFacultySwitch(){
       renderAssignmentsList();
       updateDueStat();
       checkUpcomingAssignments();
-      saveLocalPrefs();
+      saveState();
     });
   });
 }
@@ -1724,13 +1627,22 @@ function lectureContentHtml(course, l, i){
   const files = l.files || [];
   const filesHtml = files.length > 0 ? `
     <div class="files-list">
-      ${files.map((f,fi)=>`
-        <div class="attach-chip" data-open-file="${f.fileId}" data-file-type="${f.type||''}" data-file-name="${f.name}" role="button" tabindex="0">
+      ${files.map((f,fi)=>{
+        const isPdf = f.name.toLowerCase().endsWith('.pdf');
+        return `
+        <a class="attach-chip" href="${f.url}" target="_blank" rel="noopener">
           <div class="file-icon">${getFileIcon(f)}</div>
           <div class="file-name">${f.name}</div>
           <button class="file-del" data-del-file="${i}|${fi}" onclick="event.preventDefault(); event.stopPropagation();" title="✕">✕</button>
-        </div>
-      `).join('')}
+        </a>
+        ${isPdf ? `
+          <div style="margin-top:8px;">
+            <button class="reading-mode-toggle" data-view-pdf="${f.url}">${lang==='ar'?'📖 عرض PDF':'📖 View PDF'}</button>
+            <div id="pdfViewer-${i}-${fi}" style="display:none;">
+              <embed class="pdf-viewer" src="${f.url}" type="application/pdf">
+            </div>
+          </div>` : ''}
+      `}).join('')}
     </div>
   ` : '';
   
@@ -1779,11 +1691,17 @@ function wireLectureContent(course, li){
       saveState();
     });
   });
-
-  document.querySelectorAll('[data-open-file]').forEach(el=>{
-    el.addEventListener('click', (e)=>{
-      if(e.target.closest('.file-del')) return;
-      openStoredFile(el.dataset.openFile, el.dataset.fileType, el.dataset.fileName);
+  
+  document.querySelectorAll('[data-view-pdf]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      const id = btn.nextElementSibling?.id;
+      if(id){
+        const viewer = document.getElementById(id);
+        if(viewer){
+          viewer.style.display = viewer.style.display === 'none' ? 'block' : 'none';
+        }
+      }
     });
   });
   
@@ -1814,20 +1732,13 @@ async function handleFileUpload(e, course, li){
     statusEl.textContent = S('uploadingFile');
 
     try{
-      if(db){
-        const fileId = await uploadFileToFirestore(file);
-        if(!course.lessons[li].files) course.lessons[li].files = [];
-        course.lessons[li].files.push({name:file.name, type:file.type||'', size:file.size, fileId});
-        statusEl.textContent = S('uploadedLocal');
-      }else{
-        const url = URL.createObjectURL(file);
-        if(!course.lessons[li].files) course.lessons[li].files = [];
-        course.lessons[li].files.push({name:file.name, url, size:file.size});
-        statusEl.textContent = lang==='ar' ? 'تم الرفع مؤقتًا بس (مفيش اتصال بقاعدة البيانات) — هيتفقد لو قفلت الصفحة' : 'Uploaded locally only (no database connection) — will be lost on reload';
-      }
+      const url = URL.createObjectURL(file);
+      if(!course.lessons[li].files) course.lessons[li].files = [];
+      course.lessons[li].files.push({name:file.name, url, size:file.size});
+      statusEl.textContent = S('uploadedLocal');
     }catch(err){
       console.error('Upload failed:', err);
-      statusEl.textContent = '❌ ' + (err.code || '') + ' ' + err.message;
+      statusEl.textContent = '❌ ' + err.message;
     }
   }
   
@@ -2023,11 +1934,10 @@ function applyLanguage(){
 document.getElementById('langToggle').addEventListener('click', ()=>{
   lang = lang==='ar' ? 'en' : 'ar';
   applyLanguage();
-  saveLocalPrefs();
+  saveState();
 });
 
 async function initApp(){
-  loadLocalPrefs();
   await loadState();
   applyLanguage();
   
@@ -2039,9 +1949,8 @@ async function initApp(){
   }
   
   checkUpcomingAssignments();
-  startRealtimeSync();
 }
 initApp();
 </script>
 </body>
-    </html>
+</html>
