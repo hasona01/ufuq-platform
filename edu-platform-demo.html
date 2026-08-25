@@ -14,8 +14,6 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 
-<script src="https://unpkg.com/mammoth@1.8.0/mammoth.browser.min.js"></script>
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -272,18 +270,6 @@
   .attach-chip:hover .file-del{ opacity:1; }
   .attach-chip .file-del:hover{ color:#B0522D; background:#fff; }
 
-  /* PDF Viewer */
-  .pdf-viewer{
-    width:100%; height:600px; border:1px solid var(--line); border-radius:10px;
-    margin:10px 0; background:var(--paper);
-  }
-  .pdf-controls{
-    display:flex; gap:10px; align-items:center; margin-bottom:10px;
-  }
-  .pdf-controls button{
-    background:var(--gold); color:#fff; border:none; border-radius:6px;
-    padding:6px 12px; font-size:12px; font-weight:600;
-  }
   .reading-mode-toggle{
     background:transparent; border:1.5px solid var(--gold); color:var(--gold);
     border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; margin-bottom:10px;
@@ -405,28 +391,6 @@
     border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; margin-top:8px;
   }
 
-  /* ===== In-page File Viewer ===== */
-  .file-viewer-modal{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:3000;display:none;align-items:center;justify-content:center;padding:20px;}
-  .file-viewer-modal.show{display:flex;}
-  .file-viewer-box{width:min(1100px,96vw);height:min(88vh,900px);background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 15px 50px rgba(0,0,0,.3);}
-  .file-viewer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px;border-bottom:1px solid var(--line);}
-  .file-viewer-title{font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-  .file-viewer-actions{display:flex;gap:8px;align-items:center;}
-  .file-viewer-actions button,.file-viewer-actions a{background:var(--gold);color:#fff;border:none;border-radius:999px;padding:7px 12px;font:600 12px inherit;text-decoration:none;cursor:pointer;}
-  .file-viewer-actions .close{background:transparent;color:var(--ink);border:1px solid var(--line);}
-  .file-viewer-frame{display:block;flex:1;width:100%;height:100%;min-height:0;border:0;background:#fff;}
-  .file-viewer-body{flex:1;min-height:0;overflow:hidden;background:#fff;}
-  .file-viewer-message{display:flex;align-items:center;justify-content:center;text-align:center;padding:30px;line-height:1.8;color:var(--ink-soft);height:100%;}
-
-  .docx-preview{height:100%;overflow:auto;background:#f3f3f3;padding:28px;}
-  .docx-preview article{max-width:850px;min-height:100%;margin:0 auto;background:#fff;padding:55px 65px;box-shadow:0 2px 12px rgba(0,0,0,.08);color:#222;line-height:1.9;font-family:Arial,"Times New Roman",sans-serif;}
-  .docx-preview article h1,.docx-preview article h2,.docx-preview article h3{margin-top:1.2em;}
-  .docx-preview article img{max-width:100%;height:auto;}
-  .docx-preview article table{border-collapse:collapse;width:100%;margin:16px 0;}
-  .docx-preview article td,.docx-preview article th{border:1px solid #ccc;padding:7px;}
-  .docx-warning{max-width:850px;margin:0 auto 12px;background:#fff7d6;border:1px solid #e7cf70;border-radius:10px;padding:10px 14px;color:#6b5b16;}
-  .upload-progress{height:5px;background:var(--line);border-radius:999px;overflow:hidden;margin-top:8px;display:none;}
-  .upload-progress > div{height:100%;width:0;background:var(--gold);transition:width .15s;}
   footer{text-align:center; padding:24px; font-size:12px; color:var(--ink-soft);}
 </style>
 </head>
@@ -437,19 +401,6 @@
   <button class="notif-close" onclick="hideNotification()">×</button>
   <div class="notif-title" id="notifTitle"></div>
   <div class="notif-body" id="notifBody"></div>
-</div>
-
-<div class="file-viewer-modal" id="fileViewerModal" aria-hidden="true">
-  <div class="file-viewer-box">
-    <div class="file-viewer-head">
-      <div class="file-viewer-title" id="fileViewerTitle"></div>
-      <div class="file-viewer-actions">
-        <a id="fileViewerDownload" href="#" download>⬇️ تحميل</a>
-        <button class="close" id="fileViewerClose" type="button">✕</button>
-      </div>
-    </div>
-    <div id="fileViewerBody" class="file-viewer-body"></div>
-  </div>
 </div>
 
 <header>
@@ -527,7 +478,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGYp76VlTgqkAOwBqFF6mDxPctsZLT2IM",
@@ -546,6 +497,46 @@ if(firebaseConfig.apiKey !== "REPLACE_ME"){
   }catch(e){ console.error('Firebase init error:', e); }
 }
 const stateDocRef = () => doc(db, 'ufuq', 'state');
+
+/* تخزين الملفات نفسها جوه Firestore (مجاني تمامًا، بدون Storage) — محدود بحجم صغير لكل ملف */
+function fileToBase64(file){
+  return new Promise((resolve, reject)=>{
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = () => reject(new Error(lang==='ar' ? 'تعذّرت قراءة الملف' : 'Could not read file'));
+    r.readAsDataURL(file);
+  });
+}
+
+async function uploadFileToFirestore(file){
+  const base64 = await fileToBase64(file);
+  const fileId = 'f' + Date.now() + Math.random().toString(36).slice(2,8);
+  await setDoc(doc(db, 'files', fileId), {
+    name: file.name, type: file.type || '', size: file.size, data: base64
+  });
+  return fileId;
+}
+
+async function openStoredFile(fileId, fallbackType, fallbackName){
+  try{
+    const snap = await getDoc(doc(db, 'files', fileId));
+    if(!snap.exists()){
+      alert(lang==='ar' ? 'الملف مش موجود (يمكن اتحذف)' : 'File not found (may have been deleted)');
+      return;
+    }
+    const data = snap.data();
+    const byteChars = atob(data.data);
+    const byteNumbers = new Array(byteChars.length);
+    for(let i=0; i<byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], {type: data.type || fallbackType || 'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  }catch(err){
+    console.error('Open file failed:', err);
+    alert((lang==='ar' ? 'تعذّر فتح الملف: ' : 'Could not open file: ') + err.message);
+  }
+}
 
 const FACULTIES = {
   nursing: {label:{ar:'التمريض', en:'Nursing'}, short:{ar:'تمريض', en:'Nursing'}},
@@ -650,6 +641,9 @@ let currentFaculty = 'nursing';
 let lang = 'ar';
 let darkMode = false;
 let currentView = {view: 'dashboard', params: {}};
+
+/* معرّف فريد لكل جهاز/متصفح — بنستخدمه عشان نفرّق تحديثاتنا احنا عن تحديثات جهاز تاني */
+const CLIENT_ID = 'c' + Math.random().toString(36).slice(2) + Date.now();
 
 const DAYS_AR = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
 const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -802,7 +796,7 @@ const STR = {
     uploadFile:'📎 رفع ملف',
     uploadingFile:'جارٍ الرفع...',
     uploadedLocal:'✅ تم الرفع',
-    fileTooBig:'❌ الملف كبير جدًا (الحد الأقصى 500 ميجا)',
+    fileTooBig:'❌ الملف كبير جدًا (الحد الأقصى ٧٠٠ كيلوبايت — التخزين مجاني بدون بطاقة، فمحدود لملفات صغيرة زي شرائح الـ PDF)',
     addLecture:'+ إضافة محاضرة',
     notes:'ملاحظات',
     saveNotes:'حفظ الملاحظات',
@@ -843,7 +837,7 @@ const STR = {
     uploadFile:'📎 Upload File',
     uploadingFile:'Uploading...',
     uploadedLocal:'✅ Uploaded',
-    fileTooBig:'❌ File too large (max 500MB)',
+    fileTooBig:'❌ File too large (max 700KB — free storage without a card, best for small PDFs)',
     addLecture:'+ Add Lecture',
     notes:'Notes',
     saveNotes:'Save Notes',
@@ -862,7 +856,7 @@ const STR = {
 function S(key){ return STR[lang][key] || key; }
 
 const STORAGE_KEY = 'ufuq_platform_state_v8';
-const MAX_FILE_SIZE = 500 * 1024 * 1024;
+const MAX_FILE_SIZE = 700 * 1024;
 
 // ===== Notification System =====
 function showNotification(title, body, duration = 5000){
@@ -894,7 +888,7 @@ function toggleDarkMode(){
   darkMode = !darkMode;
   document.body.classList.toggle('dark-mode', darkMode);
   document.getElementById('themeToggle').textContent = darkMode ? '☀️' : '🌙';
-  saveState();
+  saveLocalPrefs();
 }
 
 document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
@@ -945,13 +939,15 @@ function buildState(){
   const notesMap = {};
   courses.forEach(c=>{
     doneMap[c.id] = c.lessons.map(l=>l.done);
-    filesMap[c.id] = c.lessons.map(l=>l.files || []);
+    filesMap[c.id] = {};
+    c.lessons.forEach((l,i)=>{ filesMap[c.id][i] = l.files || []; });
     lessonsMap[c.id] = c.lessons.map(l=>({t:l.t, d:l.d}));
     notesMap[c.id] = c.lessons.map(l=>l.notes || '');
   });
-  return { 
-    assignments, nextAssignmentId, schedule, nextScheduleId, exams, nextExamId, gradesData, 
-    doneMap, filesMap, lessonsMap, notesMap, lang, currentFaculty, currentView, darkMode
+  return {
+    _writerId: CLIENT_ID,
+    assignments, nextAssignmentId, schedule, nextScheduleId, exams, nextExamId, gradesData,
+    doneMap, filesMap, lessonsMap, notesMap
   };
 }
 
@@ -989,10 +985,10 @@ function applyState(state){
   }
   if(state.filesMap){
     courses.forEach(c=>{
-      const arr = state.filesMap[c.id];
-      if(arr){
+      const obj = state.filesMap[c.id];
+      if(obj){
         c.lessons.forEach((l,i)=>{
-          if(arr[i]) l.files = arr[i];
+          if(obj[i]) l.files = obj[i];
         });
       }
     });
@@ -1007,27 +1003,42 @@ function applyState(state){
       }
     });
   }
-  if(state.lang) lang = state.lang;
-  if(state.currentFaculty) currentFaculty = state.currentFaculty;
-  if(state.currentView) currentView = state.currentView;
-  if(state.darkMode !== undefined){
-    darkMode = state.darkMode;
-    document.body.classList.toggle('dark-mode', darkMode);
-    document.getElementById('themeToggle').textContent = darkMode ? '☀️' : '🌙';
-  }
+}
+
+/* ===== تفضيلات شخصية لكل جهاز — بتتخزن محليًا بس، مش بتتزامن مع حد ===== */
+const LOCAL_PREFS_KEY = 'ufuq_local_prefs_v1';
+
+function saveLocalPrefs(){
+  try{
+    localStorage.setItem(LOCAL_PREFS_KEY, JSON.stringify({lang, darkMode, currentFaculty, currentView}));
+  }catch(e){ console.error('Local prefs save failed:', e); }
+}
+
+function loadLocalPrefs(){
+  try{
+    const raw = localStorage.getItem(LOCAL_PREFS_KEY);
+    if(!raw) return;
+    const p = JSON.parse(raw);
+    if(p.lang) lang = p.lang;
+    if(p.darkMode !== undefined){
+      darkMode = p.darkMode;
+      document.body.classList.toggle('dark-mode', darkMode);
+      document.getElementById('themeToggle').textContent = darkMode ? '☀️' : '🌙';
+    }
+    if(p.currentFaculty) currentFaculty = p.currentFaculty;
+    if(p.currentView) currentView = p.currentView;
+  }catch(e){ console.error('Local prefs load failed:', e); }
 }
 
 async function saveState(){
   const state = buildState();
-  state._updatedAt = Date.now();
-  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){ console.error('Local save failed:', e); }
   if(db){
     try{
-      lastRemoteUpdatedAt = state._updatedAt;
       await setDoc(stateDocRef(), state);
     }catch(e){
-      console.error('Firestore save error:', e);
-      showNotification('❌', lang==='ar' ? 'تعذر مزامنة التعديل مع الأجهزة الأخرى' : 'Could not sync the change to other devices', 4000);
+      console.error('Firebase save failed:', e);
+      showNotification('⚠️ Firebase', (e.code || '') + ' — ' + (e.message || String(e)), 8000);
     }
   }
 }
@@ -1039,61 +1050,52 @@ async function loadState(){
       const snap = await getDoc(stateDocRef());
       if(snap.exists()) state = snap.data();
     }catch(e){
-      console.error('Firestore load error:', e);
+      console.error('Firebase load failed:', e);
+      showNotification('⚠️ Firebase', (e.code || '') + ' — ' + (e.message || String(e)), 8000);
     }
   }
   if(!state){
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
       if(raw) state = JSON.parse(raw);
-    }catch(e){
-      console.error('Local state load error:', e);
-    }
+    }catch(e){ console.error('Local load failed:', e); }
   }
   applyState(state);
 }
 
-// ===== Realtime Sync =====
-let realtimeUnsubscribe = null;
-let lastRemoteUpdatedAt = 0;
-
-function refreshUIAfterRemoteState(){
-  try{
-    applyLanguage();
-    if(currentView && currentView.view){
-      if(currentView.view === 'course') renderCoursePageContent(currentView.params.courseId);
-      else if(currentView.view === 'assignments') renderAssignmentsPage();
-      else if(currentView.view === 'grades') renderGradesPage();
-      else renderCourses();
-    }else{
-      renderCourses();
-    }
-    updateDueStat();
-    renderAssignmentsList();
-  }catch(err){
-    console.error('Remote UI refresh error:', err);
+function refreshSharedViews(){
+  renderCourses();
+  renderSchedule();
+  renderExams();
+  renderAssignmentsList();
+  updateDueStat();
+  if(currentView.view === 'course'){
+    renderCoursePageContent(currentView.params.courseId);
+  }else if(currentView.view === 'assignments'){
+    renderAssignmentsPage();
+  }else if(currentView.view === 'grades'){
+    renderGradesPage();
   }
 }
 
+let lastRemoteNotifTime = 0;
+
 function startRealtimeSync(){
   if(!db) return;
-  if(realtimeUnsubscribe) realtimeUnsubscribe();
-
-  realtimeUnsubscribe = onSnapshot(stateDocRef(), (snap)=>{
+  onSnapshot(stateDocRef(), (snap)=>{
     if(!snap.exists()) return;
-    const remoteState = snap.data();
-    const remoteUpdatedAt = Number(remoteState._updatedAt || 0);
-    if(remoteUpdatedAt && remoteUpdatedAt <= lastRemoteUpdatedAt) return;
-    lastRemoteUpdatedAt = remoteUpdatedAt || Date.now();
-
-    // Do not save again: this is only applying the change received from Firebase.
-    applyState(remoteState);
-    try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteState));
-    }catch(e){}
-    refreshUIAfterRemoteState();
-  }, (error)=>{
-    console.error('Realtime sync error:', error);
+    const remoteData = snap.data();
+    if(remoteData._writerId === CLIENT_ID) return; // ده تحديث احنا اللي عملناه، تجاهله
+    applyState(remoteData);
+    refreshSharedViews();
+    const now = Date.now();
+    if(now - lastRemoteNotifTime > 4000){
+      lastRemoteNotifTime = now;
+      showNotification('🔄', lang==='ar' ? 'اتحدثت البيانات من جهاز تاني' : 'Data updated from another device', 3000);
+    }
+  }, (err)=>{
+    console.error('Realtime sync error:', err);
+    showNotification('⚠️', lang==='ar' ? 'انقطعت المزامنة الفورية' : 'Realtime sync disconnected', 4000);
   });
 }
 
@@ -1106,6 +1108,8 @@ function hideAllViews(){
 function showView(view, params={}){
   hideAllViews();
   currentView = {view, params};
+  expandedLecture = null;
+  showAddLectureForm = false;
   
   if(view === 'course'){
     document.body.classList.add('course-view');
@@ -1124,7 +1128,7 @@ function showView(view, params={}){
     document.getElementById('dashboardView').style.display = 'block';
   }
   window.scrollTo({top:0, behavior:'smooth'});
-  saveState();
+  saveLocalPrefs();
 }
 
 function navigate(view, params={}){
@@ -1250,6 +1254,7 @@ function renderGradesList(facCourses){
     if(totalEl) totalEl.textContent = total ? `${total.scoreSum} / ${total.maxSum} (${total.pct}%)` : '—';
   }
 
+  let gradeSaveTimer = null;
   wrap.querySelectorAll('[data-grade]').forEach(inp=>{
     inp.addEventListener('input', ()=>{
       const [courseId, part, field] = inp.dataset.grade.split('|');
@@ -1260,7 +1265,8 @@ function renderGradesList(facCourses){
         gradesData[courseId][part][field] = inp.value;
       }
       updateTotalDisplay(courseId);
-      saveState();
+      clearTimeout(gradeSaveTimer);
+      gradeSaveTimer = setTimeout(()=>{ saveState(); }, 900);
     });
   });
 
@@ -1537,7 +1543,7 @@ function renderFacultySwitch(){
       renderAssignmentsList();
       updateDueStat();
       checkUpcomingAssignments();
-      saveState();
+      saveLocalPrefs();
     });
   });
 }
@@ -1584,10 +1590,6 @@ function renderCoursePageContent(courseId){
       <div class="assign-list">${assignHtml()}</div>
     </div>
   `;
-
-  coursePage.querySelector('#backBtn').addEventListener('click', ()=>history.back());
-  coursePage.querySelector('#addLectureBtn').addEventListener('click', ()=>toggleAddLectureForm(course));
-  wireLectureList(course);
 }
 
 let showAddLectureForm = false;
@@ -1605,11 +1607,6 @@ function toggleAddLectureForm(course){
           <button class="btn-cancel" id="cancelLectureBtn">${lang==='ar'?'إلغاء':'Cancel'}</button>
         </div>
       </div>`;
-    wrap.querySelector('#saveLectureBtn').addEventListener('click', ()=>saveNewLecture(course));
-    wrap.querySelector('#cancelLectureBtn').addEventListener('click', ()=>{
-      showAddLectureForm = false;
-      wrap.innerHTML = '';
-    });
   }else{
     wrap.innerHTML = '';
   }
@@ -1647,6 +1644,11 @@ function openCourse(id){
   navigate('course', {courseId: id});
 }
 
+function getCurrentCourse(){
+  if(!currentView || currentView.view !== 'course') return null;
+  return courses.find(c=>c.id === currentView.params.courseId) || null;
+}
+
 let expandedLecture = null;
 let readingMode = false;
 
@@ -1670,35 +1672,8 @@ function lectureCardHtml(course, l, i){
     </div>`;
 }
 
-function wireLectureList(course){
-  document.querySelectorAll('[data-toggle]').forEach(el=>{
-    el.addEventListener('click', (e)=>{
-      const i = +el.dataset.toggle;
-      expandedLecture = (expandedLecture === i) ? null : i;
-      refreshLectureList(course);
-    });
-  });
-  document.querySelectorAll('[data-check]').forEach(el=>{
-    el.addEventListener('change', (e)=>{
-      const i = +el.dataset.check;
-      course.lessons[i].done = el.checked;
-      renderCourses();
-      refreshLectureList(course);
-      const pctEl = document.getElementById('cpPct');
-      const fillEl = document.getElementById('cpProgressFill');
-      if(pctEl) pctEl.textContent = pct(course) + '%';
-      if(fillEl) fillEl.style.width = pct(course) + '%';
-      saveState();
-    });
-  });
-  if(expandedLecture !== null){
-    wireLectureContent(course, expandedLecture);
-  }
-}
-
 function refreshLectureList(course){
   document.getElementById('lectureList').innerHTML = lecturesHtml(course);
-  wireLectureList(course);
 }
 
 function getFileIcon(file){
@@ -1714,32 +1689,35 @@ function getFileIcon(file){
   return '📎';
 }
 
-function escapeHtml(value){
-  return String(value ?? '').replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
-}
-
 function lectureContentHtml(course, l, i){
   const files = l.files || [];
   const filesHtml = files.length > 0 ? `
     <div class="files-list">
       ${files.map((f,fi)=>`
-        <div class="attach-chip" data-open-file="${i}|${fi}" role="button" tabindex="0">
+        <div class="attach-chip" data-open-file="${f.fileId||''}" data-file-type="${f.type||''}" data-file-name="${f.name}" data-file-url="${f.url||''}" role="button" tabindex="0">
           <div class="file-icon">${getFileIcon(f)}</div>
-          <div class="file-name">${escapeHtml(f.name)}</div>
+          <div class="file-name">${f.name}</div>
           <button class="file-del" data-del-file="${i}|${fi}" onclick="event.preventDefault(); event.stopPropagation();" title="✕">✕</button>
         </div>
       `).join('')}
     </div>
   ` : '';
 
+  const driveHtml = `
+    <div class="upload-row" style="margin-top:6px;">
+      <input type="text" id="driveLinkInput-${i}" placeholder="${lang==='ar'?'أو الصق رابط ملف كبير (Google Drive مثلاً)':'Or paste a large-file link (e.g. Google Drive)'}" style="flex:1; min-width:180px; border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:12.5px; background:var(--bg); color:var(--ink);">
+      <button type="button" class="upload-btn" id="driveLinkBtn-${i}">${lang==='ar'?'➕ إضافة الرابط':'➕ Add Link'}</button>
+    </div>
+  `;
+  
   const notesHtml = `
     <div style="margin-top:14px;">
       <label style="font-size:13px; font-weight:600; margin-bottom:6px; display:block;">${S('notes')}</label>
-      <textarea id="notes-${i}" class="essay-box" placeholder="${lang==='ar'?'اكتب ملاحظاتك هنا...':'Write your notes here...'}">${escapeHtml(l.notes || '')}</textarea>
+      <textarea id="notes-${i}" class="essay-box" placeholder="${lang==='ar'?'اكتب ملاحظاتك هنا...':'Write your notes here...'}">${l.notes || ''}</textarea>
       <button class="reading-mode-toggle" data-save-notes="${i}">${S('saveNotes')}</button>
     </div>
   `;
-
+  
   return `
     <div class="upload-row">
       <button type="button" class="upload-btn" id="fileUploadBtn-${i}">${S('uploadFile')}</button>
@@ -1747,243 +1725,182 @@ function lectureContentHtml(course, l, i){
       <button class="reading-mode-toggle" id="readingModeBtn-${i}">${S('readingMode')}</button>
     </div>
     <div class="upload-status" id="uploadStatus-${i}"></div>
-    <div class="upload-progress" id="uploadProgress-${i}"><div></div></div>
+    ${driveHtml}
     ${filesHtml}
     ${notesHtml}
   `;
 }
 
-const FILE_CHUNK_SIZE = 500 * 1024; // safely below Firestore's 1 MiB document limit
-const fileBlobUrls = new Map();
+/* ===== تفويض الأحداث (Event Delegation): ربط دائم مرة واحدة، بيشتغل مهما اتغيّر محتوى الصفحة ===== */
 
-function getViewerType(file){
-  const ext = (file.name || '').split('.').pop().toLowerCase();
-  if(ext === 'pdf') return 'pdf';
-  if(['jpg','jpeg','png','gif','svg','webp','bmp'].includes(ext)) return 'image';
-  if(['mp4','webm','ogg','mov','avi','mkv'].includes(ext)) return 'video';
-  if(['mp3','wav','m4a','aac','flac'].includes(ext)) return 'audio';
-  if(['txt','csv','json','html','htm','css','js'].includes(ext)) return 'text';
-  if(['docx'].includes(ext)) return 'docx';
-  return 'other';
-}
+document.addEventListener('click', (e)=>{
+  // رجوع من صفحة المادة
+  if(e.target.closest('#backBtn')){ history.back(); return; }
 
-function bytesToBase64(bytes){
-  let binary = '';
-  const step = 0x8000;
-  for(let i=0;i<bytes.length;i+=step){
-    binary += String.fromCharCode(...bytes.subarray(i, Math.min(i+step, bytes.length)));
-  }
-  return btoa(binary);
-}
-
-function base64ToBytes(base64){
-  const binary = atob(base64);
-  const bytes = new Uint8Array(binary.length);
-  for(let i=0;i<binary.length;i++) bytes[i] = binary.charCodeAt(i);
-  return bytes;
-}
-
-async function loadCloudFile(file, onProgress){
-  if(fileBlobUrls.has(file.fileId)) return fileBlobUrls.get(file.fileId);
-  if(!db || !file.fileId || !file.chunkCount) throw new Error('بيانات الملف غير مكتملة');
-
-  const chunks = [];
-  for(let i=0;i<file.chunkCount;i++){
-    const snap = await getDoc(doc(db, 'ufuqFiles', file.fileId, 'chunks', String(i)));
-    if(!snap.exists()) throw new Error(`الجزء ${i+1} من الملف غير موجود`);
-    chunks.push(base64ToBytes(snap.data().data));
-    if(onProgress) onProgress(Math.round(((i+1)/file.chunkCount)*100));
-  }
-
-  const blob = new Blob(chunks, {type:file.type || 'application/octet-stream'});
-  const url = URL.createObjectURL(blob);
-  fileBlobUrls.set(file.fileId, url);
-  return url;
-}
-
-async function openFileViewer(file){
-  const modal = document.getElementById('fileViewerModal');
-  const body = document.getElementById('fileViewerBody');
-  const title = document.getElementById('fileViewerTitle');
-  const download = document.getElementById('fileViewerDownload');
-  if(!modal || !body || !file) return;
-
-  title.textContent = file.name || 'File';
-  body.innerHTML = `<div class="file-viewer-message">${lang==='ar'?'جاري تجهيز الملف...':'Preparing file...'}</div>`;
-  modal.classList.add('show');
-  modal.setAttribute('aria-hidden','false');
-
-  try{
-    const url = await loadCloudFile(file, pct=>{
-      body.innerHTML = `<div class="file-viewer-message">${lang==='ar'?'جاري تحميل الملف':'Loading file'}... ${pct}%</div>`;
-    });
-    download.href = url;
-    download.download = file.name || 'file';
-
-    const type = getViewerType(file);
-    if(type === 'pdf'){
-      body.innerHTML = `<iframe class="file-viewer-frame" src="${url}#toolbar=1&navpanes=0&scrollbar=1&view=FitH" title="${escapeHtml(file.name)}"></iframe>`;
-    }else if(type === 'image'){
-      body.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;padding:20px;overflow:auto;"><img src="${url}" alt="${escapeHtml(file.name)}" style="max-width:100%;max-height:100%;object-fit:contain;"></div>`;
-    }else if(type === 'video'){
-      body.innerHTML = `<video class="file-viewer-frame" controls autoplay><source src="${url}"></video>`;
-    }else if(type === 'audio'){
-      body.innerHTML = `<div style="height:100%;display:flex;align-items:center;justify-content:center;padding:30px;"><audio controls autoplay style="width:min(700px,90%);"><source src="${url}"></audio></div>`;
-    }else if(type === 'text'){
-      body.innerHTML = `<iframe class="file-viewer-frame" src="${url}" title="${escapeHtml(file.name)}"></iframe>`;
-    }else if(type === 'docx'){
-      if(typeof mammoth === 'undefined') throw new Error(lang==='ar' ? 'تعذر تحميل أداة معاينة Word' : 'Word preview library could not be loaded');
-      body.innerHTML = `<div class="docx-loading file-viewer-message">${lang==='ar'?'جاري فتح ملف Word...':'Opening Word file...'}</div>`;
-      const response = await fetch(url);
-      if(!response.ok) throw new Error('Failed to read Word file');
-      const arrayBuffer = await response.arrayBuffer();
-      const result = await mammoth.convertToHtml({arrayBuffer});
-      const warnings = (result.messages || []).map(m=>m.message).filter(Boolean);
-      body.innerHTML = `
-        <div class="docx-preview" dir="rtl">
-          ${warnings.length ? `<div class="docx-warning">⚠️ ${escapeHtml(warnings.join(' — '))}</div>` : ''}
-          <article>${result.value || `<div class="file-viewer-message">${lang==='ar'?'الملف لا يحتوي على نص قابل للعرض.':'No previewable text found in this file.'}</div>`}</article>
-        </div>`;
-    }else{
-      body.innerHTML = `<div class="file-viewer-message">${lang==='ar'?'تم حفظ الملف بنجاح. هذا النوع لا يدعم المعاينة المباشرة داخل المتصفح، استخدم زر التحميل بالأعلى.':'The file is saved. This type cannot be previewed directly in the browser; use the download button above.'}</div>`;
-    }
-  }catch(err){
-    console.error('File open failed:', err);
-    body.innerHTML = `<div class="file-viewer-message">❌ ${escapeHtml(err?.message || 'Failed to open file')}</div>`;
-  }
-}
-
-function closeFileViewer(){
-  const modal = document.getElementById('fileViewerModal');
-  const body = document.getElementById('fileViewerBody');
-  if(modal){ modal.classList.remove('show'); modal.setAttribute('aria-hidden','true'); }
-  if(body) body.innerHTML = '';
-}
-
-async function deleteCloudFile(file){
-  if(!db || !file?.fileId || !file.chunkCount) return;
-  for(let i=0;i<file.chunkCount;i++){
-    try{ await deleteDoc(doc(db, 'ufuqFiles', file.fileId, 'chunks', String(i))); }
-    catch(err){ console.warn('File chunk delete failed:', err); }
-  }
-  const url = fileBlobUrls.get(file.fileId);
-  if(url) URL.revokeObjectURL(url);
-  fileBlobUrls.delete(file.fileId);
-}
-
-function wireLectureContent(course, li){
-  const fileInput = document.getElementById(`fileInput-${li}`);
-  const fileBtn = document.getElementById(`fileUploadBtn-${li}`);
-  const readingBtn = document.getElementById(`readingModeBtn-${li}`);
-  if(!fileInput) return;
-
-  fileBtn.addEventListener('click', ()=>fileInput.click());
-  fileInput.addEventListener('change', e=>handleFileUpload(e, course, li));
-
-  if(readingBtn){
-    readingBtn.addEventListener('click', ()=>{
-      readingMode = !readingMode;
-      refreshLectureList(course);
-    });
-  }
-
-  document.querySelectorAll('[data-open-file]').forEach(el=>{
-    el.addEventListener('click', ()=>{
-      const [lectureIdx,fileIdx] = el.dataset.openFile.split('|').map(Number);
-      const file = course.lessons[lectureIdx]?.files?.[fileIdx];
-      if(file) openFileViewer(file);
-    });
-    el.addEventListener('keydown', e=>{
-      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); el.click(); }
-    });
-  });
-
-  document.querySelectorAll('[data-del-file]').forEach(btn=>{
-    btn.addEventListener('click', async ()=>{
-      const [lectureIdx,fileIdx] = btn.dataset.delFile.split('|').map(Number);
-      const file = course.lessons[lectureIdx]?.files?.[fileIdx];
-      if(!file) return;
-      btn.disabled = true;
-      await deleteCloudFile(file);
-      course.lessons[lectureIdx].files.splice(fileIdx,1);
-      refreshLectureList(course);
-      await saveState();
-    });
-  });
-
-  document.querySelectorAll('[data-save-notes]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const idx = +btn.dataset.saveNotes;
-      const notesArea = document.getElementById(`notes-${idx}`);
-      if(notesArea){
-        course.lessons[idx].notes = notesArea.value;
-        saveState();
-        showNotification('✅', lang==='ar'?'تم حفظ الملاحظات':'Notes saved', 2000);
-      }
-    });
-  });
-}
-
-async function handleFileUpload(e, course, li){
-  const files = Array.from(e.target.files || []);
-  if(!files.length) return;
-  const statusEl = document.getElementById(`uploadStatus-${li}`);
-  const progressEl = document.getElementById(`uploadProgress-${li}`);
-  const progressBar = progressEl?.querySelector('div');
-
-  if(!db){
-    statusEl.textContent = lang==='ar' ? '❌ قاعدة البيانات غير متاحة.' : '❌ Database is unavailable.';
-    e.target.value = '';
+  // زرار "إضافة محاضرة"
+  if(e.target.closest('#addLectureBtn')){
+    const course = getCurrentCourse();
+    if(course) toggleAddLectureForm(course);
     return;
   }
-  if(!course.lessons[li].files) course.lessons[li].files = [];
+  if(e.target.closest('#saveLectureBtn')){
+    const course = getCurrentCourse();
+    if(course) saveNewLecture(course);
+    return;
+  }
+  if(e.target.closest('#cancelLectureBtn')){
+    showAddLectureForm = false;
+    const wrap = document.getElementById('addLectureFormWrap');
+    if(wrap) wrap.innerHTML = '';
+    return;
+  }
 
-  let uploaded = 0;
+  // فتح/قفل المحاضرة (accordion)
+  const toggleEl = e.target.closest('[data-toggle]');
+  if(toggleEl){
+    const course = getCurrentCourse();
+    if(course){
+      const i = +toggleEl.dataset.toggle;
+      expandedLecture = (expandedLecture === i) ? null : i;
+      refreshLectureList(course);
+    }
+    return;
+  }
+
+  // زرار رفع ملف (بيفتح اختيار الملف)
+  const fileBtnEl = e.target.closest('[id^="fileUploadBtn-"]');
+  if(fileBtnEl){
+    const li = fileBtnEl.id.split('-')[1];
+    const inputEl = document.getElementById('fileInput-'+li);
+    if(inputEl) inputEl.click();
+    return;
+  }
+
+  // إضافة رابط ملف كبير (Google Drive وغيره)
+  const driveBtnEl = e.target.closest('[id^="driveLinkBtn-"]');
+  if(driveBtnEl){
+    const li = driveBtnEl.id.split('-')[1];
+    const course = getCurrentCourse();
+    const input = document.getElementById('driveLinkInput-'+li);
+    if(course && input){
+      const url = input.value.trim();
+      if(!url){ alert(lang==='ar' ? 'الصق رابط الملف الأول' : 'Paste the file link first'); return; }
+      if(!course.lessons[li].files) course.lessons[li].files = [];
+      let fname = url;
+      try{ fname = decodeURIComponent(url.split('/').pop().split('?')[0]) || url; }catch(e){}
+      course.lessons[li].files.push({name: fname.slice(0,60), url, isExternal:true});
+      refreshLectureList(course);
+      saveState();
+    }
+    return;
+  }
+
+  // وضع القراءة
+  const readBtnEl = e.target.closest('[id^="readingModeBtn-"]');
+  if(readBtnEl){
+    readingMode = !readingMode;
+    const course = getCurrentCourse();
+    if(course) refreshLectureList(course);
+    return;
+  }
+
+  // حذف ملف
+  const delFileEl = e.target.closest('[data-del-file]');
+  if(delFileEl){
+    const course = getCurrentCourse();
+    if(course){
+      const [lectureIdx, fileIdx] = delFileEl.dataset.delFile.split('|').map(Number);
+      course.lessons[lectureIdx].files.splice(fileIdx, 1);
+      refreshLectureList(course);
+      saveState();
+    }
+    return;
+  }
+
+  // فتح ملف مرفوع
+  const openFileEl = e.target.closest('[data-open-file]');
+  if(openFileEl && !e.target.closest('.file-del')){
+    const url = openFileEl.dataset.fileUrl;
+    if(url){ window.open(url, '_blank'); }
+    else{ openStoredFile(openFileEl.dataset.openFile, openFileEl.dataset.fileType, openFileEl.dataset.fileName); }
+    return;
+  }
+
+  // حفظ الملاحظات
+  const saveNotesEl = e.target.closest('[data-save-notes]');
+  if(saveNotesEl){
+    const course = getCurrentCourse();
+    const idx = +saveNotesEl.dataset.saveNotes;
+    const notesArea = document.getElementById('notes-'+idx);
+    if(course && notesArea){
+      course.lessons[idx].notes = notesArea.value;
+      saveState();
+      showNotification('✅', lang==='ar'?'تم حفظ الملاحظات':'Notes saved', 2000);
+    }
+    return;
+  }
+});
+
+document.addEventListener('change', (e)=>{
+  // تحديد محاضرة كمكتملة
+  if(e.target.matches('[data-check]')){
+    const course = getCurrentCourse();
+    if(course){
+      const i = +e.target.dataset.check;
+      course.lessons[i].done = e.target.checked;
+      renderCourses();
+      refreshLectureList(course);
+      const pctEl = document.getElementById('cpPct');
+      const fillEl = document.getElementById('cpProgressFill');
+      if(pctEl) pctEl.textContent = pct(course) + '%';
+      if(fillEl) fillEl.style.width = pct(course) + '%';
+      saveState();
+    }
+    return;
+  }
+
+  // رفع ملف فعليًا بعد اختياره
+  if(e.target.id && e.target.id.startsWith('fileInput-')){
+    const li = +e.target.id.split('-')[1];
+    const course = getCurrentCourse();
+    if(course) handleFileUpload(e, course, li);
+    return;
+  }
+});
+
+async function handleFileUpload(e, course, li){
+  const files = Array.from(e.target.files);
+  if(files.length === 0) return;
+  const statusEl = document.getElementById(`uploadStatus-${li}`);
+
   for(const file of files){
     if(file.size > MAX_FILE_SIZE){
-      statusEl.textContent = `${S('fileTooBig')}: ${file.name}`;
+      statusEl.textContent = S('fileTooBig');
       continue;
     }
 
-    const fileId = (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
-    const chunkCount = Math.max(1, Math.ceil(file.size / FILE_CHUNK_SIZE));
-    try{
-      if(progressEl) progressEl.style.display = 'block';
-      for(let i=0;i<chunkCount;i++){
-        const start = i * FILE_CHUNK_SIZE;
-        const end = Math.min(file.size, start + FILE_CHUNK_SIZE);
-        const chunk = new Uint8Array(await file.slice(start,end).arrayBuffer());
-        const data = bytesToBase64(chunk);
-        await setDoc(doc(db, 'ufuqFiles', fileId, 'chunks', String(i)), {data, index:i});
-        const pct = Math.round(((i+1)/chunkCount)*100);
-        if(progressBar) progressBar.style.width = pct + '%';
-        statusEl.textContent = `${S('uploadingFile')} ${file.name} — ${pct}%`;
-      }
+    statusEl.textContent = S('uploadingFile');
 
-      course.lessons[li].files.push({
-        name:file.name,
-        size:file.size,
-        type:file.type || 'application/octet-stream',
-        fileId,
-        chunkCount,
-        uploadedAt:Date.now()
-      });
-      uploaded++;
+    try{
+      if(db){
+        const fileId = await uploadFileToFirestore(file);
+        if(!course.lessons[li].files) course.lessons[li].files = [];
+        course.lessons[li].files.push({name:file.name, type:file.type||'', size:file.size, fileId});
+        statusEl.textContent = S('uploadedLocal');
+      }else{
+        const url = URL.createObjectURL(file);
+        if(!course.lessons[li].files) course.lessons[li].files = [];
+        course.lessons[li].files.push({name:file.name, url, size:file.size});
+        statusEl.textContent = lang==='ar' ? 'تم الرفع مؤقتًا بس (مفيش اتصال بقاعدة البيانات) — هيتفقد لو قفلت الصفحة' : 'Uploaded locally only (no database connection) — will be lost on reload';
+      }
     }catch(err){
       console.error('Upload failed:', err);
-      statusEl.textContent = `❌ ${file.name}: ${err?.message || 'Upload failed'}`;
-      try{
-        for(let i=0;i<chunkCount;i++) await deleteDoc(doc(db,'ufuqFiles',fileId,'chunks',String(i)));
-      }catch(cleanErr){ console.warn(cleanErr); }
+      statusEl.textContent = '❌ ' + (err.code || '') + ' ' + err.message;
     }
   }
-
-  if(progressEl) progressEl.style.display = 'none';
-  if(uploaded){
-    statusEl.textContent = lang==='ar' ? `✅ تم رفع ${uploaded} ملف وحفظه بدون Storage` : `✅ ${uploaded} file(s) uploaded and saved without Storage`;
-    refreshLectureList(course);
-    await saveState();
-  }
+  
+  refreshLectureList(course);
+  saveState();
   e.target.value = '';
 }
 
@@ -2171,22 +2088,16 @@ function applyLanguage(){
   }
 }
 
-document.getElementById('fileViewerClose').addEventListener('click', closeFileViewer);
-document.getElementById('fileViewerModal').addEventListener('click', (e)=>{
-  if(e.target.id === 'fileViewerModal') closeFileViewer();
-});
-document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeFileViewer(); });
-
 document.getElementById('langToggle').addEventListener('click', ()=>{
   lang = lang==='ar' ? 'en' : 'ar';
   applyLanguage();
-  saveState();
+  saveLocalPrefs();
 });
 
 async function initApp(){
+  loadLocalPrefs();
   await loadState();
   applyLanguage();
-  startRealtimeSync();
   
   if(currentView && currentView.view){
     showView(currentView.view, currentView.params);
@@ -2196,8 +2107,9 @@ async function initApp(){
   }
   
   checkUpcomingAssignments();
+  startRealtimeSync();
 }
 initApp();
 </script>
 </body>
-</html>
+  </html>
