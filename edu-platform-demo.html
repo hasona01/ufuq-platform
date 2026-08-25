@@ -527,7 +527,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCGYp76VlTgqkAOwBqFF6mDxPctsZLT2IM",
@@ -1019,10 +1019,16 @@ function applyState(state){
 
 async function saveState(){
   const state = buildState();
+  state._updatedAt = Date.now();
   try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
   if(db){
-    try{ await setDoc(stateDocRef(), state); }
-    catch(e){}
+    try{
+      lastRemoteUpdatedAt = state._updatedAt;
+      await setDoc(stateDocRef(), state);
+    }catch(e){
+      console.error('Firestore save error:', e);
+      showNotification('❌', lang==='ar' ? 'تعذر مزامنة التعديل مع الأجهزة الأخرى' : 'Could not sync the change to other devices', 4000);
+    }
   }
 }
 
@@ -1032,15 +1038,63 @@ async function loadState(){
     try{
       const snap = await getDoc(stateDocRef());
       if(snap.exists()) state = snap.data();
-    }catch(e){}
+    }catch(e){
+      console.error('Firestore load error:', e);
+    }
   }
   if(!state){
     try{
       const raw = localStorage.getItem(STORAGE_KEY);
       if(raw) state = JSON.parse(raw);
-    }catch(e){}
+    }catch(e){
+      console.error('Local state load error:', e);
+    }
   }
   applyState(state);
+}
+
+// ===== Realtime Sync =====
+let realtimeUnsubscribe = null;
+let lastRemoteUpdatedAt = 0;
+
+function refreshUIAfterRemoteState(){
+  try{
+    applyLanguage();
+    if(currentView && currentView.view){
+      if(currentView.view === 'course') renderCoursePageContent(currentView.params.courseId);
+      else if(currentView.view === 'assignments') renderAssignmentsPage();
+      else if(currentView.view === 'grades') renderGradesPage();
+      else renderCourses();
+    }else{
+      renderCourses();
+    }
+    updateDueStat();
+    renderAssignmentsList();
+  }catch(err){
+    console.error('Remote UI refresh error:', err);
+  }
+}
+
+function startRealtimeSync(){
+  if(!db) return;
+  if(realtimeUnsubscribe) realtimeUnsubscribe();
+
+  realtimeUnsubscribe = onSnapshot(stateDocRef(), (snap)=>{
+    if(!snap.exists()) return;
+    const remoteState = snap.data();
+    const remoteUpdatedAt = Number(remoteState._updatedAt || 0);
+    if(remoteUpdatedAt && remoteUpdatedAt <= lastRemoteUpdatedAt) return;
+    lastRemoteUpdatedAt = remoteUpdatedAt || Date.now();
+
+    // Do not save again: this is only applying the change received from Firebase.
+    applyState(remoteState);
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(remoteState));
+    }catch(e){}
+    refreshUIAfterRemoteState();
+  }, (error)=>{
+    console.error('Realtime sync error:', error);
+  });
 }
 
 const VIEW_IDS = ['dashboardView','coursePage','assignmentsPage','gradesPage'];
@@ -2132,6 +2186,7 @@ document.getElementById('langToggle').addEventListener('click', ()=>{
 async function initApp(){
   await loadState();
   applyLanguage();
+  startRealtimeSync();
   
   if(currentView && currentView.view){
     showView(currentView.view, currentView.params);
