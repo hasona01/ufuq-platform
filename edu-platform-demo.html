@@ -1697,7 +1697,7 @@ function lectureContentHtml(course, l, i){
         <div class="attach-chip" data-open-file="${f.fileId||''}" data-file-type="${f.type||''}" data-file-name="${f.name}" data-file-url="${f.url||''}" role="button" tabindex="0">
           <div class="file-icon">${getFileIcon(f)}</div>
           <div class="file-name">${f.name}</div>
-          <button class="file-del" data-del-file="${i}|${fi}" onclick="event.preventDefault(); event.stopPropagation();" title="✕">✕</button>
+          <button class="file-del" data-del-file="${i}|${fi}" title="✕">✕</button>
         </div>
       `).join('')}
     </div>
@@ -1705,7 +1705,8 @@ function lectureContentHtml(course, l, i){
 
   const driveHtml = `
     <div class="upload-row" style="margin-top:6px;">
-      <input type="text" id="driveLinkInput-${i}" placeholder="${lang==='ar'?'أو الصق رابط ملف كبير (Google Drive مثلاً)':'Or paste a large-file link (e.g. Google Drive)'}" style="flex:1; min-width:180px; border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:12.5px; background:var(--bg); color:var(--ink);">
+      <input type="text" id="driveNameInput-${i}" placeholder="${lang==='ar'?'اسم الملف (مثلاً: محاضرة صوتية 1)':'File name (e.g. Audio lecture 1)'}" style="flex:1; min-width:140px; border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:12.5px; background:var(--bg); color:var(--ink);">
+      <input type="text" id="driveLinkInput-${i}" placeholder="${lang==='ar'?'رابط الملف (Google Drive مثلاً)':'File link (e.g. Google Drive)'}" style="flex:1; min-width:180px; border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:12.5px; background:var(--bg); color:var(--ink);">
       <button type="button" class="upload-btn" id="driveLinkBtn-${i}">${lang==='ar'?'➕ إضافة الرابط':'➕ Add Link'}</button>
     </div>
   `;
@@ -1782,12 +1783,16 @@ document.addEventListener('click', (e)=>{
     const li = driveBtnEl.id.split('-')[1];
     const course = getCurrentCourse();
     const input = document.getElementById('driveLinkInput-'+li);
+    const nameInput = document.getElementById('driveNameInput-'+li);
     if(course && input){
       const url = input.value.trim();
       if(!url){ alert(lang==='ar' ? 'الصق رابط الملف الأول' : 'Paste the file link first'); return; }
       if(!course.lessons[li].files) course.lessons[li].files = [];
-      let fname = url;
-      try{ fname = decodeURIComponent(url.split('/').pop().split('?')[0]) || url; }catch(e){}
+      let fname = (nameInput && nameInput.value.trim()) || '';
+      if(!fname){
+        fname = url;
+        try{ fname = decodeURIComponent(url.split('/').pop().split('?')[0]) || url; }catch(e){}
+      }
       course.lessons[li].files.push({name: fname.slice(0,60), url, isExternal:true});
       refreshLectureList(course);
       saveState();
@@ -2112,4 +2117,4 @@ async function initApp(){
 initApp();
 </script>
 </body>
-  </html>
+</html>
