@@ -405,7 +405,11 @@
 
 <header>
   <div class="brand">
-    <div class="seal" id="sealLetter">أ</div>
+    <div class="seal" id="sealLetter">
+      <svg viewBox="0 0 40 40" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M2 22 H9 L12 10 L16 32 L19 22 H22 L25 15 V27 L28 22 H32 V15 H36 V27"/>
+      </svg>
+    </div>
     <div class="brand-text">
       <h1 id="brandTitle">أُفـق</h1>
       <p id="brandSubtitle">منصة الطالب الجامعي</p>
@@ -421,6 +425,9 @@
 <div class="app">
   <nav class="binder">
     <button class="tab active" data-tab="dashboard"><span class="dot"></span><span class="tab-label">لوحة التحكم</span></button>
+    <button class="tab" data-tab="coursesSection"><span class="dot"></span><span class="tab-label">موادّي</span></button>
+    <button class="tab" data-tab="scheduleSection"><span class="dot"></span><span class="tab-label">جدول المذاكرة</span></button>
+    <button class="tab" data-tab="examsSection"><span class="dot"></span><span class="tab-label">جدول الامتحانات</span></button>
     <button class="tab" data-tab="assignmentsSection"><span class="dot"></span><span class="tab-label">الواجبات</span></button>
     <button class="tab" data-tab="gradesSection"><span class="dot"></span><span class="tab-label">الدرجات</span></button>
   </nav>
@@ -773,6 +780,7 @@ const STR = {
   ar: {
     brandSubtitle:'منصة الطالب الجامعي',
     tabDashboard:'لوحة التحكم',
+    tabCourses:'موادّي', tabSchedule:'جدول المذاكرة', tabExams:'جدول الامتحانات',
     tabAssignments:'الواجبات', tabGrades:'الدرجات', 
     dueLabel:'واجبات مستحقة',
     scheduleTitle:'جدول المذاكرة', 
@@ -814,6 +822,7 @@ const STR = {
   en: {
     brandSubtitle:'Student Platform',
     tabDashboard:'Dashboard',
+    tabCourses:'My Courses', tabSchedule:'Study Schedule', tabExams:'Exam Schedule',
     tabAssignments:'Assignments', tabGrades:'Grades', 
     dueLabel:'Due Assignments',
     scheduleTitle:'Study Schedule', 
@@ -2037,8 +2046,15 @@ document.querySelectorAll('.tab').forEach(tab=>{
       navigate('assignments');
     }else if(targetId === 'gradesSection'){
       navigate('grades');
-    }else{
+    }else if(targetId === 'dashboard'){
       navigate('dashboard');
+    }else{
+      // موادّي / جدول المذاكرة / جدول الامتحانات — ارجع للوحة التحكم واعمل سكرول للقسم المطلوب
+      navigate('dashboard');
+      setTimeout(()=>{
+        const el = document.getElementById(targetId);
+        if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+      }, 60);
     }
   });
 });
@@ -2060,7 +2076,6 @@ function applyLanguage(){
   document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr';
   document.body.classList.toggle('ltr', lang==='en');
 
-  document.getElementById('sealLetter').textContent = lang==='ar' ? 'أ' : 'U';
   document.getElementById('brandTitle').textContent = lang==='ar' ? 'أُفـق' : 'Ufuq';
   document.getElementById('brandSubtitle').textContent = S('brandSubtitle');
   document.getElementById('avatarInitials').textContent = lang==='ar' ? 'د ح' : 'DS';
@@ -2072,7 +2087,7 @@ function applyLanguage(){
   document.getElementById('coursesTitle').textContent = S('coursesTitle');
   document.getElementById('footerText').textContent = S('footerText');
 
-  const tabLabels = ['tabDashboard','tabAssignments','tabGrades'];
+  const tabLabels = ['tabDashboard','tabCourses','tabSchedule','tabExams','tabAssignments','tabGrades'];
   document.querySelectorAll('.tab-label').forEach((el,i)=>{
     el.textContent = S(tabLabels[i]);
   });
@@ -2117,4 +2132,4 @@ async function initApp(){
 initApp();
 </script>
 </body>
-</html>
+        </html>
