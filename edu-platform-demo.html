@@ -406,8 +406,10 @@
 <header>
   <div class="brand">
     <div class="seal" id="sealLetter">
-      <svg viewBox="0 0 40 40" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M2 22 H9 L12 10 L16 32 L19 22 H22 L25 15 V27 L28 22 H32 V15 H36 V27"/>
+      <svg viewBox="0 0 40 40" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 6 V17 M14.5 11.5 H25.5"/>
+        <path d="M16 20 L6 28 L16 36"/>
+        <path d="M24 20 L34 28 L24 36"/>
       </svg>
     </div>
     <div class="brand-text">
@@ -442,42 +444,15 @@
         <div class="value" id="dueStat">—</div>
       </div>
     </div>
-
-    <section id="scheduleSection">
-      <div class="section-head">
-        <h2 id="scheduleTitle">جدول المذاكرة</h2>
-        <button class="add-btn" id="addSchedBtn">+ إضافة</button>
-      </div>
-      <div id="schedForm" class="schedule-form" style="display:none;"></div>
-      <div class="timeline" id="schedTimeline"></div>
-    </section>
-
-    <section id="examsSection">
-      <div class="section-head">
-        <h2 id="examsTitle">جدول الامتحانات</h2>
-        <button class="add-btn" id="addExamBtn">+ إضافة</button>
-      </div>
-      <div id="examForm" class="schedule-form" style="display:none;"></div>
-      <div id="examsList"></div>
-    </section>
-
-    <section id="coursesSection">
-      <div class="section-head">
-        <h2 id="coursesTitle">موادّي هذا الفصل</h2>
-        <div style="display:flex; gap:8px; align-items:center;">
-          <button class="export-btn" id="exportBtn">📥 تصدير</button>
-          <button class="export-btn" id="importBtn">📤 استيراد</button>
-          <input type="file" id="importInput" accept=".json" style="display:none">
-          <span id="courseCount">0 مواد</span>
-        </div>
-      </div>
-      <div class="courses" id="courseGrid"></div>
-    </section>
    </div>
 
    <div id="coursePage" style="display:none;"></div>
+   <div id="myCoursesPage" style="display:none;"></div>
+   <div id="schedulePage" style="display:none;"></div>
+   <div id="examsPage" style="display:none;"></div>
    <div id="assignmentsPage" style="display:none;"></div>
    <div id="gradesPage" style="display:none;"></div>
+   <input type="file" id="importInput" accept=".json" style="display:none">
   </main>
 </div>
 
@@ -920,8 +895,6 @@ function importData(){
   document.getElementById('importInput').click();
 }
 
-document.getElementById('exportBtn').addEventListener('click', exportData);
-document.getElementById('importBtn').addEventListener('click', importData);
 document.getElementById('importInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if(!file) return;
@@ -1108,7 +1081,7 @@ function startRealtimeSync(){
   });
 }
 
-const VIEW_IDS = ['dashboardView','coursePage','assignmentsPage','gradesPage'];
+const VIEW_IDS = ['dashboardView','coursePage','myCoursesPage','schedulePage','examsPage','assignmentsPage','gradesPage'];
 
 function hideAllViews(){
   VIEW_IDS.forEach(id=>{ document.getElementById(id).style.display = 'none'; });
@@ -1124,6 +1097,18 @@ function showView(view, params={}){
     document.body.classList.add('course-view');
     renderCoursePageContent(params.courseId);
     document.getElementById('coursePage').style.display = 'block';
+  }else if(view === 'courses'){
+    document.body.classList.remove('course-view');
+    renderCoursesPage();
+    document.getElementById('myCoursesPage').style.display = 'block';
+  }else if(view === 'schedule'){
+    document.body.classList.remove('course-view');
+    renderSchedulePage();
+    document.getElementById('schedulePage').style.display = 'block';
+  }else if(view === 'exams'){
+    document.body.classList.remove('course-view');
+    renderExamsPage();
+    document.getElementById('examsPage').style.display = 'block';
   }else if(view === 'assignments'){
     document.body.classList.remove('course-view');
     renderAssignmentsPage();
@@ -1158,6 +1143,7 @@ function pct(course){
 
 function renderCourses(){
   const grid = document.getElementById('courseGrid');
+  if(!grid) return;
   grid.innerHTML = '';
   const facCourses = courses.filter(c=>c.faculty===currentFaculty);
   facCourses.forEach(course=>{
@@ -1181,8 +1167,27 @@ function renderCourses(){
     card.addEventListener('click', ()=>openCourse(course.id));
     grid.appendChild(card);
   });
-  document.getElementById('courseCount').textContent = facCourses.length + ' ' + S('coursesSuffix');
+  const countEl = document.getElementById('courseCount');
+  if(countEl) countEl.textContent = facCourses.length + ' ' + S('coursesSuffix');
   renderGradesList(facCourses);
+}
+
+function renderCoursesPage(){
+  const page = document.getElementById('myCoursesPage');
+  page.innerHTML = `
+    <button class="back-btn" id="coursesBack">${S('back')}</button>
+    <div class="section-head">
+      <h2>${S('coursesTitle')}</h2>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="export-btn" id="exportBtn">📥 ${lang==='ar'?'تصدير':'Export'}</button>
+        <button class="export-btn" id="importBtn">📤 ${lang==='ar'?'استيراد':'Import'}</button>
+        <span id="courseCount">0 ${S('coursesSuffix')}</span>
+      </div>
+    </div>
+    <div class="courses" id="courseGrid"></div>
+  `;
+  page.querySelector('#coursesBack').addEventListener('click', ()=>history.back());
+  renderCourses();
 }
 
 const gradesData = {};
@@ -1319,11 +1324,12 @@ function renderGradesPage(){
 /* ===== جدول المذاكرة الأسبوعي (متعدد الأيام + فواصل + ترتيب حسب الأقرب) ===== */
 
 function renderSchedule(){
+  const wrap = document.getElementById('schedTimeline');
+  if(!wrap) return;
   let facSchedule = schedule.filter(s=>s.faculty===currentFaculty);
   facSchedule = facSchedule.map(s=>({...s, _dist: minutesUntilNext(s.dayIndex, s.time)}));
   facSchedule.sort((a,b)=> a._dist - b._dist || a.time.localeCompare(b.time));
 
-  const wrap = document.getElementById('schedTimeline');
   if(facSchedule.length === 0){
     wrap.innerHTML = `<div class="cp-empty">${S('empty_schedule')}</div>`;
     return;
@@ -1352,21 +1358,27 @@ function renderSchedule(){
       </div>`;
   });
   wrap.innerHTML = html;
+}
 
-  wrap.querySelectorAll('[data-del-sched]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const id = +btn.dataset.delSched;
-      const idx = schedule.findIndex(s=>s.id===id);
-      if(idx !== -1) schedule.splice(idx, 1);
-      renderSchedule();
-      saveState();
-    });
-  });
+function renderSchedulePage(){
+  const page = document.getElementById('schedulePage');
+  page.innerHTML = `
+    <button class="back-btn" id="scheduleBack">${S('back')}</button>
+    <div class="section-head">
+      <h2>${S('scheduleTitle')}</h2>
+      <button class="add-btn" id="addSchedBtn">${S('addBtn')}</button>
+    </div>
+    <div id="schedForm" class="schedule-form" style="display:none;"></div>
+    <div class="timeline" id="schedTimeline"></div>
+  `;
+  page.querySelector('#scheduleBack').addEventListener('click', ()=>history.back());
+  renderSchedule();
 }
 
 function openScheduleForm(){
   const facCourses = courses.filter(c=>c.faculty===currentFaculty);
   const formEl = document.getElementById('schedForm');
+  if(!formEl) return;
 
   const dayChecks = DAYS_AR.map((_,i)=>`
     <label class="day-check-item">
@@ -1389,8 +1401,6 @@ function openScheduleForm(){
     </div>
   `;
   formEl.style.display = 'flex';
-  document.getElementById('saveSchedBtn').addEventListener('click', saveNewSchedule);
-  document.getElementById('cancelSchedBtn').addEventListener('click', closeScheduleForm);
 }
 
 function closeScheduleForm(){
@@ -1426,16 +1436,11 @@ function saveNewSchedule(){
   saveState();
 }
 
-document.getElementById('addSchedBtn').addEventListener('click', ()=>{
-  const formEl = document.getElementById('schedForm');
-  if(formEl.style.display === 'flex') closeScheduleForm();
-  else openScheduleForm();
-});
-
 /* ===== جدول الامتحانات (ميد تيرم / فاينال) ===== */
 
 function renderExams(){
   const wrap = document.getElementById('examsList');
+  if(!wrap) return;
   let facExams = exams.filter(x=>x.faculty===currentFaculty);
   facExams.sort((a,b)=> (a.date+ (a.time||'')).localeCompare(b.date + (b.time||'')));
 
@@ -1466,21 +1471,27 @@ function renderExams(){
         </div>
       </div>`;
   }).join('');
+}
 
-  wrap.querySelectorAll('[data-del-exam]').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      const id = +btn.dataset.delExam;
-      const idx = exams.findIndex(x=>x.id===id);
-      if(idx !== -1) exams.splice(idx, 1);
-      renderExams();
-      saveState();
-    });
-  });
+function renderExamsPage(){
+  const page = document.getElementById('examsPage');
+  page.innerHTML = `
+    <button class="back-btn" id="examsBack">${S('back')}</button>
+    <div class="section-head">
+      <h2>${S('examsTitle')}</h2>
+      <button class="add-btn" id="addExamBtn">${S('addBtn')}</button>
+    </div>
+    <div id="examForm" class="schedule-form" style="display:none;"></div>
+    <div id="examsList"></div>
+  `;
+  page.querySelector('#examsBack').addEventListener('click', ()=>history.back());
+  renderExams();
 }
 
 function openExamForm(){
   const facCourses = courses.filter(c=>c.faculty===currentFaculty);
   const formEl = document.getElementById('examForm');
+  if(!formEl) return;
   formEl.innerHTML = `
     <select id="newExamCourse">
       ${facCourses.map(c=>`<option value="${c.id}">${L(c.title)}</option>`).join('')}
@@ -1498,8 +1509,6 @@ function openExamForm(){
     </div>
   `;
   formEl.style.display = 'flex';
-  document.getElementById('saveExamBtn').addEventListener('click', saveNewExam);
-  document.getElementById('cancelExamBtn').addEventListener('click', closeExamForm);
 }
 
 function closeExamForm(){
@@ -1530,12 +1539,6 @@ function saveNewExam(){
   renderExams();
   saveState();
 }
-
-document.getElementById('addExamBtn').addEventListener('click', ()=>{
-  const formEl = document.getElementById('examForm');
-  if(formEl.style.display === 'flex') closeExamForm();
-  else openExamForm();
-});
 
 function renderFacultySwitch(){
   const wrap = document.getElementById('facultySwitch');
@@ -1853,6 +1856,48 @@ document.addEventListener('click', (e)=>{
     }
     return;
   }
+
+  // تصدير / استيراد البيانات
+  if(e.target.closest('#exportBtn')){ exportData(); return; }
+  if(e.target.closest('#importBtn')){ importData(); return; }
+
+  // جدول المذاكرة: إضافة / حفظ / إلغاء
+  if(e.target.closest('#addSchedBtn')){
+    const formEl = document.getElementById('schedForm');
+    if(formEl && formEl.style.display === 'flex') closeScheduleForm();
+    else openScheduleForm();
+    return;
+  }
+  if(e.target.closest('#saveSchedBtn')){ saveNewSchedule(); return; }
+  if(e.target.closest('#cancelSchedBtn')){ closeScheduleForm(); return; }
+  const delSchedEl = e.target.closest('[data-del-sched]');
+  if(delSchedEl){
+    const id = +delSchedEl.dataset.delSched;
+    const idx = schedule.findIndex(s=>s.id===id);
+    if(idx !== -1) schedule.splice(idx, 1);
+    renderSchedule();
+    saveState();
+    return;
+  }
+
+  // جدول الامتحانات: إضافة / حفظ / إلغاء
+  if(e.target.closest('#addExamBtn')){
+    const formEl = document.getElementById('examForm');
+    if(formEl && formEl.style.display === 'flex') closeExamForm();
+    else openExamForm();
+    return;
+  }
+  if(e.target.closest('#saveExamBtn')){ saveNewExam(); return; }
+  if(e.target.closest('#cancelExamBtn')){ closeExamForm(); return; }
+  const delExamEl = e.target.closest('[data-del-exam]');
+  if(delExamEl){
+    const id = +delExamEl.dataset.delExam;
+    const idx = exams.findIndex(x=>x.id===id);
+    if(idx !== -1) exams.splice(idx, 1);
+    renderExams();
+    saveState();
+    return;
+  }
 });
 
 document.addEventListener('change', (e)=>{
@@ -2042,25 +2087,24 @@ document.querySelectorAll('.tab').forEach(tab=>{
     tab.classList.add('active');
 
     const targetId = tab.dataset.tab;
-    if(targetId === 'assignmentsSection'){
+    if(targetId === 'coursesSection'){
+      navigate('courses');
+    }else if(targetId === 'scheduleSection'){
+      navigate('schedule');
+    }else if(targetId === 'examsSection'){
+      navigate('exams');
+    }else if(targetId === 'assignmentsSection'){
       navigate('assignments');
     }else if(targetId === 'gradesSection'){
       navigate('grades');
-    }else if(targetId === 'dashboard'){
-      navigate('dashboard');
     }else{
-      // موادّي / جدول المذاكرة / جدول الامتحانات — ارجع للوحة التحكم واعمل سكرول للقسم المطلوب
       navigate('dashboard');
-      setTimeout(()=>{
-        const el = document.getElementById(targetId);
-        if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
-      }, 60);
     }
   });
 });
 
 function syncActiveTab(view){
-  const map = {dashboard:'dashboard', assignments:'assignmentsSection', grades:'gradesSection'};
+  const map = {dashboard:'dashboard', courses:'coursesSection', schedule:'scheduleSection', exams:'examsSection', assignments:'assignmentsSection', grades:'gradesSection'};
   const targetTab = map[view];
   document.querySelectorAll('.tab').forEach(t=>{
     t.classList.toggle('active', targetTab && t.dataset.tab === targetTab);
@@ -2082,9 +2126,6 @@ function applyLanguage(){
   document.getElementById('langToggle').textContent = lang==='ar' ? 'EN' : 'عربي';
 
   document.getElementById('statLabel').textContent = S('dueLabel');
-  document.getElementById('scheduleTitle').textContent = S('scheduleTitle');
-  document.getElementById('examsTitle').textContent = S('examsTitle');
-  document.getElementById('coursesTitle').textContent = S('coursesTitle');
   document.getElementById('footerText').textContent = S('footerText');
 
   const tabLabels = ['tabDashboard','tabCourses','tabSchedule','tabExams','tabAssignments','tabGrades'];
@@ -2101,6 +2142,12 @@ function applyLanguage(){
   
   if(currentView.view === 'course'){
     renderCoursePageContent(currentView.params.courseId);
+  }else if(currentView.view === 'courses'){
+    renderCoursesPage();
+  }else if(currentView.view === 'schedule'){
+    renderSchedulePage();
+  }else if(currentView.view === 'exams'){
+    renderExamsPage();
   }else if(currentView.view === 'assignments'){
     renderAssignmentsPage();
   }else if(currentView.view === 'grades'){
@@ -2132,4 +2179,4 @@ async function initApp(){
 initApp();
 </script>
 </body>
-        </html>
+  </html>
