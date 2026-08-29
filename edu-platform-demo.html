@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>أفق — منصة الطالب الجامعي</title>
+<title>دودو النونة</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1F6F5C">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="أُفق">
+<meta name="apple-mobile-web-app-title" content="دودو النونة">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 
@@ -147,6 +147,16 @@
   }
   .export-btn{background:transparent; border:1.5px solid var(--gold); color:var(--gold);}
   .export-btn:hover{background:var(--gold); color:#fff;}
+
+  /* Quick links (dashboard shortcuts to each dedicated page) */
+  .quick-links{ display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:12px; }
+  .quick-link-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:20px 14px;
+    text-align:center; cursor:pointer; transition:.15s; border-top:4px solid var(--qc, var(--gold));
+  }
+  .quick-link-card:hover{ transform:translateY(-2px); box-shadow:0 6px 18px rgba(30,42,56,.08); }
+  .quick-link-card .qc-icon{ font-size:26px; margin-bottom:8px; }
+  .quick-link-card .qc-label{ font-size:13px; font-weight:700; color:var(--ink); }
 
   /* Faculty switcher */
   .faculty-switch{ display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
@@ -406,14 +416,18 @@
 <header>
   <div class="brand">
     <div class="seal" id="sealLetter">
-      <svg viewBox="0 0 40 40" width="22" height="22" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M20 6 V17 M14.5 11.5 H25.5"/>
-        <path d="M16 20 L6 28 L16 36"/>
-        <path d="M24 20 L34 28 L24 36"/>
+      <svg viewBox="0 0 40 40" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 15 L2 20 L9 25"/>
+        <path d="M31 15 L38 20 L31 25"/>
+        <rect x="12" y="11" width="16" height="12" rx="1.4"/>
+        <path d="M8 25 H32" stroke-width="2.4"/>
+        <path d="M14.5 17.5 H17.5 L19.5 13.5 L21.5 21 L23.5 17.5 H25.5" stroke-width="1.8"/>
+        <path d="M27 11 Q30.5 8 29 11.5 Q28 13.5 29.5 13.5" stroke-width="1.8"/>
+        <circle cx="29.7" cy="13.7" r="1.3" fill="currentColor" stroke="none"/>
       </svg>
     </div>
     <div class="brand-text">
-      <h1 id="brandTitle">أُفـق</h1>
+      <h1 id="brandTitle">دودو النونة</h1>
       <p id="brandSubtitle">منصة الطالب الجامعي</p>
     </div>
   </div>
@@ -443,7 +457,16 @@
         <div class="label" id="statLabel">واجبات مستحقة</div>
         <div class="value" id="dueStat">—</div>
       </div>
+      <div class="stat-card">
+        <div class="label" id="nearestExamLabel">أقرب امتحان</div>
+        <div class="value" id="nearestExamStat" style="font-size:15px;">—</div>
+      </div>
     </div>
+
+    <section id="quickLinksSection">
+      <div class="section-head"><h2 id="quickLinksTitle">الوصول السريع</h2></div>
+      <div class="quick-links" id="quickLinksGrid"></div>
+    </section>
    </div>
 
    <div id="coursePage" style="display:none;"></div>
@@ -456,7 +479,7 @@
   </main>
 </div>
 
-<footer id="footerText">منصة أُفق</footer>
+<footer id="footerText">دودو النونة</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -758,6 +781,7 @@ const STR = {
     tabCourses:'موادّي', tabSchedule:'جدول المذاكرة', tabExams:'جدول الامتحانات',
     tabAssignments:'الواجبات', tabGrades:'الدرجات', 
     dueLabel:'واجبات مستحقة',
+    nearestExamLabel:'أقرب امتحان', quickLinksTitle:'الوصول السريع',
     scheduleTitle:'جدول المذاكرة', 
     examsTitle:'جدول الامتحانات',
     addBtn:'+ إضافة', 
@@ -775,7 +799,7 @@ const STR = {
     empty_grades:'مفيش مواد', 
     empty_schedule:'مفيش جدول — دوس "+ إضافة"',
     empty_exams:'لسه مفيش امتحانات مضافة',
-    footerText:'منصة أُفق',
+    footerText:'دودو النونة',
     uploadFile:'📎 رفع ملف',
     uploadingFile:'جارٍ الرفع...',
     uploadedLocal:'✅ تم الرفع',
@@ -800,6 +824,7 @@ const STR = {
     tabCourses:'My Courses', tabSchedule:'Study Schedule', tabExams:'Exam Schedule',
     tabAssignments:'Assignments', tabGrades:'Grades', 
     dueLabel:'Due Assignments',
+    nearestExamLabel:'Nearest Exam', quickLinksTitle:'Quick Access',
     scheduleTitle:'Study Schedule', 
     examsTitle:'Exam Schedule',
     addBtn:'+ Add', 
@@ -817,7 +842,7 @@ const STR = {
     empty_grades:'No courses', 
     empty_schedule:'No schedule — tap "+ Add"',
     empty_exams:'No exams added yet',
-    footerText:'Ufuq Platform',
+    footerText:'Dodo El Nouna',
     uploadFile:'📎 Upload File',
     uploadingFile:'Uploading...',
     uploadedLocal:'✅ Uploaded',
@@ -1051,6 +1076,7 @@ function refreshSharedViews(){
   renderExams();
   renderAssignmentsList();
   updateDueStat();
+  updateNearestExamStat();
   if(currentView.view === 'course'){
     renderCoursePageContent(currentView.params.courseId);
   }else if(currentView.view === 'assignments'){
@@ -1537,6 +1563,7 @@ function saveNewExam(){
   });
   closeExamForm();
   renderExams();
+  updateNearestExamStat();
   saveState();
 }
 
@@ -1554,6 +1581,7 @@ function renderFacultySwitch(){
       renderExams();
       renderAssignmentsList();
       updateDueStat();
+      updateNearestExamStat();
       checkUpcomingAssignments();
       saveLocalPrefs();
     });
@@ -1859,6 +1887,14 @@ document.addEventListener('click', (e)=>{
 
   // تصدير / استيراد البيانات
   if(e.target.closest('#exportBtn')){ exportData(); return; }
+
+  // كروت الوصول السريع في لوحة التحكم
+  const navCardEl = e.target.closest('[data-nav]');
+  if(navCardEl){
+    navigate(navCardEl.dataset.nav);
+    syncActiveTab(navCardEl.dataset.nav);
+    return;
+  }
   if(e.target.closest('#importBtn')){ importData(); return; }
 
   // جدول المذاكرة: إضافة / حفظ / إلغاء
@@ -1895,6 +1931,7 @@ document.addEventListener('click', (e)=>{
     const idx = exams.findIndex(x=>x.id===id);
     if(idx !== -1) exams.splice(idx, 1);
     renderExams();
+    updateNearestExamStat();
     saveState();
     return;
   }
@@ -1966,6 +2003,41 @@ async function handleFileUpload(e, course, li){
 function updateDueStat(){
   const el = document.getElementById('dueStat');
   if(el) el.textContent = assignments.filter(a=>a.faculty===currentFaculty).length;
+}
+
+function updateNearestExamStat(){
+  const el = document.getElementById('nearestExamStat');
+  if(!el) return;
+  const todayStr = new Date().toISOString().slice(0,10);
+  const upcoming = exams
+    .filter(x=>x.faculty===currentFaculty && x.date >= todayStr)
+    .sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
+  if(upcoming.length === 0){
+    el.textContent = lang==='ar' ? 'لا يوجد' : 'None';
+    return;
+  }
+  const x = upcoming[0];
+  const course = courses.find(c=>c.id===x.courseId);
+  el.textContent = `${course ? L(course.title) : ''} · ${formatDateStr(x.date)}`;
+}
+
+const QUICK_LINKS = [
+  {view:'courses', icon:'📚', key:'tabCourses', color:'#3BA7D9'},
+  {view:'schedule', icon:'🗓️', key:'tabSchedule', color:'#1F6F5C'},
+  {view:'exams', icon:'📝', key:'tabExams', color:'#B23A48'},
+  {view:'assignments', icon:'✅', key:'tabAssignments', color:'#C1542D'},
+  {view:'grades', icon:'📊', key:'tabGrades', color:'#6A4FA0'},
+];
+
+function renderQuickLinks(){
+  const wrap = document.getElementById('quickLinksGrid');
+  if(!wrap) return;
+  wrap.innerHTML = QUICK_LINKS.map(it=>`
+    <div class="quick-link-card" style="--qc:${it.color}" data-nav="${it.view}">
+      <div class="qc-icon">${it.icon}</div>
+      <div class="qc-label">${S(it.key)}</div>
+    </div>
+  `).join('');
 }
 
 function renderAssignmentsList(){
@@ -2120,12 +2192,14 @@ function applyLanguage(){
   document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr';
   document.body.classList.toggle('ltr', lang==='en');
 
-  document.getElementById('brandTitle').textContent = lang==='ar' ? 'أُفـق' : 'Ufuq';
+  document.getElementById('brandTitle').textContent = lang==='ar' ? 'دودو النونة' : 'Dodo El Nouna';
   document.getElementById('brandSubtitle').textContent = S('brandSubtitle');
   document.getElementById('avatarInitials').textContent = lang==='ar' ? 'د ح' : 'DS';
   document.getElementById('langToggle').textContent = lang==='ar' ? 'EN' : 'عربي';
 
   document.getElementById('statLabel').textContent = S('dueLabel');
+  document.getElementById('nearestExamLabel').textContent = S('nearestExamLabel');
+  document.getElementById('quickLinksTitle').textContent = S('quickLinksTitle');
   document.getElementById('footerText').textContent = S('footerText');
 
   const tabLabels = ['tabDashboard','tabCourses','tabSchedule','tabExams','tabAssignments','tabGrades'];
@@ -2134,11 +2208,13 @@ function applyLanguage(){
   });
 
   renderFacultySwitch();
+  renderQuickLinks();
   renderCourses();
   renderSchedule();
   renderExams();
   renderAssignmentsList();
   updateDueStat();
+  updateNearestExamStat();
   
   if(currentView.view === 'course'){
     renderCoursePageContent(currentView.params.courseId);
