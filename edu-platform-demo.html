@@ -3,19 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>دودو النونة</title>
+<title>المشاكسين</title>
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#1F6F5C">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="دودو النونة">
+<meta name="apple-mobile-web-app-title" content="المشاكسين">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&family=Baloo+Bhaijaan+2:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <style>
   :root{
     --bg: #EFE9DC;
@@ -42,7 +43,7 @@
   }
   
   *{box-sizing:border-box;}
-  body{margin:0; background:var(--bg); color:var(--ink); font-family:'IBM Plex Sans Arabic', sans-serif; -webkit-font-smoothing:antialiased; transition:background .3s;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:'Cairo', sans-serif; -webkit-font-smoothing:antialiased; transition:background .3s;}
   body.ltr{direction:ltr;}
   body.course-view{background:var(--bg-course);}
   h1,h2,h3,.display{font-family:'Amiri', serif;}
@@ -57,14 +58,15 @@
   }
   .brand{display:flex; align-items:center; gap:10px;}
   .brand .seal{
-    width:38px; height:38px; border-radius:50%; background:var(--ink);
+    width:38px; height:38px; border-radius:50%;
+    background:linear-gradient(145deg, var(--ink), var(--gold));
     color:var(--gold-soft); display:flex; align-items:center; justify-content:center;
     font-family:'Amiri',serif; font-weight:700; font-size:18px; flex-shrink:0;
-    border:2px solid var(--gold);
+    border:2px solid var(--gold); box-shadow:0 2px 8px rgba(0,0,0,.18);
   }
-  .brand-text h1{margin:0; font-size:19px; font-weight:700;}
+  .brand-text h1{margin:0; font-size:22px; font-weight:800; font-family:'Baloo Bhaijaan 2','Amiri',serif; letter-spacing:.2px;}
   .brand-text p{margin:0; font-size:11px; color:var(--ink-soft); letter-spacing:.5px;}
-  .header-right{display:flex; align-items:center; gap:12px;}
+  .header-right{display:flex; align-items:center; gap:10px;}
   .theme-toggle, .lang-switch{
     background:var(--gold-soft); border:1.5px solid var(--gold); border-radius:999px;
     padding:7px 14px; font-size:13px; font-weight:700; color:var(--gold);
@@ -74,8 +76,47 @@
   .avatar{
     width:36px; height:36px; border-radius:50%; background:var(--gold-soft);
     color:var(--gold); display:flex; align-items:center; justify-content:center;
-    font-weight:600; border:1px solid var(--gold); font-size:13px;
+    font-weight:600; border:1.5px solid var(--gold); font-size:18px; padding:0; line-height:1;
   }
+  .bell-btn{
+    position:relative; width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    background:var(--gold-soft); border:1.5px solid var(--gold); color:var(--gold);
+    display:flex; align-items:center; justify-content:center; font-size:15px; padding:0;
+  }
+  .bell-btn:hover{background:var(--gold); color:#fff;}
+  .bell-badge{
+    position:absolute; top:-4px; left:-4px; background:#B23A48; color:#fff; font-size:10px;
+    font-weight:700; min-width:16px; height:16px; border-radius:999px; align-items:center;
+    justify-content:center; padding:0 3px; border:1.5px solid var(--paper); display:none;
+  }
+  body.ltr .bell-badge{left:auto; right:-4px;}
+  .bell-badge.show{display:flex;}
+
+  /* Header dropdown panels (notifications / settings) */
+  .dropdown-panel{
+    position:absolute; top:64px; background:var(--paper); border:1px solid var(--line);
+    border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.15); z-index:500; overflow:hidden;
+    display:none;
+  }
+  .dropdown-panel.show{display:block;}
+  #notifPanel{right:20px; width:300px; max-width:88vw;}
+  body.ltr #notifPanel{right:auto; left:20px;}
+  #settingsPanel{right:20px; width:220px;}
+  body.ltr #settingsPanel{right:auto; left:20px;}
+  .panel-head{padding:12px 16px; font-weight:700; font-size:14px; border-bottom:1px solid var(--line); background:var(--gold-soft); color:var(--gold);}
+  .panel-body{max-height:320px; overflow-y:auto;}
+  .notif-row{display:flex; gap:10px; align-items:flex-start; padding:10px 16px; border-bottom:1px solid var(--line); font-size:13px;}
+  .notif-row:last-child{border-bottom:none;}
+  .notif-row .ni-icon{font-size:16px; flex-shrink:0;}
+  .notif-row .ni-title{font-weight:700; margin-bottom:2px;}
+  .notif-row .ni-sub{color:var(--ink-soft); font-size:11.5px;}
+  .notif-empty{padding:20px 16px; text-align:center; color:var(--ink-soft); font-size:13px;}
+  .avatar-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; padding:12px 14px;}
+  .avatar-opt{
+    width:32px; height:32px; border-radius:50%; border:1.5px solid transparent; background:var(--bg);
+    display:flex; align-items:center; justify-content:center; font-size:16px; padding:0;
+  }
+  .avatar-opt.active{border-color:var(--gold); background:var(--gold-soft);}
 
   /* ===== Notification Toast ===== */
   .notification-toast{
@@ -100,28 +141,7 @@
   body.ltr .notification-toast .notif-close{right:auto; left:8px;}
 
   /* ===== Layout ===== */
-  .app{max-width:1180px; margin:0 auto; padding:20px 16px 60px; display:grid; grid-template-columns:200px 1fr; gap:22px;}
-  @media (max-width:800px){ .app{grid-template-columns:1fr;} }
-
-  /* Binder tab nav */
-  nav.binder{display:flex; flex-direction:column; gap:6px;}
-  .tab{
-    display:flex; align-items:center; gap:10px; padding:12px 14px;
-    border-radius:0 999px 999px 0; border:1px solid transparent; border-left:none;
-    background:transparent; color:var(--ink-soft); font-size:14px; font-weight:500;
-    text-align:right; transition:.15s;
-  }
-  body.ltr .tab{border-radius:999px 0 0 999px; border-left:1px solid transparent; border-right:none;}
-  .tab .dot{width:8px; height:8px; border-radius:50%; background:var(--line); flex-shrink:0;}
-  .tab.active{background:var(--paper); color:var(--ink); font-weight:700; border-color:var(--line); box-shadow:2px 0 0 var(--gold) inset;}
-  body.ltr .tab.active{box-shadow:-2px 0 0 var(--gold) inset;}
-  .tab.active .dot{background:var(--gold);}
-  .tab:hover{background:var(--paper); color:var(--ink);}
-  @media (max-width:800px){
-    nav.binder{flex-direction:row; overflow-x:auto; padding-bottom:4px;}
-    .tab{white-space:nowrap; border-radius:999px; border-left:1px solid transparent;}
-    body.ltr .tab{border-radius:999px; border-right:1px solid transparent;}
-  }
+  .app{max-width:1180px; margin:0 auto; padding:20px 16px 60px;}
 
   main{min-width:0;}
 
@@ -152,11 +172,35 @@
   .quick-links{ display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:12px; }
   .quick-link-card{
     background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:20px 14px;
-    text-align:center; cursor:pointer; transition:.15s; border-top:4px solid var(--qc, var(--gold));
+    text-align:center; cursor:grab; transition:.15s; border-top:4px solid var(--qc, var(--gold));
+    touch-action:none; user-select:none;
   }
   .quick-link-card:hover{ transform:translateY(-2px); box-shadow:0 6px 18px rgba(30,42,56,.08); }
+  .quick-link-card:active{ cursor:grabbing; }
+  .quick-link-card.dragging{ opacity:.35; }
   .quick-link-card .qc-icon{ font-size:26px; margin-bottom:8px; }
   .quick-link-card .qc-label{ font-size:13px; font-weight:700; color:var(--ink); }
+  .quick-link-card .qc-hint{ font-size:9.5px; color:var(--ink-soft); margin-top:4px; opacity:.6; }
+
+  /* Study schedule dashboard widget */
+  .sched-widget{ background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:18px; }
+  .sched-week-strip{ display:flex; gap:6px; margin-bottom:16px; }
+  .sw-day{
+    flex:1; text-align:center; padding:8px 2px; border-radius:10px; background:var(--bg);
+    font-size:11px; color:var(--ink-soft); border:1.5px solid transparent; transition:.15s;
+  }
+  .sw-day.has-session{ background:var(--gold-soft); color:var(--gold); font-weight:700; }
+  .sw-day.is-today{ border-color:var(--gold); }
+  .sw-day .sw-dot{ width:5px; height:5px; border-radius:50%; background:var(--gold); margin:4px auto 0; }
+  .sched-upcoming{ display:flex; flex-direction:column; gap:8px; }
+  .su-item{
+    display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px;
+    background:var(--bg); border-right:4px solid var(--sc, var(--gold));
+  }
+  body.ltr .su-item{ border-right:none; border-left:4px solid var(--sc, var(--gold)); }
+  .su-item .su-time{ font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--ink-soft); direction:ltr; flex-shrink:0; }
+  .su-item .su-name{ font-size:13px; font-weight:600; flex:1; }
+  .sched-empty-dash{ text-align:center; padding:20px; color:var(--ink-soft); font-size:13px; }
 
   /* Faculty switcher */
   .faculty-switch{ display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
@@ -206,7 +250,7 @@
   body.ltr .course-card{border-right:1px solid var(--line); border-left:5px solid var(--c);}
   .course-card:hover{transform:translateY(-2px); box-shadow:0 6px 18px rgba(30,42,56,.08);}
   .course-card .top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
-  .course-card h3{margin:0; font-size:16px; font-weight:700; font-family:'IBM Plex Sans Arabic';}
+  .course-card h3{margin:0; font-size:16px; font-weight:700; font-family:'Cairo';}
   .course-card .code{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); direction:ltr; display:inline-block;}
   .tag{font-size:11px; padding:3px 9px; border-radius:999px; font-weight:600; background:var(--cbg); color:var(--c);}
   .progress-track{height:6px; background:var(--line); border-radius:999px; overflow:hidden;}
@@ -427,30 +471,43 @@
       </svg>
     </div>
     <div class="brand-text">
-      <h1 id="brandTitle">دودو النونة</h1>
+      <h1 id="brandTitle">المشاكسين</h1>
       <p id="brandSubtitle">منصة الطالب الجامعي</p>
     </div>
   </div>
   <div class="header-right">
+    <button class="bell-btn" id="bellBtn" title="الإشعارات" aria-label="الإشعارات">
+      🔔<span class="bell-badge" id="bellBadge">0</span>
+    </button>
     <button class="theme-toggle" id="themeToggle">🌙</button>
     <button class="lang-switch" id="langToggle">EN</button>
-    <div class="avatar" id="avatarInitials">د ح</div>
+    <button class="avatar" id="avatarBtn" title="الإعدادات" aria-label="الإعدادات">🦊</button>
   </div>
 </header>
 
-<div class="app">
-  <nav class="binder">
-    <button class="tab active" data-tab="dashboard"><span class="dot"></span><span class="tab-label">لوحة التحكم</span></button>
-    <button class="tab" data-tab="coursesSection"><span class="dot"></span><span class="tab-label">موادّي</span></button>
-    <button class="tab" data-tab="scheduleSection"><span class="dot"></span><span class="tab-label">جدول المذاكرة</span></button>
-    <button class="tab" data-tab="examsSection"><span class="dot"></span><span class="tab-label">جدول الامتحانات</span></button>
-    <button class="tab" data-tab="assignmentsSection"><span class="dot"></span><span class="tab-label">الواجبات</span></button>
-    <button class="tab" data-tab="gradesSection"><span class="dot"></span><span class="tab-label">الدرجات</span></button>
-  </nav>
+<div class="dropdown-panel" id="notifPanel"></div>
+<div class="dropdown-panel" id="settingsPanel">
+  <div class="panel-head" id="settingsPanelTitle">الإعدادات</div>
+  <div class="avatar-grid" id="avatarGrid"></div>
+</div>
 
+<div class="app">
   <main>
    <div id="dashboardView">
     <div class="faculty-switch" id="facultySwitch"></div>
+
+    <section id="quickLinksSection">
+      <div class="section-head"><h2 id="quickLinksTitle">الوصول السريع</h2></div>
+      <div class="quick-links" id="quickLinksGrid"></div>
+    </section>
+
+    <section id="scheduleWidgetSection">
+      <div class="section-head">
+        <h2 id="schedWidgetTitle">جدول المذاكرة</h2>
+        <span id="schedWidgetViewAll" class="export-btn" data-nav="schedule" style="cursor:pointer;">عرض الكل</span>
+      </div>
+      <div class="sched-widget" id="schedWidgetBody"></div>
+    </section>
 
     <div class="stats">
       <div class="stat-card">
@@ -462,11 +519,6 @@
         <div class="value" id="nearestExamStat" style="font-size:15px;">—</div>
       </div>
     </div>
-
-    <section id="quickLinksSection">
-      <div class="section-head"><h2 id="quickLinksTitle">الوصول السريع</h2></div>
-      <div class="quick-links" id="quickLinksGrid"></div>
-    </section>
    </div>
 
    <div id="coursePage" style="display:none;"></div>
@@ -479,7 +531,7 @@
   </main>
 </div>
 
-<footer id="footerText">دودو النونة</footer>
+<footer id="footerText">المشاكسين</footer>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -646,6 +698,8 @@ let currentFaculty = 'nursing';
 let lang = 'ar';
 let darkMode = false;
 let currentView = {view: 'dashboard', params: {}};
+let avatarEmoji = '🦊';
+const AVATAR_OPTIONS = ['🦊','🦁','🐼','🐯','🐨','🐸','🐧','🦉','🐢','🦄'];
 
 /* معرّف فريد لكل جهاز/متصفح — بنستخدمه عشان نفرّق تحديثاتنا احنا عن تحديثات جهاز تاني */
 const CLIENT_ID = 'c' + Math.random().toString(36).slice(2) + Date.now();
@@ -799,7 +853,11 @@ const STR = {
     empty_grades:'مفيش مواد', 
     empty_schedule:'مفيش جدول — دوس "+ إضافة"',
     empty_exams:'لسه مفيش امتحانات مضافة',
-    footerText:'دودو النونة',
+    footerText:'المشاكسين',
+    viewAll:'عرض الكل',
+    settingsTitle:'الإعدادات',
+    notifTitle:'الإشعارات',
+    notifEmpty:'مفيش إشعارات جديدة',
     uploadFile:'📎 رفع ملف',
     uploadingFile:'جارٍ الرفع...',
     uploadedLocal:'✅ تم الرفع',
@@ -842,7 +900,11 @@ const STR = {
     empty_grades:'No courses', 
     empty_schedule:'No schedule — tap "+ Add"',
     empty_exams:'No exams added yet',
-    footerText:'Dodo El Nouna',
+    footerText:'El Mashakseen',
+    viewAll:'View All',
+    settingsTitle:'Settings',
+    notifTitle:'Notifications',
+    notifEmpty:'No new notifications',
     uploadFile:'📎 Upload File',
     uploadingFile:'Uploading...',
     uploadedLocal:'✅ Uploaded',
@@ -890,6 +952,7 @@ function checkUpcomingAssignments(){
     const body = S('notifUrgent').replace('{count}', urgentAssignments.length);
     showNotification(S('notifUpcoming'), body);
   }
+  updateBellBadge();
 }
 
 // ===== Dark Mode =====
@@ -901,6 +964,99 @@ function toggleDarkMode(){
 }
 
 document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
+
+// ===== Notifications bell & settings/avatar panel =====
+function daysUntilDate(dateStr){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr + 'T00:00:00');
+  return Math.round((d - today) / (1000*60*60*24));
+}
+
+function getNotifItems(){
+  const items = [];
+  assignments.filter(a=>a.faculty===currentFaculty && a.urgent).forEach(a=>{
+    const course = courses.find(c=>c.id===a.courseId);
+    items.push({icon:'✅', title:L(a.title), sub:(course ? L(course.title)+' · ' : '') + a.due});
+  });
+  const todayStr = new Date().toISOString().slice(0,10);
+  exams.filter(x=>x.faculty===currentFaculty && x.date >= todayStr).forEach(x=>{
+    const dleft = daysUntilDate(x.date);
+    if(dleft <= 7){
+      const course = courses.find(c=>c.id===x.courseId);
+      const soon = dleft===0 ? (lang==='ar' ? ' · النهاردة' : ' · Today') : (lang==='ar' ? ` · بعد ${dleft} يوم` : ` · in ${dleft}d`);
+      items.push({icon:'📝', title:course ? L(course.title) : '', sub: formatDateStr(x.date) + soon});
+    }
+  });
+  return items;
+}
+
+function renderNotifPanel(){
+  const panel = document.getElementById('notifPanel');
+  if(!panel) return;
+  const items = getNotifItems();
+  panel.innerHTML = `
+    <div class="panel-head">${S('notifTitle')}</div>
+    <div class="panel-body">
+      ${items.length ? items.map(it=>`
+        <div class="notif-row">
+          <span class="ni-icon">${it.icon}</span>
+          <div>
+            <div class="ni-title">${it.title}</div>
+            <div class="ni-sub">${it.sub}</div>
+          </div>
+        </div>
+      `).join('') : `<div class="notif-empty">${S('notifEmpty')}</div>`}
+    </div>`;
+}
+
+function updateBellBadge(){
+  const badge = document.getElementById('bellBadge');
+  if(!badge) return;
+  const count = getNotifItems().length;
+  badge.textContent = count > 9 ? '9+' : count;
+  badge.classList.toggle('show', count > 0);
+}
+
+function renderAvatarGrid(){
+  const grid = document.getElementById('avatarGrid');
+  if(!grid) return;
+  grid.innerHTML = AVATAR_OPTIONS.map(em=>`
+    <button class="avatar-opt ${em===avatarEmoji ? 'active' : ''}" data-avatar="${em}">${em}</button>
+  `).join('');
+}
+
+document.getElementById('bellBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  document.getElementById('settingsPanel').classList.remove('show');
+  const panel = document.getElementById('notifPanel');
+  const willShow = !panel.classList.contains('show');
+  if(willShow) renderNotifPanel();
+  panel.classList.toggle('show', willShow);
+});
+
+document.getElementById('avatarBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  document.getElementById('notifPanel').classList.remove('show');
+  const panel = document.getElementById('settingsPanel');
+  if(!panel.classList.contains('show')) renderAvatarGrid();
+  panel.classList.toggle('show');
+});
+
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('#notifPanel') && !e.target.closest('#bellBtn')){
+    document.getElementById('notifPanel').classList.remove('show');
+  }
+  if(!e.target.closest('#settingsPanel') && !e.target.closest('#avatarBtn')){
+    document.getElementById('settingsPanel').classList.remove('show');
+  }
+  const avatarOptEl = e.target.closest('[data-avatar]');
+  if(avatarOptEl){
+    avatarEmoji = avatarOptEl.dataset.avatar;
+    document.getElementById('avatarBtn').textContent = avatarEmoji;
+    renderAvatarGrid();
+    saveLocalPrefs();
+  }
+});
 
 // ===== Export / Import =====
 function exportData(){
@@ -1017,7 +1173,7 @@ const LOCAL_PREFS_KEY = 'ufuq_local_prefs_v1';
 
 function saveLocalPrefs(){
   try{
-    localStorage.setItem(LOCAL_PREFS_KEY, JSON.stringify({lang, darkMode, currentFaculty, currentView}));
+    localStorage.setItem(LOCAL_PREFS_KEY, JSON.stringify({lang, darkMode, currentFaculty, currentView, avatarEmoji, quickLinksOrder}));
   }catch(e){ console.error('Local prefs save failed:', e); }
 }
 
@@ -1034,6 +1190,12 @@ function loadLocalPrefs(){
     }
     if(p.currentFaculty) currentFaculty = p.currentFaculty;
     if(p.currentView) currentView = p.currentView;
+    if(p.avatarEmoji){
+      avatarEmoji = p.avatarEmoji;
+      const btn = document.getElementById('avatarBtn');
+      if(btn) btn.textContent = avatarEmoji;
+    }
+    if(Array.isArray(p.quickLinksOrder) && p.quickLinksOrder.length) quickLinksOrder = p.quickLinksOrder;
   }catch(e){ console.error('Local prefs load failed:', e); }
 }
 
@@ -1384,6 +1546,45 @@ function renderSchedule(){
       </div>`;
   });
   wrap.innerHTML = html;
+  renderScheduleWidget();
+}
+
+/* بطاقة معاينة جدول المذاكرة في لوحة التحكم — شريط أيام الأسبوع + أقرب المحاضرات */
+function renderScheduleWidget(){
+  const wrap = document.getElementById('schedWidgetBody');
+  if(!wrap) return;
+
+  let facSchedule = schedule.filter(s=>s.faculty===currentFaculty);
+  facSchedule = facSchedule.map(s=>({...s, _dist: minutesUntilNext(s.dayIndex, s.time)}));
+  facSchedule.sort((a,b)=> a._dist - b._dist || a.time.localeCompare(b.time));
+
+  const daysWithSession = new Set(facSchedule.map(s=>s.dayIndex));
+  const today = new Date().getDay();
+  const stripHtml = [0,1,2,3,4,5,6].map(i=>`
+    <div class="sw-day ${daysWithSession.has(i) ? 'has-session' : ''} ${i===today ? 'is-today' : ''}">
+      ${dayName(i).slice(0,2)}
+      ${daysWithSession.has(i) ? '<div class="sw-dot"></div>' : ''}
+    </div>
+  `).join('');
+
+  let listHtml;
+  if(facSchedule.length === 0){
+    listHtml = `<div class="sched-empty-dash">${S('empty_schedule')}</div>`;
+  }else{
+    listHtml = facSchedule.slice(0,4).map(s=>{
+      const course = courses.find(c=>c.id===s.courseId);
+      if(!course) return '';
+      const th = THEME[course.subject];
+      return `
+        <div class="su-item" style="--sc:${th.c}">
+          <span class="su-time">${s.time}</span>
+          <span class="su-name">${L(course.title)}</span>
+          <span class="badge" style="background:${th.bg}; color:${th.c};">${dayName(s.dayIndex)}</span>
+        </div>`;
+    }).join('');
+  }
+
+  wrap.innerHTML = `<div class="sched-week-strip">${stripHtml}</div><div class="sched-upcoming">${listHtml}</div>`;
 }
 
 function renderSchedulePage(){
@@ -1891,8 +2092,8 @@ document.addEventListener('click', (e)=>{
   // كروت الوصول السريع في لوحة التحكم
   const navCardEl = e.target.closest('[data-nav]');
   if(navCardEl){
+    if(qlJustDragged) return;
     navigate(navCardEl.dataset.nav);
-    syncActiveTab(navCardEl.dataset.nav);
     return;
   }
   if(e.target.closest('#importBtn')){ importData(); return; }
@@ -2014,11 +2215,13 @@ function updateNearestExamStat(){
     .sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
   if(upcoming.length === 0){
     el.textContent = lang==='ar' ? 'لا يوجد' : 'None';
+    updateBellBadge();
     return;
   }
   const x = upcoming[0];
   const course = courses.find(c=>c.id===x.courseId);
   el.textContent = `${course ? L(course.title) : ''} · ${formatDateStr(x.date)}`;
+  updateBellBadge();
 }
 
 const QUICK_LINKS = [
@@ -2029,15 +2232,48 @@ const QUICK_LINKS = [
   {view:'grades', icon:'📊', key:'tabGrades', color:'#6A4FA0'},
 ];
 
+/* ترتيب كروت الوصول السريع حسب أولوية الطالب — بيتغيّر بالسحب والإفلات وبيتخزن محليًا */
+let quickLinksOrder = QUICK_LINKS.map(q=>q.view);
+let quickLinksSortable = null;
+let qlJustDragged = false;
+
+function getOrderedQuickLinks(){
+  const map = {};
+  QUICK_LINKS.forEach(q=>{ map[q.view] = q; });
+  const ordered = quickLinksOrder.map(v=>map[v]).filter(Boolean);
+  QUICK_LINKS.forEach(q=>{ if(!ordered.includes(q)) ordered.push(q); });
+  return ordered;
+}
+
 function renderQuickLinks(){
   const wrap = document.getElementById('quickLinksGrid');
   if(!wrap) return;
-  wrap.innerHTML = QUICK_LINKS.map(it=>`
+  wrap.innerHTML = getOrderedQuickLinks().map(it=>`
     <div class="quick-link-card" style="--qc:${it.color}" data-nav="${it.view}">
       <div class="qc-icon">${it.icon}</div>
       <div class="qc-label">${S(it.key)}</div>
     </div>
   `).join('');
+  initQuickLinksDragDrop();
+}
+
+function initQuickLinksDragDrop(){
+  const wrap = document.getElementById('quickLinksGrid');
+  if(!wrap || typeof Sortable === 'undefined') return;
+  if(quickLinksSortable){ quickLinksSortable.destroy(); }
+  quickLinksSortable = new Sortable(wrap, {
+    animation:150,
+    delay:150,
+    delayOnTouchOnly:true,
+    touchStartThreshold:5,
+    ghostClass:'dragging',
+    onStart:function(){ qlJustDragged = true; },
+    onEnd:function(){
+      quickLinksOrder = [...wrap.querySelectorAll('.quick-link-card')].map(c=>c.dataset.nav);
+      saveLocalPrefs();
+      setTimeout(()=>{ qlJustDragged = false; }, 150);
+    }
+  });
 }
 
 function renderAssignmentsList(){
@@ -2153,59 +2389,23 @@ function saveNewAssignment(){
   saveState();
 }
 
-document.querySelectorAll('.tab').forEach(tab=>{
-  tab.addEventListener('click', ()=>{
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    tab.classList.add('active');
-
-    const targetId = tab.dataset.tab;
-    if(targetId === 'coursesSection'){
-      navigate('courses');
-    }else if(targetId === 'scheduleSection'){
-      navigate('schedule');
-    }else if(targetId === 'examsSection'){
-      navigate('exams');
-    }else if(targetId === 'assignmentsSection'){
-      navigate('assignments');
-    }else if(targetId === 'gradesSection'){
-      navigate('grades');
-    }else{
-      navigate('dashboard');
-    }
-  });
-});
-
-function syncActiveTab(view){
-  const map = {dashboard:'dashboard', courses:'coursesSection', schedule:'scheduleSection', exams:'examsSection', assignments:'assignmentsSection', grades:'gradesSection'};
-  const targetTab = map[view];
-  document.querySelectorAll('.tab').forEach(t=>{
-    t.classList.toggle('active', targetTab && t.dataset.tab === targetTab);
-  });
-}
-window.addEventListener('popstate', (e)=>{
-  const state = e.state || {view:'dashboard'};
-  syncActiveTab(state.view);
-});
-
 function applyLanguage(){
   document.documentElement.lang = lang;
   document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr';
   document.body.classList.toggle('ltr', lang==='en');
 
-  document.getElementById('brandTitle').textContent = lang==='ar' ? 'دودو النونة' : 'Dodo El Nouna';
+  document.getElementById('brandTitle').textContent = lang==='ar' ? 'المشاكسين' : 'El Mashakseen';
   document.getElementById('brandSubtitle').textContent = S('brandSubtitle');
-  document.getElementById('avatarInitials').textContent = lang==='ar' ? 'د ح' : 'DS';
   document.getElementById('langToggle').textContent = lang==='ar' ? 'EN' : 'عربي';
 
   document.getElementById('statLabel').textContent = S('dueLabel');
   document.getElementById('nearestExamLabel').textContent = S('nearestExamLabel');
   document.getElementById('quickLinksTitle').textContent = S('quickLinksTitle');
+  document.getElementById('schedWidgetTitle').textContent = S('scheduleTitle');
+  document.getElementById('schedWidgetViewAll').textContent = S('viewAll');
+  document.getElementById('settingsPanelTitle').textContent = S('settingsTitle');
   document.getElementById('footerText').textContent = S('footerText');
-
-  const tabLabels = ['tabDashboard','tabCourses','tabSchedule','tabExams','tabAssignments','tabGrades'];
-  document.querySelectorAll('.tab-label').forEach((el,i)=>{
-    el.textContent = S(tabLabels[i]);
-  });
+  updateBellBadge();
 
   renderFacultySwitch();
   renderQuickLinks();
@@ -2255,4 +2455,4 @@ async function initApp(){
 initApp();
 </script>
 </body>
-  </html>
+        </html>
