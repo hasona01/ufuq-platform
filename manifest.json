@@ -1,6 +1,6 @@
 {
-  "name": "دودو النونة",
-  "short_name": "دودو النونة",
+  "name":"المشاكسين",
+  "short_name": "المشاكسين",
   "start_url": "./edu-platform-demo.html",
   "display": "standalone",
   "background_color": "#EFE9DC",
