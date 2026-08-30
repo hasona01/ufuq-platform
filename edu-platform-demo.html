@@ -2542,7 +2542,9 @@ function renderAssignmentsList(){
         <div class="aes-text">${lang==='ar' ? 'لا توجد واجبات أخرى حالياً، استمتع بوقتك!' : 'No assignments left right now, enjoy your time!'}</div>
       </div>`;
   }else{
-    const sorted = [...facAssignments].sort((a,b)=> (a.done?1:0) - (b.done?1:0));
+    const sorted = [...facAssignments].sort((a,b)=>
+      (a.done?1:0) - (b.done?1:0) || (a.due||'').localeCompare(b.due||'')
+    );
     list.innerHTML = sorted.map(a=>{
       const course = courses.find(c=>c.id===a.courseId);
       return `
@@ -2747,4 +2749,4 @@ initApp();
 </script>
 <button id="scrollTopBtn" title="ارجع لفوق" aria-label="ارجع لفوق">↑</button>
 </body>
-        </html>
+  </html>
