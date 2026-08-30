@@ -273,16 +273,18 @@
   .timeline::before{content:""; position:absolute; right:6px; top:6px; bottom:6px; width:2px; background:var(--line);}
   body.ltr .timeline::before{right:auto; left:6px;}
   .t-item{position:relative; display:flex; gap:14px; align-items:flex-start; padding-bottom:20px;}
-  .t-item::before{content:""; position:absolute; right:-1px; top:4px; width:10px; height:10px; border-radius:50%; background:var(--gold); border:2px solid var(--bg);}
+  .t-item::before{content:""; position:absolute; right:-1px; top:4px; width:10px; height:10px; border-radius:50%; background:var(--tc, var(--gold)); border:2px solid var(--bg);}
   body.ltr .t-item::before{right:auto; left:-1px;}
   .t-time{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); width:56px; flex-shrink:0; direction:ltr; text-align:left;}
   .t-card{
     flex:1; background:var(--paper); border:1px solid var(--line); border-radius:10px;
     padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border-right:4px solid var(--tc, var(--gold));
   }
-  .t-card .t-info{flex:1;}
+  body.ltr .t-card{ border-right:1px solid var(--line); border-left:4px solid var(--tc, var(--gold)); }
+  .t-card .t-info{flex:1; display:flex; flex-direction:column; gap:4px; align-items:flex-start;}
   .t-card .name{font-weight:600; font-size:14px;}
-  .t-card .room{font-size:12px; color:var(--ink-soft);}
+  .t-card .room{font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:999px;}
   .t-card .t-del{
     background:transparent; border:none; color:var(--ink-soft); font-size:14px; padding:4px 6px; border-radius:6px; flex-shrink:0;
   }
@@ -782,6 +784,16 @@ function formatDateStr(dateStr){
   const month = lang==='ar' ? months_ar[d.getMonth()] : months_en[d.getMonth()];
   const year = d.getFullYear();
   return lang==='ar' ? `${day} ${month} ${year}` : `${month} ${day}, ${year}`;
+}
+
+/* تحويل وقت الحصة من صيغة 24 ساعة (HH:MM) لصيغة 12 ساعة سهلة القراءة */
+function formatTime12(timeStr){
+  if(!timeStr) return '';
+  const [h, m] = timeStr.split(':').map(Number);
+  const period = lang==='ar' ? (h < 12 ? 'ص' : 'م') : (h < 12 ? 'AM' : 'PM');
+  let h12 = h % 12; if(h12 === 0) h12 = 12;
+  const mm = String(m||0).padStart(2,'0');
+  return `${h12}:${mm} ${period}`;
 }
 
 /* المسافة بالدقايق من دلوقتي لحد أقرب حدوث لليوم ده والوقت ده (جدول أسبوعي متكرر) */
@@ -1567,9 +1579,11 @@ function renderGradesPage(){
 function renderSchedule(){
   const wrap = document.getElementById('schedTimeline');
   if(!wrap) return;
+  const today = new Date().getDay();
   let facSchedule = schedule.filter(s=>s.faculty===currentFaculty);
-  facSchedule = facSchedule.map(s=>({...s, _dist: minutesUntilNext(s.dayIndex, s.time)}));
-  facSchedule.sort((a,b)=> a._dist - b._dist || a.time.localeCompare(b.time));
+  facSchedule = [...facSchedule].sort((a,b)=>
+    ((a.dayIndex - today + 7) % 7) - ((b.dayIndex - today + 7) % 7) || a.time.localeCompare(b.time)
+  );
 
   if(facSchedule.length === 0){
     wrap.innerHTML = `<div class="cp-empty">${S('empty_schedule')}</div>`;
@@ -1587,12 +1601,12 @@ function renderSchedule(){
     }
     const th = THEME[course.subject];
     html += `
-      <div class="t-item">
-        <div class="t-time">${s.time}</div>
+      <div class="t-item" style="--tc:${th.c}">
+        <div class="t-time">${formatTime12(s.time)}</div>
         <div class="t-card">
           <div class="t-info">
             <div class="name">${L(course.title)}</div>
-            <div class="room">${L(th.label)}</div>
+            <span class="room" style="background:${th.bg}; color:${th.c};">${L(th.label)}</span>
           </div>
           <button class="t-del" data-del-sched="${s.id}" title="✕">✕</button>
         </div>
@@ -1628,7 +1642,7 @@ function startHeaderClock(){
     const now = new Date();
     let h = now.getHours();
     const m = String(now.getMinutes()).padStart(2,'0');
-    const period = lang==='ar' ? (h < 12 ? 'ص' : 'م') : (h < 12 ? 'AM' : 'PM');
+    const period = lang==='ar' ? (h < 12 ? 'صباحًا' : 'مساءً') : (h < 12 ? 'AM' : 'PM');
     let h12 = h % 12; if(h12 === 0) h12 = 12;
     el.textContent = `🕐 ${h12}:${m} ${period}`;
   }
@@ -1672,15 +1686,17 @@ function renderScheduleWidget(){
   if(!wrap) return;
 
   let facSchedule = schedule.filter(s=>s.faculty===currentFaculty);
+  const today = new Date().getDay();
   facSchedule = facSchedule.map(s=>({
     ...s,
     _dist: minutesUntilNext(s.dayIndex, s.time),
     _date: occurrenceDateStr(s.dayIndex)
   }));
-  facSchedule.sort((a,b)=> a._dist - b._dist || a.time.localeCompare(b.time));
+  facSchedule.sort((a,b)=>
+    ((a.dayIndex - today + 7) % 7) - ((b.dayIndex - today + 7) % 7) || a.time.localeCompare(b.time)
+  );
 
   const daysWithSession = new Set(facSchedule.map(s=>s.dayIndex));
-  const today = new Date().getDay();
   const stripHtml = [0,1,2,3,4,5,6].map(i=>{
     const label = lang==='ar' ? SHORT_DAYS_AR[i] : DAYS_EN[i].slice(0,2);
     return `<div class="sw-day ${daysWithSession.has(i) ? 'has-session' : ''} ${i===today ? 'is-today' : ''}">${label}</div>`;
@@ -1729,7 +1745,7 @@ function renderScheduleWidget(){
           <div class="su-info">
             <div class="su-name">${L(course.title)}</div>
             <div class="su-meta">
-              <span class="su-time">${s.time}</span>
+              <span class="su-time">${formatTime12(s.time)}</span>
               <span>·</span>
               <span>${dayName(s.dayIndex)}</span>
             </div>
