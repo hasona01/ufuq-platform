@@ -1,0 +1,2664 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المشاكسين</title>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1F6F5C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="المشاكسين">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700;800&family=Baloo+Bhaijaan+2:wght@600;700;800&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<style>
+  :root{
+    --bg: #EFE9DC;
+    --bg-course: #E8F4F8;
+    --paper: #FFFFFF;
+    --ink: #24303A;
+    --ink-soft: #64707C;
+    --line: #DED4BE;
+    --gold: #1F6F5C;
+    --gold-soft: #DCEDE7;
+    --radius: 14px;
+  }
+  
+  /* Dark Mode */
+  body.dark-mode{
+    --bg: #1a1d23;
+    --bg-course: #1e2834;
+    --paper: #252b36;
+    --ink: #e8eaed;
+    --ink-soft: #9aa0a6;
+    --line: #3c4149;
+    --gold: #4db6ac;
+    --gold-soft: #2d3e3a;
+  }
+  
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:'Cairo', sans-serif; -webkit-font-smoothing:antialiased; transition:background .3s;}
+  body.ltr{direction:ltr;}
+  body.course-view{background:var(--bg-course);}
+  h1,h2,h3,.display{font-family:'Amiri', serif;}
+  .mono{font-family:'IBM Plex Mono', monospace; direction:ltr; display:inline-block;}
+  button{font-family:inherit; cursor:pointer;}
+
+  /* ===== Header ===== */
+  header{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 20px; background:var(--paper); border-bottom:1px solid var(--line);
+    position:sticky; top:0; z-index:20;
+  }
+  .brand{display:flex; align-items:center; gap:10px;}
+  .brand .seal{
+    width:44px; height:44px; border-radius:50%; overflow:hidden; flex-shrink:0;
+    border:2px solid var(--gold); box-shadow:0 2px 8px rgba(0,0,0,.18); background:#fdfcf9;
+  }
+  .brand .seal-img{ width:100%; height:100%; object-fit:cover; display:block; }
+  .brand-text h1{margin:0; font-size:22px; font-weight:800; font-family:'Baloo Bhaijaan 2','Amiri',serif; letter-spacing:.2px;}
+  .brand-text p{margin:0; font-size:11px; color:var(--ink-soft); letter-spacing:.5px;}
+  .header-right{display:flex; align-items:center; gap:10px;}
+  .theme-toggle, .lang-switch{
+    background:var(--gold-soft); border:1.5px solid var(--gold); border-radius:999px;
+    padding:7px 14px; font-size:13px; font-weight:700; color:var(--gold);
+    transition:.2s;
+  }
+  .theme-toggle:hover, .lang-switch:hover{background:var(--gold); color:#fff;}
+  .avatar{
+    width:36px; height:36px; border-radius:50%; background:var(--gold-soft);
+    color:var(--gold); display:flex; align-items:center; justify-content:center;
+    font-weight:600; border:1.5px solid var(--gold); font-size:18px; padding:0; line-height:1;
+  }
+  .bell-btn{
+    position:relative; width:36px; height:36px; border-radius:50%; flex-shrink:0;
+    background:var(--gold-soft); border:1.5px solid var(--gold); color:var(--gold);
+    display:flex; align-items:center; justify-content:center; font-size:15px; padding:0;
+  }
+  .bell-btn:hover{background:var(--gold); color:#fff;}
+  .bell-badge{
+    position:absolute; top:-4px; left:-4px; background:#B23A48; color:#fff; font-size:10px;
+    font-weight:700; min-width:16px; height:16px; border-radius:999px; align-items:center;
+    justify-content:center; padding:0 3px; border:1.5px solid var(--paper); display:none;
+  }
+  body.ltr .bell-badge{left:auto; right:-4px;}
+  .bell-badge.show{display:flex;}
+
+  /* Header dropdown panels (notifications / settings) */
+  .dropdown-panel{
+    position:absolute; top:64px; background:var(--paper); border:1px solid var(--line);
+    border-radius:14px; box-shadow:0 10px 30px rgba(0,0,0,.15); z-index:500; overflow:hidden;
+    display:none;
+  }
+  .dropdown-panel.show{display:block;}
+  #notifPanel{right:20px; width:300px; max-width:88vw;}
+  body.ltr #notifPanel{right:auto; left:20px;}
+  #settingsPanel{right:20px; width:220px;}
+  body.ltr #settingsPanel{right:auto; left:20px;}
+  .panel-head{padding:12px 16px; font-weight:700; font-size:14px; border-bottom:1px solid var(--line); background:var(--gold-soft); color:var(--gold);}
+  .panel-body{max-height:320px; overflow-y:auto;}
+  .notif-row{display:flex; gap:10px; align-items:flex-start; padding:10px 16px; border-bottom:1px solid var(--line); font-size:13px;}
+  .notif-row:last-child{border-bottom:none;}
+  .notif-row .ni-icon{font-size:16px; flex-shrink:0;}
+  .notif-row .ni-title{font-weight:700; margin-bottom:2px;}
+  .notif-row .ni-sub{color:var(--ink-soft); font-size:11.5px;}
+  .notif-empty{padding:20px 16px; text-align:center; color:var(--ink-soft); font-size:13px;}
+  .avatar-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:6px; padding:12px 14px;}
+  .avatar-opt{
+    width:32px; height:32px; border-radius:50%; border:1.5px solid transparent; background:var(--bg);
+    display:flex; align-items:center; justify-content:center; font-size:16px; padding:0;
+  }
+  .avatar-opt.active{border-color:var(--gold); background:var(--gold-soft);}
+
+  /* ===== Notification Toast ===== */
+  .notification-toast{
+    position:fixed; top:80px; right:20px; background:var(--paper);
+    border:1px solid var(--gold); border-left:5px solid var(--gold);
+    border-radius:12px; padding:14px 18px; box-shadow:0 4px 20px rgba(0,0,0,0.15);
+    z-index:1000; max-width:350px; animation:slideInRight 0.3s ease;
+    display:none;
+  }
+  body.ltr .notification-toast{right:auto; left:20px; border-left:1px solid var(--gold); border-right:5px solid var(--gold);}
+  .notification-toast.show{display:block;}
+  @keyframes slideInRight{
+    from{transform:translateX(400px); opacity:0;}
+    to{transform:translateX(0); opacity:1;}
+  }
+  .notification-toast .notif-title{font-weight:700; font-size:14px; margin-bottom:4px;}
+  .notification-toast .notif-body{font-size:13px; color:var(--ink-soft); line-height:1.5;}
+  .notification-toast .notif-close{
+    position:absolute; top:8px; right:8px; background:transparent; border:none;
+    color:var(--ink-soft); font-size:18px; cursor:pointer; padding:4px;
+  }
+  body.ltr .notification-toast .notif-close{right:auto; left:8px;}
+
+  /* ===== Layout ===== */
+  .app{max-width:1180px; margin:0 auto; padding:20px 16px 60px;}
+
+  main{min-width:0;}
+
+  /* Stats row */
+  .stats{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:22px;}
+  @media (max-width:640px){ .stats{grid-template-columns:1fr;} }
+  .stat-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 18px;
+  }
+  .stat-card .label{font-size:12px; color:var(--ink-soft); margin-bottom:6px;}
+  .stat-card .value{font-size:26px; font-weight:700; font-family:'IBM Plex Mono',monospace; direction:ltr; text-align:right;}
+  body.ltr .stat-card .value{text-align:left;}
+  .stat-card .value small{font-size:14px; font-weight:400; color:var(--ink-soft);}
+
+  section{margin-bottom:30px;}
+  .section-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;}
+  .section-head h2{font-size:20px; margin:0;}
+  .section-head span{font-size:12px; color:var(--ink-soft);}
+  .section-head .add-btn, .export-btn{
+    background:var(--gold); color:#fff; border:none; border-radius:999px; padding:7px 16px;
+    font-size:12.5px; font-weight:600;
+  }
+  .export-btn{background:transparent; border:1.5px solid var(--gold); color:var(--gold);}
+  .export-btn:hover{background:var(--gold); color:#fff;}
+
+  /* Quick links (dashboard shortcuts to each dedicated page) */
+  .quick-links{ display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:12px; }
+  .quick-link-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:20px 14px;
+    text-align:center; cursor:grab; transition:.15s; border-top:4px solid var(--qc, var(--gold));
+    touch-action:none; user-select:none;
+  }
+  .quick-link-card:hover{ transform:translateY(-2px); box-shadow:0 6px 18px rgba(30,42,56,.08); }
+  .quick-link-card:active{ cursor:grabbing; }
+  .quick-link-card.dragging{ opacity:.35; }
+  .quick-link-card .qc-icon{ font-size:26px; margin-bottom:8px; }
+  .quick-link-card .qc-label{ font-size:13px; font-weight:700; color:var(--ink); }
+  .quick-link-card .qc-hint{ font-size:9.5px; color:var(--ink-soft); margin-top:4px; opacity:.6; }
+
+  /* Study schedule dashboard widget */
+  .sched-widget{ background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:20px; box-shadow:0 4px 16px rgba(30,42,56,.05); }
+  .sched-week-strip{ display:flex; gap:7px; margin-bottom:18px; }
+  .sw-day{
+    flex:1; text-align:center; padding:10px 2px; border-radius:14px; background:var(--bg);
+    font-size:12px; font-weight:600; color:var(--ink-soft); border:1.5px solid transparent; transition:.15s;
+  }
+  .sw-day.has-session{ background:var(--gold-soft); color:var(--gold); font-weight:800; }
+  .sw-day.is-today{ border-color:var(--gold); box-shadow:0 0 0 3px var(--gold-soft); }
+  .sched-upcoming{ display:flex; flex-direction:column; gap:10px; }
+  .su-item{
+    display:flex; align-items:center; gap:12px; padding:10px 12px; border-radius:14px;
+    background:var(--bg); transition:.15s;
+  }
+  .su-item:hover{ background:var(--gold-soft); }
+  .su-item .su-icon{
+    width:34px; height:34px; border-radius:50%; flex-shrink:0; color:#fff; font-weight:800; font-size:14px;
+    display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(0,0,0,.12);
+  }
+  .su-item .su-info{ flex:1; min-width:0; }
+  .su-item .su-name{ font-size:13.5px; font-weight:700; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .su-item .su-meta{ font-size:11.5px; color:var(--ink-soft); display:flex; align-items:center; gap:5px; margin-top:2px; }
+  .su-item .su-time{ font-family:'IBM Plex Mono',monospace; direction:ltr; }
+  .sched-empty-dash{ text-align:center; padding:24px; color:var(--ink-soft); font-size:13px; }
+
+  .clock-chip{ margin:2px 0 0; font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; direction:ltr; text-align:right; }
+  body.ltr .clock-chip{ text-align:left; }
+
+  /* Daily motivational quote strip */
+  .quote-strip{
+    display:flex; align-items:center; gap:10px; background:linear-gradient(90deg, var(--gold-soft), var(--paper));
+    border:1px solid var(--line); border-radius:999px; padding:10px 18px; font-size:13px;
+    color:var(--ink); margin-bottom:20px; font-weight:600;
+  }
+  .quote-strip .qs-icon{ font-size:16px; flex-shrink:0; }
+
+  /* Scroll to top button */
+  #scrollTopBtn{
+    position:fixed; bottom:22px; left:22px; width:42px; height:42px; border-radius:50%;
+    background:var(--ink); color:var(--gold-soft); border:none; font-size:18px; font-weight:700;
+    box-shadow:0 6px 18px rgba(0,0,0,.22); cursor:pointer; display:none; align-items:center; justify-content:center;
+    z-index:400; transition:opacity .2s, transform .2s;
+  }
+  body.ltr #scrollTopBtn{ left:auto; right:22px; }
+  #scrollTopBtn.show{ display:flex; }
+  #scrollTopBtn:hover{ transform:translateY(-3px); }
+
+  /* Schedule widget: daily progress bar */
+  .sw-progress-row{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; font-size:12px; color:var(--ink-soft); font-weight:600; }
+  .sw-progress-track{ height:7px; border-radius:999px; background:var(--bg); overflow:hidden; margin-bottom:14px; }
+  .sw-progress-fill{ height:100%; border-radius:999px; background:linear-gradient(90deg, var(--gold), var(--gold-soft)); transition:width .3s; }
+
+  /* Schedule widget: per-item checkbox, subject tag, now/next badge */
+  .su-item{ position:relative; }
+  .su-check{
+    width:20px; height:20px; border-radius:50%; border:2px solid var(--line); background:var(--paper);
+    flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff;
+    padding:0;
+  }
+  .su-check.checked{ background:var(--gold); border-color:var(--gold); }
+  .su-item.done .su-name{ text-decoration:line-through; color:var(--ink-soft); }
+  .su-item.done{ opacity:.65; }
+  .su-tag{
+    font-size:9.5px; font-weight:700; padding:2px 8px; border-radius:999px; flex-shrink:0;
+  }
+  .su-now{
+    font-size:9.5px; font-weight:800; padding:2px 8px; border-radius:999px; background:#2E9E5B; color:#fff;
+    flex-shrink:0; animation:pulseNow 1.6s infinite;
+  }
+  .su-next{
+    font-size:9.5px; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--gold); color:#fff; flex-shrink:0;
+  }
+  @keyframes pulseNow{ 0%,100%{opacity:1;} 50%{opacity:.55;} }
+  .sw-more{
+    text-align:center; font-size:12px; color:var(--gold); font-weight:700; padding:10px 0 2px; cursor:pointer;
+  }
+  .sw-more:hover{ text-decoration:underline; }
+
+
+  /* Faculty switcher */
+  .faculty-switch{ display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap; }
+  .fac-btn{
+    background:var(--paper); border:1.5px solid var(--line); border-radius:999px;
+    padding:10px 18px; font-size:13.5px; font-weight:600; color:var(--ink-soft);
+  }
+  .fac-btn.active{ background:var(--gold); border-color:var(--gold); color:#fff; }
+
+  /* Timeline (study schedule) */
+  .timeline{position:relative; padding-right:20px;}
+  body.ltr .timeline{padding-right:0; padding-left:20px;}
+  .timeline::before{content:""; position:absolute; right:6px; top:6px; bottom:6px; width:2px; background:var(--line);}
+  body.ltr .timeline::before{right:auto; left:6px;}
+  .t-item{position:relative; display:flex; gap:14px; align-items:flex-start; padding-bottom:20px;}
+  .t-item::before{content:""; position:absolute; right:-1px; top:4px; width:10px; height:10px; border-radius:50%; background:var(--tc, var(--gold)); border:2px solid var(--bg);}
+  body.ltr .t-item::before{right:auto; left:-1px;}
+  .t-time{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--ink-soft); width:56px; flex-shrink:0; direction:ltr; text-align:left;}
+  .t-card{
+    flex:1; background:var(--paper); border:1px solid var(--line); border-radius:10px;
+    padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:10px;
+    border-right:4px solid var(--tc, var(--gold));
+  }
+  body.ltr .t-card{ border-right:1px solid var(--line); border-left:4px solid var(--tc, var(--gold)); }
+  .t-card .t-info{flex:1; display:flex; flex-direction:column; gap:4px; align-items:flex-start;}
+  .t-card .name{font-weight:600; font-size:14px;}
+  .t-card .room{font-size:10.5px; font-weight:700; padding:2px 9px; border-radius:999px;}
+  .t-card .t-del{
+    background:transparent; border:none; color:var(--ink-soft); font-size:14px; padding:4px 6px; border-radius:6px; flex-shrink:0;
+  }
+  .t-card .t-del:hover{ color:#B0522D; background:#F6E6DB; }
+  .badge{font-size:11px; padding:3px 9px; border-radius:999px; font-weight:600; white-space:nowrap;}
+
+  /* Day group divider in schedule */
+  .day-divider{
+    display:flex; align-items:center; gap:10px; margin:18px 0 10px;
+    font-size:13px; font-weight:700; color:var(--gold);
+  }
+  .day-divider:first-child{ margin-top:0; }
+  .day-divider::after{ content:""; flex:1; height:1px; background:var(--line); }
+
+  /* Course cards */
+  .courses{display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:14px;}
+  .course-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px; border-right:5px solid var(--c); cursor:pointer; transition:.15s;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  body.ltr .course-card{border-right:1px solid var(--line); border-left:5px solid var(--c);}
+  .course-card:hover{transform:translateY(-2px); box-shadow:0 6px 18px rgba(30,42,56,.08);}
+  .course-card .top{display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .course-card h3{margin:0; font-size:16px; font-weight:700; font-family:'Cairo';}
+  .course-card .code{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-soft); direction:ltr; display:inline-block;}
+  .tag{font-size:11px; padding:3px 9px; border-radius:999px; font-weight:600; background:var(--cbg); color:var(--c);}
+  .progress-track{height:6px; background:var(--line); border-radius:999px; overflow:hidden;}
+  .progress-fill{height:100%; background:var(--c); border-radius:999px; transition:width .4s ease;}
+  .course-card .meta{font-size:12px; color:var(--ink-soft); display:flex; justify-content:space-between;}
+
+  /* Standalone course page */
+  #coursePage{ animation:fadeIn .3s ease; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:translateY(0);} }
+  .back-btn{
+    display:inline-flex; align-items:center; gap:6px; background:var(--paper); border:1px solid var(--line);
+    border-radius:999px; padding:8px 16px; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:18px;
+  }
+  .back-btn:hover{ color:var(--ink); }
+  .course-hero{
+    background:var(--c-bg, var(--gold-soft)); border-radius:var(--radius); padding:22px 22px 20px;
+    border-right:5px solid var(--c-page, var(--gold)); margin-bottom:26px;
+  }
+  body.ltr .course-hero{border-right:1px solid transparent; border-left:5px solid var(--c-page, var(--gold));}
+  .course-hero .tag{ background:var(--paper); color:var(--c-page, var(--gold)); }
+  .course-hero h2{ margin:8px 0 2px; font-size:26px; }
+  .course-hero .sub{ font-size:13px; color:var(--ink-soft); margin-bottom:14px; }
+  .course-hero .progress-track{ height:8px; }
+  .course-hero .progress-fill{ background:var(--c-page, var(--gold)); }
+  .cp-section{ margin-bottom:26px; }
+  .cp-section h3{ font-size:16px; margin:0 0 12px; }
+  .cp-empty{ font-size:13px; color:var(--ink-soft); background:var(--paper); border:1px dashed var(--line); border-radius:10px; padding:16px; text-align:center; }
+
+  /* Lecture accordion */
+  .lecture-card{ 
+    background:var(--paper); border:1px solid var(--line); border-radius:12px; margin-bottom:10px; overflow:hidden;
+    transition:.2s;
+  }
+  .lecture-card.open{ border-color:var(--c-page, var(--gold)); }
+  .lecture-card.reading-mode .lecture-body{
+    max-width:700px; margin:0 auto; font-size:16px; line-height:1.8; padding:20px;
+  }
+  .lecture-head{ display:flex; align-items:center; gap:10px; padding:13px 14px; cursor:pointer; }
+  .lecture-check{ width:18px; height:18px; accent-color:var(--c-page, var(--gold)); flex-shrink:0; cursor:pointer; }
+  .lecture-title{ flex:1; font-size:14px; font-weight:600; }
+  .lecture-title.done{ text-decoration:line-through; color:var(--ink-soft); }
+  .lecture-dur{ font-size:11px; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace; direction:ltr; }
+  .lecture-icons{ font-size:20px; display:flex; gap:4px; }
+  .lecture-badge{
+    width:42px; height:42px; border-radius:50%; background:var(--c-bg, var(--gold-soft));
+    color:var(--c-page, var(--gold)); display:flex; align-items:center; justify-content:center;
+    font-size:24px; font-weight:700; flex-shrink:0; transition:.2s;
+  }
+  .lecture-body{ padding:14px 14px 16px; border-top:1px solid var(--line); animation:slideDown .3s ease; }
+  @keyframes slideDown{ from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);} }
+
+  .files-list{
+    display:flex; flex-direction:column; gap:8px; margin-bottom:12px;
+  }
+  .attach-chip{
+    display:flex; align-items:center; gap:12px;
+    font-size:13px; background:var(--c-bg, var(--gold-soft));
+    color:var(--c-page, var(--gold)); padding:12px 14px; border-radius:10px;
+    text-decoration:none; cursor:pointer; border:1px solid transparent;
+    transition:.2s; position:relative;
+  }
+  .attach-chip:hover{ border-color:var(--c-page, var(--gold)); transform:translateX(-2px); }
+  body.ltr .attach-chip:hover{ transform:translateX(2px); }
+  .attach-chip .file-icon{ font-size:28px; flex-shrink:0; }
+  .attach-chip .file-name{ flex:1; font-weight:500; word-break:break-word; }
+  .attach-chip .file-del{
+    background:rgba(255,255,255,0.9); border:none;
+    width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:14px; color:var(--ink-soft); cursor:pointer; opacity:0; transition:.2s; flex-shrink:0;
+  }
+  .attach-chip:hover .file-del{ opacity:1; }
+  .attach-chip .file-del:hover{ color:#B0522D; background:#fff; }
+
+  .reading-mode-toggle{
+    background:transparent; border:1.5px solid var(--gold); color:var(--gold);
+    border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; margin-bottom:10px;
+  }
+  .reading-mode-toggle:hover{background:var(--gold); color:#fff;}
+
+  /* Upload */
+  .upload-row{ display:flex; gap:10px; flex-wrap:wrap; margin:0 0 12px; }
+  .upload-btn{
+    display:inline-flex; align-items:center; gap:8px; background:var(--paper); border:1.5px dashed var(--c-page, var(--gold));
+    color:var(--c-page, var(--gold)); border-radius:10px; padding:9px 14px; font-size:12.5px; font-weight:600;
+  }
+  .upload-btn:hover{ background:var(--c-bg, var(--gold-soft)); }
+  .upload-status{ font-size:11.5px; color:var(--ink-soft); margin:0 0 10px; line-height:1.5; }
+  
+  /* Add lecture button & form */
+  .add-lecture-btn{
+    background:transparent; border:1.5px dashed var(--c-page, var(--gold)); color:var(--c-page, var(--gold));
+    border-radius:10px; padding:10px 16px; font-size:13px; font-weight:600; width:100%; margin-top:8px;
+  }
+  .add-lecture-btn:hover{ background:var(--c-bg, var(--gold-soft)); }
+  .lecture-form{
+    background:var(--c-bg, var(--gold-soft)); border:1px solid var(--c-page, var(--gold)); border-radius:12px;
+    padding:14px; margin-bottom:10px; display:flex; flex-direction:column; gap:10px;
+  }
+  .lecture-form input, .lecture-form textarea{
+    border:1px solid var(--c-page, var(--gold)); border-radius:8px; padding:9px 12px; font-size:13px;
+    font-family:inherit; background:var(--paper); color:var(--ink); width:100%;
+  }
+  .lecture-form textarea{resize:vertical; min-height:80px;}
+  .lecture-form .form-actions{ display:flex; gap:10px; }
+  .lecture-form .btn-save{ background:var(--c-page, var(--gold)); color:#fff; border:none; border-radius:999px; padding:9px 18px; font-size:13px; font-weight:700; }
+  .lecture-form .btn-cancel{ background:transparent; border:1px solid var(--c-page, var(--gold)); color:var(--c-page, var(--gold)); border-radius:999px; padding:9px 18px; font-size:13px; }
+
+  /* Assignments */
+  .assign-list{display:flex; flex-direction:column; gap:8px;}
+  .assign{
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:12px 16px;
+  }
+  .assign.urgent{border-left:4px solid #e74c3c;}
+  body.ltr .assign.urgent{border-left:1px solid var(--line); border-right:4px solid #e74c3c;}
+  .assign .info{display:flex; flex-direction:column; gap:2px;}
+  .assign .a-title{font-weight:600; font-size:14px;}
+  .assign .a-course{font-size:12px; color:var(--ink-soft);}
+  .assign .due{font-size:12px; font-weight:600; font-family:'IBM Plex Mono',monospace; direction:ltr;}
+  .assign .a-right{ display:flex; align-items:center; gap:10px; }
+  .assign .a-delete{
+    background:transparent; border:none; color:var(--ink-soft); font-size:16px; line-height:1;
+    padding:4px 6px; border-radius:6px;
+  }
+  .assign .a-delete:hover{ color:#B0522D; background:#F6E6DB; }
+
+  .add-btn{
+    background:var(--gold); color:#fff; border:none; border-radius:999px; padding:7px 16px;
+    font-size:12.5px; font-weight:600;
+  }
+  .assign-form, .schedule-form{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:16px;
+    margin-bottom:14px; display:flex; flex-direction:column; gap:10px;
+  }
+  .assign-form input, .assign-form select, .schedule-form input, .schedule-form select{
+    border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:13px;
+    font-family:inherit; background:var(--bg); color:var(--ink); width:100%;
+  }
+  .assign-form label, .schedule-form label{ font-size:12px; color:var(--ink-soft); display:flex; align-items:center; gap:6px; }
+  .assign-form .form-actions, .schedule-form .form-actions{ display:flex; gap:10px; margin-top:4px; }
+  .assign-form .btn-save, .schedule-form .btn-save{ background:var(--gold); color:#fff; border:none; border-radius:999px; padding:9px 18px; font-size:13px; font-weight:700; }
+  .assign-form .btn-cancel, .schedule-form .btn-cancel{ background:transparent; border:1px solid var(--line); color:var(--ink-soft); border-radius:999px; padding:9px 18px; font-size:13px; }
+
+  /* Day checkboxes in schedule form */
+  .day-checks{ display:flex; flex-wrap:wrap; gap:8px; }
+  .day-check-item{
+    display:flex; align-items:center; gap:5px; background:var(--bg); border:1px solid var(--line);
+    border-radius:999px; padding:6px 12px; font-size:12.5px; cursor:pointer;
+  }
+  .day-check-item input{ accent-color:var(--gold); }
+
+  /* Exams */
+  .exam-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:12px 16px;
+    display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px;
+    border-right:4px solid var(--ex, var(--gold));
+  }
+  body.ltr .exam-card{border-right:1px solid var(--line); border-left:4px solid var(--ex, var(--gold));}
+  .exam-card .info{display:flex; flex-direction:column; gap:3px;}
+  .exam-card .e-course{font-weight:600; font-size:14px;}
+  .exam-card .e-meta{font-size:11.5px; color:var(--ink-soft); display:flex; gap:8px; align-items:center;}
+  .exam-type-badge{font-size:10.5px; padding:2px 8px; border-radius:999px; font-weight:700; background:var(--exbg, var(--gold-soft)); color:var(--ex, var(--gold));}
+  .exam-card .e-date{font-size:13px; font-weight:700; font-family:'IBM Plex Mono',monospace; direction:ltr; color:var(--ex, var(--gold));}
+  .exam-card .e-right{display:flex; align-items:center; gap:10px;}
+  .exam-card .e-delete{background:transparent; border:none; color:var(--ink-soft); font-size:16px; padding:4px 6px; border-radius:6px;}
+  .exam-card .e-delete:hover{ color:#B0522D; background:#F6E6DB; }
+
+  /* Grades */
+  .grade-card{
+    background:var(--paper); border:1px solid var(--line); border-radius:12px; padding:14px 16px;
+    margin-bottom:12px; border-right:4px solid var(--gc, var(--gold));
+  }
+  body.ltr .grade-card{border-right:1px solid var(--line); border-left:4px solid var(--gc, var(--gold));}
+  .grade-card-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+  .grade-course-title{ font-size:14px; font-weight:700; }
+  .grade-total{ font-size:13px; font-weight:700; font-family:'IBM Plex Mono',monospace; direction:ltr; color:var(--gc, var(--gold)); }
+  .grade-rows{ display:flex; flex-direction:column; gap:8px; }
+  .grade-row{ display:flex; align-items:center; gap:8px; }
+  .grade-label{ font-size:12.5px; color:var(--ink-soft); width:70px; flex-shrink:0; }
+  .grade-input{
+    border:1px solid var(--line); border-radius:8px; padding:7px 10px; font-size:13px;
+    font-family:'IBM Plex Mono',monospace; background:var(--bg); color:var(--ink); width:100%; text-align:center;
+  }
+  .grade-input.small{ max-width:56px; }
+  .grade-slash{ color:var(--ink-soft); font-size:13px; }
+  .grade-del{
+    background:transparent; border:none; color:var(--ink-soft); font-size:14px; padding:4px 6px; border-radius:6px; flex-shrink:0;
+  }
+  .grade-del:hover{ color:#B0522D; background:#F6E6DB; }
+  .add-quiz-btn{
+    background:transparent; border:1px dashed var(--gc, var(--gold)); color:var(--gc, var(--gold));
+    border-radius:999px; padding:6px 14px; font-size:12px; font-weight:600; margin-top:8px;
+  }
+
+  footer{text-align:center; padding:24px; font-size:12px; color:var(--ink-soft);}
+</style>
+</head>
+<body>
+
+<!-- Notification Toast -->
+<div class="notification-toast" id="notificationToast">
+  <button class="notif-close" onclick="hideNotification()">×</button>
+  <div class="notif-title" id="notifTitle"></div>
+  <div class="notif-body" id="notifBody"></div>
+</div>
+
+<header>
+  <div class="brand">
+    <div class="seal" id="sealLetter">
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAKAAAACgCAIAAAAErfB6AABkVUlEQVR42t39d5hdV3U+jq+19znntrl37vQ+o1Evo15sS27gim1sbIOxwYZQA4RQAgEC6STh+QBJIJQkhoAJ4ALGXS6yLVuWJVu9d2mk6b3fue2cvdfvj733OWecfH7f7/cP6XkkPUaMZu6de+8uq7zvu9ZCKQpwPv94JBCACACAcw4ARAQAiKi/ACAgAFR/M0QiqR6PiADqP4mIAACAQAyACAQQA0BAUr+dSD0EASh4eQQARCBE9bpIBIgASEQExPSvRQIKvzGGSIBE0v8tCCAQ1ZPNH0LzEuqfAISAhAyAkIjMZyME1O9JfzBABJJERJyx87r+FpznPwwZmY8ORIB6G4jI/0L90GwhITK14ogAxNRWm50j8xi1ZIRIpH4O0ryEWmwEQCAAlAgYbIPac/UADH6qzwcSAgEK/SsZ6Fc0rxH6LQihMwoIBAhI+pWQ9KMR1ftGf8vNuUBkiHS+1/+8b7A6tgjIkOlVJgYoAcwJByIAhszcHtBbq++WVLeWiNRDACQgIFkAhCgJEAkBCNEsHfj7qXfcvA5TW2gOHpCURGSuPvhHTO0oEQALNkwZGKDgbao9VfZHbTGZZ5LedFTnCBEICJGAGIDUJxUBZMgAXKQbrNYF0b9DavcYIikrHb4b5F8sAP+yGptGxiqqayNR3VRi6qYr063OEyk7QeT/Wt9w6OsNBATIgvvJmL70JP0XNW8LyTyV1PNJ73pwIUnvlbb1en9B+oYM/IOiL70yFxLP8w6f9w3G0BqS/sCEyjXp603aLOv7IYOnEkgCREBzjwElkTKPQhIBIkPSO0BEIAEI9WqScn+k7h5DAKHvn3knCIjAgBEQkFRnCMm/YcCQ1G9G35kbryoBEYgDEKH0P6E5UkxfX9+6+/ebgt8R2POL3USry0Mk9fUlAtT7q82XjpOkdoNAQITAQP3PWFtCbR4RgIChuYmoVh7171XXSu8rknKU2uUT+tGcH5eR3hW1l/6JVF5eHUTfABEAA0IAFQZK7e/9EAHNo/Tz/MBBmpVQJks/ekY8eLGaaHPj0PeIxoiaa8H0MqufEkMmSd+hGVErotQmUhtktdDaARMBAlPmITD1JM2ySiIeuAJUka0k4ymNh5CoLX5ggNA4AwT/tdRjZODvSb1MOKQGDPaUABhJIAxsDCIGduxiD7IAABhT1hhCYa5xwf5pJlSrFrhH5ebIuFQKrD6aRdTbbF6JdBDuW0t1OPwURd8w1E8gYogyiNuDxAgpFLBRsMcw8yfqNhqHj0HAReCfBQYE6D/GLAKe/0tsXQD7TASSCMmbEbvoaISQSAIhcQBAxgCYttnanJM+6miSY2W2UZr01MRiCCR1Po3v+BEAANcZcBDzIgECCECh01LQ2xCO8QDCtwz9IFB5YfRjLvXKSCaEQ+X2/WBA/4hMHq/dO1z8PliHQsz8w8Qi6PtOwMASEqAIrrNeNSDSWW5wl8KGUAVHJI2rJCAkAET/kQYCMVmOXvfwOTCRgo92hJ8KCvJAFSoSACHzf4Wf+GIo/jbPJwTwPT0DIHU0gzd6vnGI877BjDG9onoppJQhu6d9behuBcGoerZCM5D5Tlua7SdQptUcAd/267xJqm1lerlRhlAnDB4MXMfJREQGHlE+2iBcNAOx8s8fEUmSKnBSkaL/QAKQ+jQHyaH6ISOkCxBeXbAbrOwVEkiNZOkjr/PSIIoOkgb0swginXsarIDppdc4F6ocmwAQLO3RVbrDJBABMQJ/LxmQD1mQ2ScMdk/HV0RIpAxskDqjwdTIj8kQzHf8VAikMeM+wBnGwgIjQj7EdbHfYJUdITNoMAEiYxhCmvwAhgLvaHJZY52R/GgWgBOhfEcMBQwV+AcMiJnNABO+E4bBrcDUq4cJRP+eBjGCus2BpUFSThdDO4gIwCQimqheP8TEiSosV0GIsijmluMMV3NxR9FEEiSbmRAHkSmiNlkBcq//ydQDEbh2qoC+A0PUYY4GjtAAYipU109kREhBUuQjW4TAyOCOgIwIVHCnziAimwE6ByG6BGJBHkUgtXFnhPp9/I/gTj2S+TAoBlHChbDS5/0GM3XmgwtqgmdtDSUE+60TJd8DI0rUOxoCi1Ao12tABUnK2/kkAklCz8+ZNHBEZC4fqV1X8YA+WJq1IpPaMj8qIIn6lwfxEJrQAULhunYF+iVCgbeOsoxHNyAIzYzPz1sWc77pQmkAdf9DGegd0L/T4NstDKBjZTel9O1tmJwjdcVB+FnrTAMggQy4jChJhpkMg1KFt0CaA2FAbHMAgwAJ/djM/4mKDIKoGPx02DfjBl83SIjCv8xPiS56LNpHmkIphwEZ/ExfrawKqhBQ7Sigvjv6EjPSqZIhZAymqcMsPw4n1Ggw+sgI+SCa9owUZovVhkj98iAJCBW2gqEATMGNGnPTSAzN8OtIJH3GMhRRIRACCAqoEUCTbl38JpopxJA0tqP4OVK2VJNJAIwkSZAKkA7lSiraUgEtaUMHIiBgiasQSoVmyryTT7n6PgEZAgcfliAMrpyf+oKxGn6irKMwZkw4A2CKGaEQdg0zCYlQ0k0mDdSW3+Dj4QwDL/oN1lC9Ck00ZmlCIxOPIAIGUYgyetKklRSg/jos0qSMuszIAJk0vo5YgP5pAMkH/M3tVybBj8kJUCpTSQCAEjVyTv+D9PTRcZ9SkMY5kMm70be95JO+JggxKIdxBsAuCTZJfV5BhsMnNORDKLBSlAAjIkWRKsMOJJEh+M7ahDUkwSBjIa9MAZiAYbo2kBgAKJhTGd9Q0BTQzsRIPxINGCKUzVfGB5kJxAgRuOF3Q3EhAhAzVxYRGKAkTTCooMEnJc//7bpQaZIWYyCEKBbf+/q3gyCkrlCoksaV/A0jIAp23QC/hOZm+OAj+fYPfYAYCUjMoBLIX+VQYhOAXCFjTlKrj/R5Yv8bymjoC61lkOgbrUBZFjh/uDTSJBKaokdEnRMZA0ZSc8RMAxRhLFA7Qg1yEQGhBAFIDI3fJa6PC9P+E4AMmADaGpMBFMlnZJUxV5qhGQi5OQxGL6BxUBayBcbZg0QIixYUtcAUgUFS3X5GQISCgAC48QVGpKTD84s/yALG0MBVyPw7qRFIZOpDBuywn2Og8XVoArLgyoIvrQp7MQo9RV0mpl9L6eeIKUUOGeiRoU8NhFBSI77BILP2s98QaqpoyhAjQSDVFiqcxAc0Ucs6ffPiX98g47+o6UKQkoJFQLWyUhOCpDAgaQStOskwO+T7VJUSMSWEM0Ci9EED9K+sdstEQZLCjJ5CmmsoiVgojiIElNKXe0oA4cfMhFLvDZmjGdC4HIIjIn2snUgaJEcj50bRwQADn4R+vndx3+DQ9fT1rcH3dcIEqBKq4HyHOFT/7CP4GKLRNqPGKVGrc4zyLewWg/DZBHdq0YVBJmToPpGBMdQm+dremaqswK3q0xVwjwa1NkBskEljsNroP/ISIBuUhlJZKa7vASGoFNbnxAlJshCc6dN0RFKSlmNI8sFNrfEBH0QkDVfPTDUJw5Ibn9zQURZRINILaCJE5L5CVlEX+lgQC3sF9EW1pPTbaGBJHVKgRlKJ9FUWiuDyGWm4JEx0wBL5wuEgowQEBKkYJ2WKCXypuEEGKXh2QAVpExiEP6TBppk4pM8zGjmr7wUAwmUQCvQ2iluCsLDH4N4QkvkBSgBG5JsUP8/WEBsyo4XX+jO/hEIGkcX5ZwwvhOjO0LRkQHcDHfmwNDJF1JBkRIBMhqHlkJ21tHtTS6lJJGZALzRKd18lou6INDCncdLIJElzjZhObQJ9JIUVHhAIwcCoc4hUuEhS1UCE1AB+FQ3oog3fNihLoILzd56ui9lEG5o2DAaSsWmBwIVpGJIYAyNNNRjiTJMbRrzIZ4UJQLFMMEMOF3poOPVEDNS70teT0AzkJPzSGKI0KARU+YBNkM2ZxImF8ulAFxzAqMZHX/QbLBWAZ8ymXgatojJiFyIihsgBTMKKBogWzFQIIQEhI5DM+FA/GpNgVFNApJAjk1kxExhDCHBS7oABhbk/dTUlAIAMqwYMw6iy2wBUk/6n8Iuq1MuZYEqi0gQDBNEcUSD3AT+6vshvMPmQPGGoFEUCSACjZvXLBcAPs5WXJRNpExBqdpbJkJIrsBN6ickHn0ErfnxhQGBEfQI5sNK+/E+Ha0H2zPx7qEol0MebQQJKMgS3rkkMjLV5d4Yf80PvQCB/KWDROtAlKQkZMeaXfYKf8xKR1G6SEQBIhgDApHougRLWcCIGKHy/SMRAobtBrUAQJxNKIAxiLpQhmbTRHRiV7jsLSVD65GaozBADbBSYXxqqaG8dBEhjrTRJKYNAH1RlLM3w2pcAFh0EoLqGKMiMjTvDUPUDhU54ONBEAhnCgyCIUzSEjRjoGg3WjTNTJsOwEzEdG+vqQqaUIRp/QPK3NsjbNK1LGKBbDCGU3huIxhcFG5RdmtRcmmBQQToIeAlUNhD4Bd06ndR1wkRAJBFZ6P4F4LwqITELoCq9SFCQsUgtx9Mk/QyNs2HsGQDN4CR0vgSAwgQEkoiHMAefRNLslK5ZpbA2coZQwchU1GGVuuqXEICrEkgKJesQSIuMzPQ8X+XzLtkh1DEUECGDoFIJTN5pYDu/UNrHsRjDoNpFmmcFqhAkqSy8NNSvr8PyQ2Kf0idJIULevJLpCoAYVKBjQDyGEjUK+CIIqYdm8kKqeoqC1MnoO2TotqKv4iddlHNx58EAgExLJwWQKQw0cTKpSl+dPHEABuChjn5phoXW+grps4rIKBQ2SQVwSwApSZI0xBV5kgTIoJ6MVK8I4MgYggWAyBhj6p8IITZZarYKfF08hutvmD7CCpJEBc8F2oBAfemn2AFthe+IxC5eH0zGdqmMwgcBFL1qoCelkTMlYuaSMJASkAFJYACaCYIQGyN94tGTJEh6RILII68oRU64HgpXCk9KTwoBCvEkBOTALGQ24zZyh1kRZjncspFZyGxknDGOwMB37AyNcAeMFCEkplTfZr4d95Nlg19KnUMEXJQvSGMXffGZuTaCNLKBGn6SjKRARkqqTtqN+ZeHTDF4GHBW8JMqA5dEJEgKkh5JT8q852aFOy29LLnTXj7jFXKeW5BFV0rpJzFKMqswKB0KM4fxFI+mrGiJHYlbTgmzYjwS5cxGy0LJERlTXpZDgJ8ImBHmqWYBOlcPA+R+qqhiail8/PYChdHn3wf7Oadkii/TEo0goQy6lhh2SIdRgEznxMQBUOtdCCUJj4QgKkiRF25GFDJefqKYHS7mJry8B9K2uG05cTtiIbMY15VNkohQSIkAFiIxEJxywit4bt4rFt2i63kRtMrtWFU0WebEU1Y0zpwI4w5nFmMW40zfar9xTuCAUSOm2tf6xeamiNnHPiXRjEDgfHPCFyDIMl9IBEBV3I3EAqZMoY8K65cYiKeAQDJg/gZLAiEkCBCu9ArCzXrulCgOFqeHCpmJYgYQEtF4SSzpoONlC1Mj4yODw8NjEyNj4xOTU5npbN4VwvOQPItbtuOkk/HSZCKZKk2XpyuqK5JlKZZwPPCyhVyukGcSSu14bSxVacdTViTGnRizHG5xo18wRBgLkRAQKHJ08scIGPqbapJAP4YgInYJRNGh5iYqLEISPk0kdfZE4Zp6o33UrkyqEMwlWZSU80TGy454maF8ZqyYmfIKTjRWlihNFHGsf+zU6XPHTp0909k1MjyczeYkECHjnDMGHDlnAESCQBAIkNL1gMCyWDKZqCitaGpomju7af68psq6ikIExnJT2Vw2ySLVsWRNJFnpJFI8GrEsC5EhY4wFG+wXtdM7O8jQzEpRInXLAdEikJfIBpNhzQzvhrpFEUlCgXqDGRECCGCAxEH3vQIFAwopXSmL0ptyC0PFbHd+vC8/IUHUpCvK7eRA9/CePQcOHTjS2T84lpnmDNOxRHNl5dzGhtaamtqqyoqy8mQiEY04jmVLKVzPyxWLE5mpscnJnsHBnsGhswP9nUPDgxMZQpZKxFrrKtoWzV+1dmVdc82om+kZH4kAby0pb4qUpe1IjNlRy7Y5Z36fNh9nCXUlMFmvD9nQDBRWmXQ67112zn/pSuBrGTIZIntQJxi6zh98Up60yhURUEjpkSxIL+u5Y262Jz/am53IkVeWKnPA6jrWsXfXwd0HD/b19UftyILW2ZcvW75u4cKls5oba6ujTuL/5ZssFLM9Q4P7T7fvOHpy17Gjp7s7i65bXVG1fNH8tZctn72kJYvFwfHxONotJRX1sVSZFSuxHIdxzhgiCympQ6UufgupgAyXoeTah2rhYt9g8DdY5wwKLWK6nwGhRK0cDlWQGrCqICgvihkv11ucas+OjhemqpNlNbGKg4dOPLtx07GjJ10Sc+vrrlmy7Lq1a9csWZIqKTUWUggppIZCQgwdhtpaKb4JkTNmUnCYmh7fe+zkq3v2vn5w/5m+HodbS+a13nLTtUtWtnXlRwfGR+ti6dklFXWRklIWjXLLYpyxQPJBQKidC1cKfgCu+5+hAAOL6h5hJNl55nsuTPGZNkq6JYOSuQPX5TkB2+pRUNolPUmupJwojriZ7vxYe2ZIMNZQXjd2dvDFl17ffmB/PpNdVN907/U33HnN1bVVNQAAIDzphkqQQ3cJ/jd8n8DvW0akmE2wOAdwAKBveODpN7b+YcuW473dUcdZtWDBde+5pnp+XffIAJcwp7R6VrSs3IrGueNwzjgH8vNan5oyoiAkU9BhijCImRtMl8AGExAH4JqQ1/gUR5SAQNK0s9QHnxFIT8q88LKiMFicPp0b7suM1pZVJyCx8dlNm15+fSyTWdI666M33HznNVenk2kA6cmi7nEZFN7PQFoULialIACOzC+YeAdnp8pcVTWizR0APp4Zf+aNbb9+edOhM6dTsfi7rlt/+x3XZ5jbNzbamCxfEK+otUvituMwy7QV9VsYQKjxjlQ8JqKgQHGARPKi32DTKMEPo6RRq0tddq2VpAx04yohJOU9kfHy/e7EqemhkUKutaZxpH34vx99/OCxEykn+uHrb/jcXXdXV1QCeJ5wdRcQn4KgQFOtNk9KIgCLRfw35cki6trl/yvCSkBSSptbAPbQ2OjPnnzyt69smhTu4tmt9979noqFjWf7e8qc+KLS2ga7JGlFotxiyBA5BNSyf4AUyCOCgkZiBooXF/sGoxZFAZBUbXqlAe1Maacq3CUkkC6Jgisnirled/R0ZlAgNpY3vLZp2+PPbBzPTF8+b8E3P/zAZW3LAIQripwxvy2xJMmZhWCrlxWyYNpzIcMIAPQO9j/7+htCijuvu66uqhoAJBWkJMYYvoNTCN19kiSkcCwbwN5z7PB3H334rZOnSyzrfbdff+17rjo91MORtZXWzXLSKSsS4ZwzK0QIhjwD+R0d/NdhRHAJbDAYzaQEv8CEQg3kwPRaIekRFj05Vpw+Vxg9NdVv25HmZNUjDz/z9KbXGMIn33PrN+5/IBGLezLn67zUSkopOIsB0PGO9smpTEN1VUN1vf8etu3b+4fNrx1sP52oLPdIZofHrpg///3X37iqbYlqBO0JF/1eTwZqNECTqnwhSeRY8Ww++6+PPPrzFza6rnvjtevvfeCOs5ODXtFrq2xqjaTL7WiEWcqiqAYSQb+YAL0k8CstCfE8q3YuEJLlMwgGoQMta9R9XKUkKUi6gsbdbEdh5NhkfzSaKOfJh/7r0a179pfF4391/wMfuvE9yia/o7G4lMRZZOOW1x59aVN5Oi2LhUyhUFZesWrRQofghbd3DhbytY01iZJYb9+gRJZKJtDzxgaGksivW7P2lquvrK6oBgAhiwBKcBLE3BDqziJIcGQMI0+9vvnvHvrlwNTU5SvbPvGpD/a6k7lCcUV5wxwnXWpHHW5bjGtKP6wHoKDjrN9P5KLfYBkgr8zn+RGBpBLTSLWCQsq8EBNeoaswcnyiz4pEUxD70Q9+cehU+4KGhu999nNXtC1zRZ5hyL8SAIIQ0uLRxzY+97vnX/iHr35lUetsAHjrwP6/+elPj/V0pZLJvAdr1q6cmBgdHh/hjDMeFQAVZWU1lWX53GRfV7/l0eULF99zw43LFy4EIElFpkQIIT5fk4WqnwxJx4ofPHXyz3/y4yPdXYvnzfr05+4fp5wouMsqG5ud0qQVjVk2Rx46z+BH1Ii684Qql70UsGilc9AIJVM8DgOpGVRCz5PkSjHh5s8Vxk5M9Dh2tNIp+/6//Mfeg0eWts7+r2/8xdymFtfLcc7DvaWMg+NDY+Of+uY3f/PP308mksdPn/7aD38wmM3NWzA7nowPj44Mjk1lMhk3n0MJhUJBAtbMagRCKVyHQVkyXVZRIVyvt7NLZrLf+9IXVy1aLMljjGGonyWi3/kMEMAVXsRO9Az0f+a739196vTShXO+8OWPDRYni+StSDfOsktTdtRmFmNcZQjodz+f0YDtQhSgXYDSFYPeKUU7ARIHyYARMkEoFCGfdd0hd/pMZigPUJOoePBnvzlw8tSyWbN/+c2/nNvU4oqcZVnaWga98lFIicif2rz5qnVrk4mkKwq2bdVWVqVTqYNHj725c8/g+LQdi5VVlVU11JZWljuxqJUsJUALZdS2LTsxksntPHD40P6DVr5QU1kVjcbMRAWQpnbGNEIDH3G2OC+60w01Nf/x9a+vbG09drrzoZ8/Xp+ocD1xZKKvX2SznutJofpyoF+r6LfR89WcdCl02VELw9WrAQEQV3CH6i3lEU173mBh6sh0X192fHZV0yMPPbFp6/a51bX//RffmtPU4okc51bQRlI3WAEC9IRn8+hf/fhHa5csfu+17xYyb/EoAPYN9G98441n3952dnzcilqxRMyyYiAkgpSWTQAWCJEvFDyRGc/MSZffcdWG69atm9U8CwAAPGMeTK/ioE8t6FJJBECUQthWrKOv99P/57vHerrftX7NvZ+461h/R32ibFWqvtZJxrjNGCJy3V8m1NNU9U4jEOe7/Iz/zd/81Xk+QmZaAwJJBqFSAADwJOSFO+Hl2wvD5zLD82pbtryw7fFnXqxIJv/zK3/eNme+62U5t1QqZGq7gsa/kogx/uqOHTWVlYtnz5EgpHQFeaXJslVLltx303sK09lthw+7mez05ARjnEcigLI4PT02OJIZHx8YGvrUDbf89FvfXLV4Sbo0LWROkgw6cKAWalHAAAY4usLWXa9QUVq+ZsG8zbt2Hzh+IhmNr1q94uxgX8Sxk3bUQQVV+wMpUG9tSLZ/vrHoC7DBgMC19FCVZjHVV0VKxLykjFfoKoydmOyvKascOjP07798hIT4/mc+c/3aK5RlDsniZnSBMLmvvW3f7taGprnNzUIUbSvCmb3j4OEX39w+ODwyMDKUampwovZI/0B+ajrnutnp6cJUzrbsqoZaYGzV3AWTE9Ov7tg5NjE2p7mJo0NSBPND/MjfRIoIGMZHOONFr1BbUVtfWfby7j0nTrUvmzenpr5yYGqsJBJNMNtBiyELVZTP7HN5/uXR53+DTWNtky34+wVCUk6IITdzdGpAIqR5yQ9++t/dAwOfu/XWz939QU/kLM7JLyULlMlmqQkQsOC6//7oY67nXb16lcWtzt7+P/raV7Ye31aMTO489vbmHXutaFIwIMcur650InYklUzXVCSiUY5samL68NEDQ4VzI7nOl3e88eSr21YvbqsoLZPk6UsXCOURVREs+pUZ+j0wzjxRXNgy1ysWtx0+1tnV+67L101DfkLk03Y8zmwLVR9NDDrPEBrq9JK4wUFjfOJAgCiRgSTKSznh5c7mhnsyo7OrG5974uWtO3dfvXjJv33pzxAl81Mi/0Ro56cXXUjJeeShJ554/fixM3096xcvTsRL7vvzL192XcO99y+ZPddesjy1ZvWsLa/v6+oZc+Lx8Ymp6Wwhl3ezBdey+FD/4Pwa56++/u4rLq+YNT+xZn2DAPfH//3c9evWp+IJAml6XIcHIPmaLERfMI3IGCMSaxct3nfs2J4TpxjR5ZetPD3a69iRUisWYZyzGYNnUOmt/W73F/8GB22A/fY6roRprzDgTpyaGEwlkl2nen/769+no7GffPnPGqprhCwy5DNoPnNxw0eeIc8WC795/vnyktIv3PfhB3//uFPpvf/ueQ/+9/NP/OHI0NBkTb03a1bs8IG+6kR8bpU9uzrSUBlLR0jm8rbIffUL6/vGTv/HL7c89czhqYnpa65u6ezpO3Jo4Mb1G6T0gppI0w0L0Q+xTVkZBnMZbMtZ1NL80ttvHztzdkFLS3VNxUB2ojQaT7GIzSzUdeUzPwme9xt8QXTRaoIK8+vBUIIsSjcjCn3ZcU+KpF3yi6ceHstMf/3e25bPW+iKHGc8ADKDHf5fSmqZ5cTKKhhRJpvdffzI++6b88bbh559YXTN3MV/essXvvfkX191XfrTn1q0sHGp5CMFOe0RR2IRURHhiXH31MaX2je9Mf71+z++bE7zlm2PLF1Z8cbTR4WUnFvkB1zwjvoDjUv5zVuIiCEvevnFs+f98Xtv//av//vJZ17+wp99fFBOd0yPVbF4lFmcoykfVVVS/H+Uxl6cG+w3nzIxKBJJV8icJ0bc6b78ZHV5xf63Dhw4cnzp3LmfuftuSa6JSuB/Xl8KhBKqLTHsPHasZcHs4eMn3z5wEIQrIdvdP25FSwYyI1/54Q9yNLkByyiSO9S7zRV5gwILh0eiPObYzsiIrKyqe+PAzs17drat8ppmCY+KUkrF/ZmiUgIkSaFwS2cBLBQlEUMUsvCRW2/ZuH37nmOn9u4+1LahrX9waDiaLrWilqa8OKKSh/ptKM7vHb4ArQz1lCSSfjEQuhKmPLc/PykBHY+9tvlNBPyTO25Pl6SFcBn6YybDhIKpsZeEaPlNA3v6+k8fPTExlSkW3aQTP3Wmb97sSGMV6x6e3Hl4X9vyciQSgizLijjxmBOP2oloJAWc56kouVi6PGWz/OHO7qFs17Jl1X09U+lImW1ZkvwaGT8psihcEurPhUHNSSCAEF48mvj4e29jxF55ZVskT5xTd35sQhQ8aSgL8pnTC6GMvgDlo4YZZJ4y05JkUbij7tRAbrKmrOLgjmMnznRevmjR+665VsqiVg9LMm2/Q3mKGhjKnOlsNh6LcMYIvL/4owfuve5d8Vh0/qzWQtH9z+d++uWvrr7nzkxvP5WmamsbbbfgqS5JemwRMoUnM4bZQn7uAuePHqidGMPmlkQqCdteO/vp274OAFIKzlkwXJAwk50uSSSJXD2aK2yxVckGIGNcyPytGzY8sumVN44d2fv2oVVXL+sdHx5KTKesqEXMNGjS7BLD8w5mXYACcKOERa54QZdomrzBwlROuFzyV7bsyHvigRtvjNhRT3jIGCByFlEfXnds1vXwxNB5asuWr/3kp0IIheSXl6ZXt7UtmjOXMfb05lcvW7ckXxTJUnbFFen6Fua6BdWohzOIxR0CIBDRuBVxLDUpT0iqrYusv7w8nZLFvDt3fuVre7dLKRnjptWPKpLDv/v5L5/esgXRltKfhxVMZUNU00RBSOHY0Qduvslh1hvb9nLBC0B9ucmsKEq/w4PuoSfpEmgnjMiQkMzMPklQlDApcsOFyXQyfepY+8HjJ5bNm3PLhiuELDi2w9ECgHO9ndO5PCJnzFE3yPM8hs62/Qc3Htidrky7rmfaM4iiW5BEz7y+dVwOXHdjQ+9Qx3Qh8funurPTwB0oeq5t8bFRevH5c5yhxZ3Nr/SNjhYdmxeKEjkV8tEnnu0bnySPite8u+HYwM6NW7cxtIQkvx2853np6orn9u7evP0txhzP03K+UGs+s6CMS1m44bJ1K1pnn2zvOHOqI51KD+Qmp7xC0XgpIP5/CRkvRh8cRJ2qhpOKojDmTk96+dJoYsf2PcVc/s71VyRiSSHl8Pjo+NTU5NT0d3/+0O7DRz2POno6hJSIlm3FhBTbDu5btnR+kvFoNKZuEiBYnDPEP7z26vvuWtnZf9yOxF94/uxb24b6+3kkEo/HHQnCjlA8Fi0WpXSpJB6NRjgglJQ4ETt2tru4ddfIiy91IbeEdC9bX/O7V18gIsYU34dCCseJxDwxb17rrtOnhRC2FWVoEYmgi1CgHURPiGgkftNla7P53Bvb9ySt6FQxP+RlCtLTpWtgWqdeAl12NDbBAIBJAiFlURZHC5loNFacyB09cqouXX7r+isAwLFi//m7J36zcWNpMr1y4cLLli8729PxzR/+OJcv9g0NbdzyGmd82s2dOnrypnWXIQbF9oxZPQODE/nRmmqZyWWA4Pp313z+s0sP7un/zS/OHTvuTk5DogTuuKOlKh0rTVq33NRQkU7kpqwzJ71HHu7b/ua5P/nk/BtuaPQESAH11dHOwVM9A4MMuQG9GQDedPll/V3ddjzKOX/l7bdOdXYAWlKKINY3TDUiAoibr7isoaLi4KET2cHJRCQynJ/KyYJHwuBiIart4k+TVO2zIMKCFBMiP1aYLk0lj+8+c25o5NbVK2c3NL2y4+3K8vJ1S9s8IXceONBUW7t99550RcW16y4rut5P/vDEqYHeea1z3Zx757qr2ubOzeTGS2IlqiaYAWvv7olFCy6MEiCBKK1gFhO339Vw8sT08aPTe7fnozEnHp2IRTkRKxRENu9mC24yHVu6vGr+HMuxhZBMkHQFuK7Ii8zJc+caaqp1ewfkk9mJ2c0td6+/5qUdb3cM9j344vP3vvu6ec2tkopsxlxFBbmjJwpzGpvWLJj/3Ns7Ok50zlu/cGxyIuO55UwCVyNz1QRldgk0QgMdTRARgUtizM3lhVdjxw4cOeGRd9MV6xDYia7OV/ft/cjNN72178B03o3Z1kSu0Hu6fdm8+W/u23+8t+fad294cOPzDRXVWel+6d//7bolS++67iYhClISt+2oEyFWLIgsMiQi1/WK4DKGS1fGlyxLTE54QwP54dFpKSQCcSbK0pGa2qqyUoczmsznp/PE0WYcpfRyRZdHeDwaQ0ThSSDOOd+y+8Dv39xy59VX1VZU/vzZ51atW1UUnor8/BFO4SoGT5LF+TXLV2zcvuPgkRNtG5YMkTcm8tUy4UiLc7+m/eJHssxIZ0WgSpe8Sa8gmeVNu+1nOqpKSzcsbQOAP3n/PR19Xa++vaM0le4dGm5tqJsq5EfHx8pLk421NZ+59ba3h851TYyf7O7iTSkXcG3bMiKymAWcZ/K557ZvG8sUPSElSCTO0SYUhDQ6MUUS0iXVzVXNyXg8YjsA4HluLp8Zz4yPT054IOyYbVlSSMGQ5z0v6xVcwTbv3b1yyaKIHQUQRHL9suWvHznYI3M7Thx3PbGmsdoGQETbiglDfVrAAVwhBeiJfPKKtiVV6fTJM+dyk9Ng4VgxU4yUC2JM6tbzF6BHxwUw0Xp4KAEIlAUQGa8Yj8b6e4f6B4fbWpqbaxuKxeJ3Hvz32U2NKxYsONPdXZ5Mdg0NCSHnNDehEBzwpa1bDw/1CrIWzG/pPNn5oSuubqqpIxIFIf/w8qbXX9tcw6ziBPQMZMrKeLEgGNgAREI0ljY2lM1LRMs4s1ENx0BgyCBFXmUhl5/uHTvXN9UNjACZIJqYyhFRwuO9u9/61PFDd950681XXunYrCJdev811/3+7TcqasrOdQ70nOr4yH33nc2MPPbKKxO5LAAyxKjt3H7NhmWVdVIKhijJndVQP6e+fs/p05PDk9GW5Hgum5dFATEbgol/l0IUbWqmNb2fcbMx2z5zpmNqOrNi9tyIHXEcq66xEWKxnuHRohOZQA+S0Wg61Tk5MYHw8NY3KmrqvnDnB1MkFlfUPXDlu65du0YIL1twP/2VP/+zf/i7WWWpv161cM50YevOEVH0OEdBBUS+vOnKxQ2XJ6MVUkrXKxRF0RWu63l5t1BwXSl5IppeUL9qcf0aIBstHBnNFAuiZ4Dqx8R3W1qvr6n71N//078+9GvOHM/Lr1i84INXXbOspjE7OXX3u94VSaf+9j8fPNDbORVho1yOO3RsdPBHv3ti2M2r9MkT0uaRtlnN0/ncmfZOx45OFos5UZRUVG25VEe+iz7I0qPskUiSAJkVBVd6MW53dnRzxtYsX3ZqcuRw15kFly2XiK9u2z2Sz8lirjSdEhKyxSKNDk4WMlASdRPRRQvnz5sz5/uP/fbLH7h31cJFL+/YlX9r5yN1db/cuv2DO3bMSqa27x852ULz5iQsHltSv6a8pL7g5tCMEQz1QNIsjicFkVtb2uRY8c3HXpz2Mm4xNnjCvbui8muvvrLXSSycNetD772VSFpW9ED7sX9+5OEv3PthzxNW1Pmnhx4azmTWb9jgCcEZ86Ssb6g5tH1/x8hgVW2LEJ6KPlYsmM9e2HjmbPdqWueRzHqeND0XL0wmfP6DLCOcFSA86eWEKwGgIIcGR9MlJT2ysHnT8+PDow4HIHAFCSEYkgfgSlEoFAh5ZjrbNjf5z48+lp/KDBZypVXl8UgEAEYmJqpjkTUMqqzY5oGRN0ameNTZtUum0pk5leXlkeqCm2XIiUCqHkzk6811SQUHRG5N58aL08KRaRDezm0TE12w03aXuMLtaafVq2fV17tuwbYjTjRSWl313J5dQ519h9rPNs+fVZ6fBm55+WJBuDa3uGMDQ8dx9FxCBACa39SUiid6+wYgLyTRtFdwTZ8ZM1bnom/C4hcMoksy5xVty/Jy3tDIWHVFRV4WJ7KZubOaFzc0FAvFvOdKIIdzhiwrXNf1SkuS7afOFibH169auvfAkcuWL+k4em5ucwsALJ/d+lDRPVGSrHe92wv5a1jklEdPHPNeKVDZB6J94+c42iXxSttxOLPDnfNQKzJFtpCdmp4enx5JlqQtVvnKcyfKOuADxezlhXxraapjzdrv9PWe6+2ZVd8gZbGpprE0EmlqaTx87OSCBXNyxcLBnQfQ4ZV11WWV6bGRsfYT7WdPtL9x8NC8a+tjjEspgdz6qsqqZGpsIuNOF2zOC7Komv1w7R/PO9hx3gl/rWQgkJKmhNudHSsCikn3pU1vNFRVX73+siNnz9y4cvU9i1cvr69f3di6srF5TcPslfUtqxub1za3rq5t2bBowYHDx4719kqPenv6v3TvfZXJlJCisapqFPm/7Ng7XCymRLHJ5g3F4mpP2iO06cTYCIiq8hhRNpubKhbzxWKh4OaLxWKhkM3kM+OZ8dGpsanspARZJOfVN8/ue+rg9aem783kV0uvadGSyauvfg3kC+3drx08fPuGK2KRKOOssqHmpU2veZbV3n5uSVXtJ2+7bUlF/aFDR493dmDf+AdWXn7H+g1HT5/bfupo7ZymnCg6tlMSiT61dXv36NiaNct5iZNAXhtLxbjDGQvN0rrIFR3KXnkkMsLrzI4wy5oant74+puLWmYtW7H0ZFfXovq6RZV1QuRAuAD4xJ633zp3Jl1VVmpbJIoOd9a3rRgcH9lxur2lubm3p2dWZVU6mXI976o1q06NDP1haOxYuqxnYqLWsitJrkKaPenuPdz/1rmJromiYFzIvCfyWZHNetmcm8t5haxbnMiLjr7strc6tz97Jrb52P19ozfFrOZVy4tXXPHbQuF7Z3u2eiWrr7//TE93c4q1zZ1/crjvR799rG9k/MDRU++/8sovf/jDzXV1fXZuQeus6faBv/zox1cuWthcV3fN8uW7jxz/54cf3Xby9LajxxbOm73v2PEj5zo2rF2VrEoyIRviqRJuM8bf0cL+IgY6iEhVMhSlKAgZcaLT05m8V6gsK0VuuugzJOIAYPFI3+T4d37wn4tXtH3srjvuWbFmcGTE8+QdN1739uBgV99gzrZ7RkYba2sVFr2otfmNzqkr3vv+w3s2f/P1V68aG7kJ+FLpzkU8cGJ494nhrcnT/elYeU26poQ5TBQQpcDCeL4wMBUdmVow5d1aYG1xTC5ZXFi9/JHJyYf3HBwvqa9beMW8dC1FUoDOxNQ0AT37xtZxFKtvu8p7Ee9617VCygLSX//iF1etXPGPn/88AOTAtQUisqvXrH5+327eVH3kTOdvN71SUV4hC67IFqO2ky9mirqf24yp8RdzFO1P91NdZYgsbglXSEHpVFISeHqgjarJRgBv3fK26obqw8eO9edvtNF6Zdfu3217Y+2KFSM9g5WlJZctmJvP5yWRxXk+X3h9z4Fhqn798NjshrV1n1p95PieN9589fLB/vfZzuUor2DYP1V8Kys2jhWPkLzRpfn5giVFCUElUjKfS8WipYvmZpa3PT48/PiuA5Op5vor7m2uqJsaG2YWTo73uqNnr2i7BwGHJiZrm2uRSQLheYIzdjrbV0TsmRibBPn0/q2JspK7WlYDQLGY5xFbFPOxkshEPhtxuBResViIMOaCFHqqnj8jUV7kN9gMDCNiSvsCCFnP8wCciAMSpfBM92aGAFJ6c1Lld9/6nr6x4ccf+909bSuuWrVye2d7sjI1/fb44qbGyZGJWYtXMkSX4Ev/8E+bD+2unHdVdnJw/1Q8YdP8xtUtn1h14sjur2979arxkfcwXk/F2zxxZR7fdKLPRcR622mbzvdlc5ZtlbctEYsXPz6d+c2OfSPJhqaV76svr1OgzMRQf//Y6cJU11c+/oHaBa1HxDBrSjILRQwbVs3ZPtZe2lKz8eDOxlnVLhV3Fbt/9corNTUVbffPhWLxZG4wObsyVRm1IsKpKI1IL91UlisWbWAM9PRU00ZKXvxQpR6ooGrNpO6ARZIjCiH9yiUkZETIkCSVc+drt90xKYu7Vq6KcKqurr1tyYpXTxzccMWqXQeOf/yaa7r7+roGhxoqanae2XXnXfVb39o92XsAE/OsllUHz3oJmy2cs37WotWHj+/a+uarV44O3+JEml13Q0nyRYKpkaHBoqhc3BZd1vayW3j06Kn+aHXtqjuXVtRLkhxpenL03IndtdSeKg6uvuqWlmXzPvHgPzs296R0otGzp8/YjvNk38DrJ4+eO332nvvee+Dw0Zf27apvqgNJX//5j2PR6EQmt/qqlZ3tnZmRsVOTGcfCy264LM88aZodSl2GRiBppkz0Ytxg3zYbAao0M69QEmOAyCRnOZQZ8kggR7QQSLgW4JVL1xK4E5R/94YNVF32i6efnshOL5s//1fPPWU5sVtXXZ4ssxkW4iVW3C6I4q7Rw4esstVW07JdZwaTNs2fdfm8JZcfPrj9tS2bbp+eauHcKhRWzV6QmD9viwW/Pny0k1fMWnrrwoo6KSQDOT0x1N9xIJE9+omV1qdvqvzXX5/k0fKr6+ZX3vXhZ/btONnZUV1Zlaord12PERs70/f9z3+pNVU93jf85Etb77rhXR+/4sY9XScf2bp51pJZ+988mEynEpUlLanq0mj8t08+N+uqawWTElQf6Qsyl/KCkQ2qCSWiNNiNiHOLpAAhIsjLUunXd+/bund/3nU5MgbIGI/EnEIuny+6USdiM16UAhhPVVctLC1/ZPNriYo0Io9FbSFL95/MRphVlN7a9aWFXOFsx57+k8chtrDQsOTAmcFk1J4z98rWRWvfPrz9hQM7hkk+MathR0fXCSptbru9raxWEtkMM1Njpw6/Hc+d+Og1qfvXN5VnDsK5nVc2pr71+ssfv+WWuXYpDuWqRezICztr5swaHZ+Ix6KDfQO/6pz4ly9+ac28Rf/yo18s/cRHnaL3wpOv7D92cPE1y3kywh2W7Rz/4Aff9/zLm8/uOx275oailATIQ/Pdzvf1vTBBltLrSEDJwQIgV+Rtzm2EQqEwncsvnj333ssvH5sesyzuAEeiKQv/5bHf3XzF+qub5wjp5YVIRuK/fO757R0ds6urtuzb17awdVZ9fWmq5N++8Bdf+td/7hpsT5RYjJeUlsulZXx2S7bj5Fudxw+ysuVWbdu+M4OpCJs//6pV669745Wn/3XP3pXXP9CWrpdENucTE8Pth/eXTB/58BL8yJVV9bIdenYC4p6u2K/2ksNAEk1kp21uxRMpUfTqnUSRMmsbmq/8yH1//o/f+/K//+SBB+789CfuAyG/8tN/P9zV/dd/9qd1yaSXsBLE6yOp+kjZo5MZx7GjkUhRCERkKBn6ZcIS4FJoCK414hayCHempXBiEcd2hkfG5lXXbHp+F8/nGEhJEGNWxIlOujmR9w4eO1EYHJOem3W9kkg8EolmpzIVbfOWLV9wrm+wNF6ajEa3nTr5++/8n1d37vzJo49sfqV3zZWlFaUUKfEWrY00jrknT781eORItHxFrnb+vrMjqcHoFdff6xVFPJq0HWd8bOjs6X2R6WPvXyY/eU1lreyEwT2AcGK85Of7Irv66u+5/f7v3Xzd71988Y7rrs3mCge6epavXlHXUG8BfOb2OyYdr3X+3K4o+4d/f+jO66/+8YOPuBVltU11C6vr2krrPVngjJEQRHJ4ahItzhxeKBZLgNto4YVRSl0oH8zULF4k4ghRbk/KXEkqWZJI9g0Nr6iu+twN7z7W1e3YFgGWlqef2bm7MpX6yE3X905MPLd9x3uvvLLG88AV1en62XfftXfPvqqYc2xoNFNSVllW9urhg+1Dg3/9yU/dff11v3nq+d9sfuaAPLtkeaq6msVSxWWrnMJk/tyJN7qO7Es0XT5YqC8U6qrL01MTw32dJ0X/jvctLnzy+tpGaIe+XWBHT02U/HR7/tBE/ftu/ejf3XVnPGJ9/9GHdx07/rG77ihks9nRkYo5szOdfZ+55dZ0Ijky0U9CJtPJIdf7z+dfTtdVVZSXTpztE54k8hDIEx4iMvIGRkedSCSWiHieG7NLOHAzbJFCA7Ev4g3WRQCInCO30coXiuWJZCqeGB4fGx8fX9s4b23jXADszk9sPnF0emJqfl3j2HgGCJNWpLOn74ZlS9dVN6lfdsfKtZ09XZ++8dZnt237t0cfvWzdms6+3q279161euUn7nnffbfe9NAzz/7u9eeOYu+S5cnqSsbL3CVrIy1ThVMnX+7uSJ6LDR3ev680Zt+8DD71gYombIehTWA7ZycTD+6E3eOt11515xP3vT+ViALJ7fv3T0rv+muu/cXTzy5uaPr6Pfd5XrGhth4AiLwItzgieG4kHmlesdDL56UQ5BZJpfWECGQxPj6VGRgbT5YkS9KJjChGI8wCxnCGHvEiN9EoABDBYggW8qhle+DFk5GqstLOjs7+kZGKdFXBnXas+DM7dv335lcXNtQeOHlsD7fcfKHE4nsOHjh+4uRP/vizJQyJABk2NzS5Ul6/es0Pnnii8+TRd21YN10sPr351XNDQ1+8977P3XfPA++99VdPPvvY1o0nYgMLFycqyiBZLpYv53MW0uZNT942K/nlu8pbYx0wtA240zmV/K+9bFtvxdXr737kw/dVppMA9N1f/aq2orI8laiuq33hrR2zUskv3nlnVXk5Y0zKoupKWB5LRlwx2DPopJKFsQnibGxwJG1ZlakkkTDtCKyB0dHhycnq+vpUsmQqMxRllmX6HeIFkc1egCBLFZ0JQIEgY2hZgoFFtTVlh4+fPNnd2zZ3ESICevdsuGJec+PodMax7LjjeJ4rhBezo+loIsYZQ6ZUNWe6ur72058uWDK/vrX+3K6+xzdt+dsPPcCYOHS460cPP/y5e+9NliQ+/8C9H37vLQ8++fRTW57nFZPz5kUr0+QStM1p/MH9cdazEXJ233T8l7utV7sb1q5778Pf/GB1WQoAhBA/efzxE/mpxmh9PJ1+8vePWmSl58/5txef62zv+D+f+WxrYwOQIJBxzj//wfc/9Ozzo1NZsq1INNpYXnnXu6+qjSSkBEBG5AFge0/vxHR2ZVWZHeGYgZgV4bpOmOiC5EoXSlWJwABttGLMigEryGJjY40Q3pEzZ++6FiK2ky0UX37l1Q/ccsvTr72+YtGC1romn5//zTPP1NmRqrLyiGNL8lrq6j55660v7t3Bo9aiBXP37j/+5u498+pr2+bNGR2ZPHziZNuC+UKIsnTq6x974JPvu/0XTz398OZn03VT8QqWdhwWx/4x66ETyZfPVV6+6vZff+VD9ZVpAHBdl3F+5Ez7GBMrFi+YHJk+2dfLi+7KlQuYRVQo3H/jTU11tQCETE8xXdHQcu/V1y5cPC8HhShESiEC4IGk/YePRCKxxfNnA8Dh9rMkxexZTXksxiwWtxwGPNhdhIsfyQpRsBaDuOU4lpUp5ltmNTsxZ8fxowCyf2Rsz9FjN2y4etP27afb20XRPXGuMxGNuB4NDg6d7e5uamz47yef/PDtt7fU1wEX77nyysuWLNpz8pRE/p37P7F1z56fPfXUeCG7ds3qjoHB5YsWMoae8KSUFWWlf/6xj9x/260PPv6HZ9/YdHb63N8+Ur73dGvr0tt/+b37mqvLAaDouowxy7IQsb2/Pye8px5/xgH21fvv/9v7H9i8e2e+UFh39XWV5ZWqpYwa9TKZnf7FE89wZlkSRidHxzOZWbX1x8915F13ybw52akphpYkd++JE07EbmquzxWLSR5LMIfr/BcBL42xOopql0ovjDaz05GSrtxYTVNdTXX10c6u7sGBWCT6/JbXR8dGeoeGy0pLdxw5jLY9NjLGbd5SXW1b7OSp40K4fYMDLfUNREKSV15WccNlFUD0Dz//uYizFeuWDI9OvrH/4FDNSFVZeuHcOWWJhOrs4wlRV1XxN5/99Gfef/fDTz81kZn+0XfuaamvVQaZc+7YNgBM5HJHT515ec/eXedOX7l8WVVZyZunDr65b/dffOwTju0AgJAuQyal4Nx5YeuWSCLWPdS/sHXO46+8WhKPzG2d9bMnnmyorSkUi0fPnvngDdcBYO/Q0JFz5yorK+uaqqcKU7WR8hizOEPECzS48EIpOkxtBwN0kJfYUW/KdUqdBXNnv7p1x9b9B++78aa//NwfT2SmqtOV6WRq5+GDuYK7bP58i3HHRtvG7r7hRLykqixN4DKGACjJk5Jy+UJVadnx3q5cXnBk966/asW8uTsOHNr4xpuV6VR1Rfny+fOXzJ0rpSSimqqKL3/yE+o9CeEBIuf82JkzB06cHBqf6Bseq6osf+CG61eemdU+PDg+lRfZYkt5eWY6m0oyprSYZlBedWXZbzc+v2b54netvAyAbdmxc2ho5P733rRqwdKCW/CkW5kuA4D9p870jYxeccXaRDIxMj6eLInaqj38/yxpupg32EjLEDkyh/GUE4lwOycKbYvmvrFtz6u7995344115ZV15bUAAkBevrQNNGarynhoVkMLABF5/rIwZMgomYj/8QfunspM9A0Np1Ol1RWVALBmwQLP88719Jzo7JzMTCk0jTH0PI9UxSb4Bcc0nc0mE/FVSxbPa2lR1+rytiWDw8PD42O1VZXlpWUAQCTU3HIAYIwTeWsWL1o8pzkeSQFIAOvum26QUIjaJQAEEAcgT7gA8PLO3R7RksXzc1SIMTtlxRxk6M9uDOkAL2okK6j0RQQHeZLHSiPxoez0wkXzairLdh491j000FBZLWSeMb/tBRC5BusEoiIGkx7IdANUjWC9ZEkqWVIKAFKqhsxkWXxuS8vclhb/bQhJlvU/PyytWbpUfXWut3vP4SO3XHOtY1vVlZXVlZUAIKSnWw2H5mwgcgAWjySJiohRAOnYHCAqyQUAIimJLG4Pjg29efBgRWXF4rY5o9nJSieW5BEOXFWT+6OMz7exvhCYmZnVKhHBYizOnJpokoqFZHl8yYLZPcPDm3bsRtP1XfFPqj+G33eUJIW6HQQDgQGBIZckpPSIJDJkDNRISymFkEJKqYQfnLHHX37p7376YynEriNHPvqXf9nR2wuAQoii6wLAgZOnvv2zBzljnHEpPSkFkTCNdowZIkLkQ6Pjn/iHb7+2e/dUvvDhb31j45tbAZgnhJ/XkpQI1qu79pwb7F+yeG6qtrRQKFRHSpQDDkLn898FDS5IfbA/koEhImPgMEjb8RJuj+Un16xeFo9FH3351Vwxz5nfIwG1HTN9PTiPMGaTmj2IQABSCiE8Pc8GVNU4+VO+Ef2e1MAYA6K/e/DBj3z72yc7Oj0hekZGH3lj6+jEBABIIse23zpwYNNb2z9yx11f+M4/FYpFKcH0syYiEuqPVAOGcWI688iWLV3DI4WieHLrm6d6ev32/erVOeeeKD7+2muWw9etXZoTuZTlpK24TVxJZf1JpxeguvBCVPjjDFYMI8wqtaJV8dLx6cy8xa0L5rQcOHXylZ27GNpCCv9ckz8zA3DHoYMd/b0A6GlBOTHmWFYEUc2nlJ4QRAJAmi4YjHOLMwsIegcHP/7tv//Niy/84i//6rf/57uO41icVVaUc8tSVl2oQQ6ctdbVRqMR27Isy2LMUmaDMcuyHMtyOLelKf4sLSmJOI7FeGVZuQrC9fkCElJyFn1z/4Edx47OmdW8eOm8icnR+ngqbcUijAdjVukC0YXnv9us7lMjiTwCUIF0gtlVTpIRTWPhsnXLgLHfvvASkeTIJEnpTzuUpELlz/7tt3/ym4cRbduKIQIC6+zrfuyF50YnxxE5Y5bFI4gWIjBmIXIp5c8ff/yFLW8gYz987NGHNm9avnBha22dumIFocZVAgBEnAhnfP3y5f/2tb+487rrfvC1b4yMj//LL39xvP00MsaYNTQ68uDjj//rb39ztP2MzaPqlnquKzwByEVobp1u048oSfzyuY25YvGKy1aSw4SHFU4yxmyuB4Zj0ECJLoENNu1q1AApZMiQR7hV4cTq4mVDU+Or1i2d19q07fCRzbt2cx5VlR2q2NTiFudOPBr95T/+7Rfuv3/bvr2f+8d/ONfbA8i3HTj40b//+1NdvQBs7/HjD3zrW+3dvROZ3Pu/+OXnt7yBiN955JGn3twKAO9ateKL77trYjpz4xf/9Js/+YlvwD0hAODRl1767Lf/3hPu2wcO3PPnX+0bHuodHf3avz948Ew7AI5OTHzgG9/61n/+7BebXr7lz/9i6/592goxLqSUIJCjpdvPSyISUlg8tmXf3tcP7m9tbb78qjX9k8P1iXQFj0fRYko8Gu4hf2m0cNDDvI1LAwQbeZzbtfEUEsgIu/ld6wWJ7z/8yHR+mjNLjTtB5CMTE2/v35/L55cvXNhYW3eyu+cXL7w4lStKKaOOU1ldHY9GJcm+wcFHX3l5aHICAF45evTcwAABJOLxsrJSIrp5w4YffPmrG7//r3/xsY/9+NHHznZ2peNxt5AXQkiivadP/37LGwDYPzG+cf/enOdFnUgyXR6NRqWUr+zYufPMmd997zvb/uM/EqnErze9qsYrkWURZ0J4suD53pQIGPKiV/i3xx6bFu7NN14bSdkkvNpoKmY5NuOq3JuBnlhO/mW+qDeYIVNTzkjPw0IE5IzFuF0RSTSVlA1NjKy6bOXShfN3nzr50DPPchaRQkgpEa1X3t5965e/erzjnJRERBZiSSyWzRcZY0XpeZ43lZ1myOLxRFm61OIWt+1kKuk4NkPkCGOTE6r3GIB0bOvda9YBst7hIYtzUoQAYlmyJFmaBMRYJJJKlDicI6LrFgqFImPsWHdXWWli5dy5qVispaaqf2wEEWNRB0Ay1NGeH9pLKSwefWTTS9uPHlk8p3XDhlW9IwON8bIquyTOHMZMNIKkmiTiBZFmXRDZLPktxfSRQiSbW0kZqY+VDmTGxmTmPTddfbL93H88/fRN66+Y29iYK0wDwOEzZ2rqqmY1NRB5BAwYAudf/cEPF7bO2n3qlOVEvvq9f1k0d8HRrk5u2d/80U/tWCxfLPxq48Ydhw5npqdf3bHj/V//ekksnvdcm1nHu3tLU6Ut9Q2jU5M2t//sRz9qKqs42d8nBd3+pT8bz2Q44Oe//6+u50Ys9k8///mmt97ec/oEA/mJb//jrLr6k+c63Hz2rq99o1Asyuns/Np6z6Px8bFsdhoAhBRRO9bR3/ODx35vRyN33HZDBvNMssZYeSlGFL6hMwM1xwAvAA4NcEHaCatjjnp39VxzlS6oYVHYNTEwf1b9+PDk/uNnunp777jmWiBpcWfrvj07jhz5+G23pxIphvjmwUM7jh6546oNE7ncktbZ3/jIR6srK091djTV1nz1Q/clopHeoeHP33nHVSuW7zpy9I6rrrz3PTef6u4tSAnICFldZcVffuwjKxcurEiX1pSlhycni1IumzP7i/e8f2B8POLY33zg/ohlD42Nf+EDdy+ZO/vw2fYPXX/9J2+/fcexk8e6uz9x683333zzkc4uIvjcnXfefvVV07n8mY7Oq1YtXzirVQhhWZGv/vDfth89dsM162+4/Zr2ob55pRWtkbKUFbM4D5qCkxqBx2DGVMXzlsWc/+GU0ui8AXS7VaF6P3pSTHuF3sLUgbHurJerkNHv/fA3HT393/rwhz5/zz1E7pv79t71l39z7dp1n37PLUPj43//m4fn19U+873vTk5PdPcNVJaVn+g8d9XKNf8fj5uLgP9fTReBfIeQSsgCY4hgA7hFr+hYJb98fuO3fv7zmsqKb33zc2NWNkK4orS+yUknrAjnDP2WDZpLUqMr6Xz3mz3/N9gMXzXbbPri628jQ0aM9WYmYsn47LrafUdO7zxydF5zw7zGlqaa6srSsmfffPPRjc+/smfPopZZ//KFz5enSh958YWv/OBHg8Oj//Sz//r0B+7iDIT0CASClCSIPAQpySMSQFJNgyYQkgSRUMXgUrgEEvQ3PfUw/RSQUnqqX6h6CpDHEIT0zO9Ug7SAiKT0PCkcq+SNfXu+9bOfexz/9FMfLmlITUxPLUzXNDllCStic66HzhALJ48AJKUMg2UX5Q0mPQYQ9TAwVEGkOrbSkzLnFYeK06enh06N9s+rrN/68tu/fuKFZCz627/5mxXzFgDIscnxgZHRaCTSUl+LYEtyc/l87/BoRTo9mcnMqqsxGOc7RoyqJlf4/8BUvxM3nxE8hPFi0mQDU7PQzD2WjhU/3dVx37f+qmdi/P4P3H7jHVcdHeiYU1q7MF5Zw+MOtznnZqChgbtMDQdJybl1sftgAxsj+mOy9H6YHrIc0WE8L0X3+MiqpYtHBocPHTu159jxGy+7LJWIR2xWVV6VTqYAhJQeZ8yxnYrSsljETidLCTydT/5PdQT+/1dMoF/A6esrfObLBxEZsxDVvFqHoQUk/OhISOFYsaGxsT/+zneOdpy7Zv3ae+6/7eTQubpYemGsptKKxyyHc4bAKKAVpN9NS52f832Dz38BOOO647tpvIzAVLdnhgyQEJAh2sg4t8ZFri83eeXq1YM9Awfau3YdOXrNimXpZCpXmFZDSjlzcvmC4vwRyBMumY5E5tCEUHAw4+X9LYRAJ0PhCVszuo4H9xkAx8bHLCvievI3Tz/ZPzowt7lVkqdGNjlWbGRq8k++973tx4+vXrr445//UPtEd4kVaUs31trJKLcty2LIyS+xlEzPk6Wg8eH53uALgWRJSSAJgCMyREYogaQuDAfOkdnI48yptuPzktWcoKc49qk//vCqxXP3nDzxsb/9+/bevlgkKaRAtAZGx/7j8T8UCq5txYiYbcUsFjWbQUQg1Sgq8EeWwTv3khSjJ2ekKZrYIH94MIAeidjT33/yzNn2rs6JfHHHwaN9Q/0WdzwhHCvWNzz06X/6py2HDq1qW/Spz9/flR0Gwnml9VU8Eee2wy1UfcSDnovSGGgfoL8UoErd5c54M0QJFPJsAMAY2pylrEh9JLkwXet6xWEx+aef+tCKha2Hzp77o7/79uEzZyJ2AoifOHeurLx0PDP9yvbtnNu/furJrbu3C0GMRQiIMcZ5xACdJIhIznS0aGKCd4T6UvdKZYxzZhMQQ8u2YgePH1o8f96+48d6hkc6erqXz19QkS4vuoWInTjV2fFHf//tNw8eWbFowRf+5CMj3mSxmGuraGy0kwkesRhX6mcCieATnRQeMBLqfnhx+2AMDpKZJDZjwI6i5hgyQAuZg9zh1kBmrMhp/drVAz0DR851vHZgX1NV1fympojFX9ryZvvg4G9e2JTN50739Z0+172oddbQ6FhFuqx3cODg8WONtfVSepxbDG1EUHNOAwtsJpCHJ0cyFkHkiDgwNPzy1jdbm5rGJiaf2fza0dNnX929LyflvsNHv/HJj69pawMQthV7bdfOL/7wh0fOdaxauvCTn7tvSGayxeKyyoZWO11hxR3L4pwjmcFauhSYSBUXhvqbXwo+OFhRND4SZw4/0MVLyJgSbbEEcxzL7swN51HceOVVXq5w4Ez7i3v2oCeXzWktZqfmts6654brkvH41j27G2pqCWHTtu35fLGzv9+2nNamZsZ4Jjvd2dvHOTqOYxp2o7qjjNmIZrI0gueJo6fP7DlypK6mkqO9/8TJ13a+Nbu5+c3de2+74fqX39qxduGCL33k3ngsggiI1k9+/+jfPPSr4Uz2xmsuf+CT7x+C8WIh11beMDtWXm7FI8zijAeNZ8Gf+x7EB36wQAShabYX5wYrKQYzBkulwf6Km87penC0GgPnMKvEchzLHshO5NzCNevWxJ3I8bNdr+7afaaj6wM3v2fVwsUVpemmmsr3XnOVW3Rf3L4tXVk5PDpiIa5uW/rT3z7cVF83ODz89OY3egYHli1YyNBSNcoMnf7hwS07d07n8kdPnU4lSkriKc6t3z/3wtDURE1luROxNu3Ymc3lunv7BsfGiegLH/rg8gWLhChwFm3v7v3qj374X89utBz7njtuvuv9Nw16kxMTk23lDUvTdSmIRrnNGVfCaQzm05JPcgcTekyAf9HfYDPdgpnAVo+1RwjaVKARcQACA4zYkfGpKYegubJ2ODfdPT66etmiRc2NXZ29O44c27hrl3ALC2c1RZ2YpOKcptbrL18DJNavWvX85lerKyqI2yfOddTV1oxlphPxSNvcBcOjw9GIQwSj4xN9IyOv797PuSUJ9h47tvvggVg8mognBofHcsX86kVLx8bHK0tLG6orH3jf7Wvbljk2A2DZQuFnTz7xzZ8/uKv9zNzmpo/90d3r1i87MdCNEkoysOWlrXNqGhrLa42ABLQ4Hk0zdNS5YShV16q/i36DtWBWaU51MR36+xsorfRMdOCMD4+N//r55xtq657btMVidnl5ac/kcLKm9Io1yy3As109r+7avWXvPptbC5pbLG4heC11jalEbNGc+Vv37D11rn00k+kZHIrbdkUqObul+T8efezKVWsZs/7rD3+oq67uGhyOOFZZMjk6PnbzVVf/7LHfjY5PpNOp0pKS+S1NS+bOXzp/wbxZsyMOB+BCiI3b3vzGj378200vSYvdduO7P3T/+6y6RMfo4LyahpO7TlTaqcqy8mde2nzzhg0W0wiz6ewO79BtmGFQgFrlgxc9kiUDwh9J+g6YKJS8mNmEnKRkzOoZ7HvslVd6RkZbW1oEyrtuvPbEaN/xqX5kMK+svvd035PPbtp16KRk7LIF8z547bU3XXF5ZbocQADwo6eOV5aX2nY0l8tNZrKpZLy2qua/Hn8cUEbj8YNn2sti8bnNTbl8/kxHR3W6vK6yMhZLpBKx1cvborbjCpcj49wBYOOZ8Zff3vX711/fdvQYSLFobvP77rhxYdu83qnhI51di2uaGqIpOV58c+++8nj8XStWL507l0iiGSPke15fixf4XzIqLpKcWRf5BkPQLxoJiAg5M1lTyFWhwXektCyrf3h4MpvbuHPnaDbbWllW01BV2VTVX5jqmxypKS2HAu3deeTNnYfPtJ/NZ3Ozm1ved+WGW6+4bOGsZtuKKCm14Vul67qOHXlp21YCWr9iTWY6U1WRltIrFN1UogTAMq/tKQaCwDtxrmvT228/tWXrwTOnWcRZsmTxdVevW7xstuvIqalsXWnZYM/Its1vrVuy5MixM83V1Q/cfFN1WaWQBSAGKM0Wou5FomvNfMgFzBgeICk54xf9BvvmCWlmfoz+WFGmBm7r0WhSWtwC4EW3+P3fPtLYXDc4MDB3Xms8GceEva+nPV2droqWWHl29MjJN7btPtDePVnIV8VjbbV1ly1ZvGHVikUtrVVlaUR/7UjKHCIixgK8YwYGIIbGx092dO06fPjNQwcPd3cMTmRLnOjC2Q3vvnrd6jXLipYcyEz09Q+OtQ/deMVlUR758S8ftjx524YryxLRGzdcKUmwmZLYQGpptN1+2qB5fyBJ0rrYb7CQQu0smn73Qc0VmawJmMK8AgSPSJIgybbu3b/z1MmO3t68682bPWvN0gWbj+6VtjN7TiOLQTIZt13e3zV26Ej7oYNHus91ZotepDRVW14+q7xycUvzgsb6xurKktKSdDIZj0QYgM1t1/Myudzo1OTo5OTw2ERn38CZnt6j3T09I0O56SnH4g0NdatXrVjeNr+mpdJFkcsXElaksaK6t6NvyytvpZIln73zju6+wYaqisbK2mxuOuI4xhTJoO2b8bmSCBkDkiSCjBw5AwAphXUJmGi9qzJ0nAPcgYUEwoSgrjIgY6okgqF1rrentrLmmde27D97pkhew9zGk6fOrV2xsHl+09vHDpdWpsrj6bJ4amp8aqh78Fxn/4muvtNdPaODo4Wiy5mMWsziPGbbtu1EHNtC7nluNpedyhdyricAOLcc20knky0tdYtnN7e0NNQ21cSTsVwhNzI1lkgkuk/3LqlvHe4fLI2VHD3RnnAit11+2fzWOQCuJwRToxcYMxpffYL96ZVEhIwRaQm+eoiaJgUEHC96E+2zbgCBUAWDOTRBRYMJT4iFhGxgcUeSyzByrqf7ly8+XyCqLInffeuNL7/99kR2+uqr17UPD3RnRtOVpRG0K+KlrCiHhsdGRyZHhkdHRsfHJqYmJqemJjNCCNcTJMnizLFYLBFLp9MlyURDbU1FRXlpRSpVGrUca6KQnShmLQEVPF6dTCfi0V1v7z97uvvy5SufemXz6vnzP3rLTelkadEtWDYDUr02Qyw3IYEIImiGKI1mSemBQ4dcj524FG6w7qckQ6aLzDfNv6UEZog/rVtSxB0p9sbmEQB2rrfL88Q0Fb78zz+8ccP6d69bc6Kjo32iP1ZWUltXPZ7LEomSeCSVKGXIbJtLQZ6QzAMmsOgKQYIzjNgOsy3ucOBQ8PK5XD7n5USxAMKqTFccPHZ6QWXN7OqaGPLdhw7t2X90dnMrAt26/soFLbMIip7nMcYQmZLL+qAn6pIK0vCzCS8N4qNIQkVU66mFl0CQpXcIAaUQwEBbM5KITBf8MPSHhxGBkgVIST7cRYYSACCLOwCQyU3/+sUXDp3rKkklHcYra6pOdJ39ysfuf+zll+e2NqYrkifOdlTVVPdPDNuOBRZDFyzGkXMCQSS5YMh5lorZTD4Zic6vqaeiSDiR3ftOzqtv7OjsmMgXigVXFPIDPb1rFi+595b3lEQTAFR0s0xLgJmJoaQ/3dt3veCP2tFKO4Nm+YVzTHvq873BF6ZhE+kdZehzc3reJJp+w8ZEm6mt6GMCJiAjhsgYE9L1RKEkFv3snffcsHRpS0VFLjcthSyxojFhx122sm52YgJmQWmzVTZ2rH9evHZ5unlN7ZzV9XNGTveVFHhbdcviqsallc11InXyzeP2kHv8wJlKnsgOTrQ1t1aVlLa3d9u54sjgUFtz6/e/8tVP3vX+RNRx3bzrFTTOrI5uiEP2x06aLF/63GQw+s4Mp1RFVnRB2nSc/yiaJACpMXHhWysJGENty1TKJAkZAwSSUmcx4VlTflGh+T8pIZudjsWithXdefxIVWkFoNx56Mi6Fct+9NCvvvyxj//0qSeZ5ZSXp/v6+xtq64TnNtXVjk9O7j99Yt2ytsOnuxa1zGo/fUoIt2dk/IbL1161eOFPf/3bllmtyxYsWrdgXt/oUGVpOlWSLLgFi1shOUogEtBIHIIph2SaIBWSlA5BauAOfQmQqp0y8hbLsi96JMtU4QQFvoTAkJEkQu2VdPWh7igsgz5DvrCK/ODE7x+GDC0AIaTgLAoAI+NDrudVlVfsPHj4UPupVDo9OJk/eu5cTXkps51j587WJBP1ldU7T55OWTyVSgPi8lnNcxvq9p463Ts4/N0/+ZNccTLmJAC4El9KkkIK9EP90A77XyoEA4gMQxXMwgbVT5Z8EB7A1F0p/RIB2ZZzCWywOrP+dA6DSEvy5VmBeTPld/ofMuDJ9YQtdRn8YM2IyAnIYlzZDI4RbT+gkM+7CPzg2ZO/efoPn7/vI/FI1HIiJN2o4yRiJVE7AoCnezs4s1pqqomEaTeBUsqQ9fDfl4/a6HcohPA9it8F2sArJEkqYphQWymN2DEF54F90d9gk//qcd7qw2vuIaRz0z+dAdgSEKhyLdUQ3hQHY6Cj0idCt7wwzQF1xArImELzMZvPRhyHs2jId6p581ISWSwCAFK6Gqkw2ZwuMtZvGMJlY/70U0n+OSANx5oCUf9AaJwSUZXM6E4SCERk84vfRKv1kJLQMP9BPKm/UN+RajvVhkm1SYyhP35GAjKVVWpzp+pgwg3UQYJpZaXDNmU0GEMAJoQ0c/ak4jD1E8nP2UyApyyttiImPAwIMl0N7PtWTeyH0nf14mhOCZD+Urlt1dblAuTBF6KdsFQBI6JJDimgRLWQR3cIV+capABkiKTvPzMdG5heTa1f9lt2GG+NoCWq/tUxGClKSQhSHS0z9RNBHRb9TdBpup+XIYSy2/A8d/I9bMAaQZAlaUuk0l4tFlYHBQPdEDK4IN2ULkABuI6NdVME9d9MeauqNkBA3e2eIaGKWXyM2s9BGAbhtH9KKCQ8RgREaZZYp6SIyEnV/4PuAUCoA1wKVdzrZNUkNiQpiPJA4y76xpOkgORFNWmD0LfP5m8ljTVtpFSEZew3XRIDopWn8zdby92RpETDmhn6TPqQQEj3oO25lm9po6vMJjNXR22yBCOH0cGXQYWD/uqoWSyEcMalw3x/jw0lQH7kRKa7jyT/ARiCM2hmsE8BTgkzOzYERyWUIV/cQEfoY2swloJ1UcmxFgWoCgIztEILlcOW0MRiBBLYzKqtdzToJQqMoW8w9U8xoKIRdECmZfIzDmZgfKXR/RrptDmkqKWTIc+LfhzIgo6jqG2PfgPqy0tlg/2PrYV2DIhUfISIJMm3VupeEgBjwdqjLwXxDwbq0BrhHWvr40SgMzGcUdCg8KOg7JpCm2IEcMAwVKuuwRXtWXw/z5CkJJLKIBu7MmM9/ZIZklIz3cbqmw97gcZynP8CcFVLz5ka9W7qu0yvVYaBLwM9mYXCEB6arCpoPGToCEnAmel3pK2FfyeUJfbzbi3eVR1cGOquon4MZaBE1D0mAm8cchZK5YoAIKXU6AUzsnblSUgESkqVFBmUXaVtpgsLhuHNi9wH65ukc0GdCKIkT6UuSEzHvohBL3RSY4dR5TASCCQJE2GRUSgSkERkJKX6NgvMOerQTDtB0kE4UUjYiCj1ToTCNF3QZA6bLqjyperKLTPDKBghjnbhxuToq2oEOuB33fJrGgzvf/FH0couS6lrgRjnmhNUU6KI0F8if4kBmAq8Nc6gFgzJFDmZ9IUBoAauzS1FlWgh+ZBDkPJI8vPUkBtGU8rkC04Qw0lS0DwRfWuuUEkfetOfwt+vIFQknRqi/0YMCx6W/1/kUTQZ6ggQgZRemDNG3I9Tzcg7w6oSkpA6hSGNP2hKDlESIRAjk42aUi4TWsl35Meq45beS5+TJEJznzB0skihJf6b0rk7BnCKVFmcxkd8iVHQWtTkBUFgqMabqXRMpWahyPPiD7L8BIVhuDhbH3GkMNwLJqXCmYOjEBkZLSqi7mcHBu4gCH5kIMiQjkQfHZz5dlgo+gq2B8Ixl58FaRMcGspOAck94x76fdFM9CfDn4f8lyC4UDt8YdIkAj/Bl1KarCOwZaZgXns/nXf6w6UJpCadkIAhWoyDQSD89sAUMDjKRIfIC2nMsh+WUyiK8wlnIKn6ZgSmWgOZ5Gc1oZMh1ZMEIKE00oYAH58RRpGfBYdRL7oEhnL4eA76UlkiqaoYNLQjDYKJRnoXymSCSE0zxyoWZkzXNyn/FxaTq+6kalfVxdGxmwwwR39cVyjN1j8LbC0gGGRGkwUEKjlSL8goCJn9OhUZNlBmlgHTGgAdP+uOFhei0d0F8cEmUjGnm6FhmAiUPoepfpYCkPkphOaIlPXWXd7lOwh3c6sglDUrvEySP9dW75xmnlVRNgYGI2CGtM0IEUHky5sRpelzFQiekXy6xND4iADCx06MSEsa0NQP1sn0O7gUfDAigJQ+SxPcSvUBceaFN+QuoUE5w6KXgFjURhURkLF3dGhQzzKlbRiq7zdsAvO7PhhPSnog6ow0HEEGbZ1NAhbWXkGAZWk6P4yDhZyALwymsHDgUuh0R/BONh8YAEmpOxopgABDwYz69IwAGZNSEJGyuACh+BR9lSIChnMTUqmJsc8+tWjqCULNBjTBTOH9mCkLCmbf6GJi5SFCFLe+5VoeqoIJf2CdOSsYwqtDr0SXgg/W1pTpVMdXE5qyUcBg9UFKg0CSTpNN0hyQg/7OBbIoNR8xIOKNgcB3tt4hnzUI0IsQYqySayW91yR1UOXrzxahUBWO+oY0giQjswtFUqaM0q9/Z5reln6AfpHzwUz5PCSVwprEXyUqqrRD7RVaHKUAqcEKKUhKqeBMMNdQs8voV5OTQhyUQgDCQwF1nK7cH6o+/5q9DE9WN7MDVOgNZneZaokWbu3s19DNOEkB4OUbcgw6RvhjZBVKqgE7KWGmwbjY6UKN8SEhkJQMmbpHoarZoHqYmIZ9GWpBTNDuwO+tpYV7WpjDlG9mfn5iqtiCjEdnnv5fGATQGMRiGNAZMpTtYOjy6oDYt0zkcwtGSWC00Jr19nfYZOMG/kalAL/4Cf8Q7aZsnqF+iIikJ02TXRRSGK2LBCJgROGOJaZ9CQbYPzAApp2fjnDI6GKQ+eJy5WSl9IERNczDCDtAmiZKZqcV+MnAb68UCt4NM02SQMrAyyKGahuU7oyMkNZXFgZ4CkNkF2Q81gWZm6QDWR/S8XvcAHJfKK0DJy0+DdHGfuI4I0T1DbX/XaOLC0nmJRmY2pc9ggxUe2EeKaTj0LsgA2YqJMMPtU2Tfg4WaPQCeQGB3kIZEvL7SbikC0QXXiDCX/FrAODzdBQCHkHMQAhnkvO67TYJ1UfFl1tIDEOUuuBWy3GQYbCqGJwnX9kjSUqQiBxNJYVmMRSmoUqlKCzYoKA+RTUVDct8glKNkPASEIEQJBo1gSrb8GlquiB7fEGwaNNZxgcl/MYUSrVKgfDGRK0GU9SPZzzE3gcNXPxM1txqCgc4oWBohoENCW4poPBCcLWPUoD/JnxRCgUS/NClnNk9yKRWUpLQBiOggA3mRXhpiO7UVjHmS6oIQ4ZUEQHqa6WMDwTtvkSeMWBKhcj8xFb3gwC/4tQIKP3dhnB7vZnG01wdSZIkMUDVBBcJNb6iuS9k8I4WKRjiSkzkpjp8BUFbcCYAiJEWcQRHJGTkLxE2KaRWUshQIJRAbcANr+R/cJ84JxV6S3X7dduwYPZZqEIiHH+FJNe+l9WDsoKXMWwC+UrrEBymFX0Y7nM5o70X+HREII8P0iY0BEtwahEIFWdMWjSAl8jks4APVkedZlLujJnlQZM7mkYWhJpxk4adNQGX30XMOFjUobKUPqXPNNoZuse6cNOod/3rD6Y034c2/a6LEEJOfJQVwr4gZOFDfkPbJFTiaDTAp/9CADP5lIs4ikamVTUa9A/8nb6IjCnFlgiTxWYpVAuEIP0lqcYgIulplIqWR5+98UnbcImL3/GVSPoQBQbSEsSAwQjAL6SAswjLvSg0ns3U/Qa2WSNlANJnxtBE9bprJWlWhc77DHB2AXbXlJEZU82YgnP1ToeZF7UI6lr7FbSGWKNQ6oQQlhwbWJfAV9fp/BZ9JtcwwSCl0eVqC4IGwkTwQ2EfWvFFIQF8HVJfzxAGYEAc+sGUAaoRAjmfFiThO2b+Xaxkg8HlyKdwSGGQGJodDaoRQqBI98uEDI7pw0k+aaHY/uDcYFDMACQxaCbnI/vI/OCbTK2KEXwYe4Eh5eY70O0g6/N1XoShxD5gGH10khnMOfTbZ2BflwKbpBeQMVQ1k6qrbrhuFHzMiDF/DdUlDtac/Eg71AJDLxwjQ+pA6JIhMJ+bMoosUugDzQRefIQxHCr7G2eMu1+6oo5qmFDQMZdpfxbEyQyZ9IsL2YwW4BcmD74QfbJmtMwPOTJUJf66iC9Ugov/C10RdnIhGskgjAGOoaO5kKTZuGeC/+vQbZq5vX6ha3gfwchT/pcJEaFqVuXmfVLM9+kGSvfTQLUa57vC//8HxBwzIVhYMaMAAAAASUVORK5CYII=" alt="شعار المشاكسين" class="seal-img">
+    </div>
+    <div class="brand-text">
+      <h1 id="brandTitle">المشاكسين</h1>
+      <p id="brandSubtitle">منصة الطالب الجامعي</p>
+      <p class="clock-chip" id="headerClock">🕐 --:--</p>
+    </div>
+  </div>
+  <div class="header-right">
+    <button class="bell-btn" id="bellBtn" title="الإشعارات" aria-label="الإشعارات">
+      🔔<span class="bell-badge" id="bellBadge">0</span>
+    </button>
+    <button class="theme-toggle" id="themeToggle">🌙</button>
+    <button class="lang-switch" id="langToggle">EN</button>
+    <button class="avatar" id="avatarBtn" title="الإعدادات" aria-label="الإعدادات">🦊</button>
+  </div>
+</header>
+
+<div class="dropdown-panel" id="notifPanel"></div>
+<div class="dropdown-panel" id="settingsPanel">
+  <div class="panel-head" id="settingsPanelTitle">الإعدادات</div>
+  <div class="avatar-grid" id="avatarGrid"></div>
+</div>
+
+<div class="app">
+  <main>
+   <div id="dashboardView">
+    <div class="faculty-switch" id="facultySwitch"></div>
+
+    <div class="quote-strip" id="dailyQuote"></div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="label" id="statLabel">واجبات مستحقة</div>
+        <div class="value" id="dueStat">—</div>
+      </div>
+      <div class="stat-card">
+        <div class="label" id="nearestExamLabel">أقرب امتحان</div>
+        <div class="value" id="nearestExamStat" style="font-size:15px;">—</div>
+      </div>
+    </div>
+
+    <section id="quickLinksSection">
+      <div class="section-head"><h2 id="quickLinksTitle">الوصول السريع</h2></div>
+      <div class="quick-links" id="quickLinksGrid"></div>
+    </section>
+
+    <section id="scheduleWidgetSection">
+      <div class="section-head">
+        <h2 id="schedWidgetTitle">جدول المذاكرة</h2>
+        <span id="schedWidgetViewAll" class="export-btn" data-nav="schedule" style="cursor:pointer;">عرض الكل</span>
+      </div>
+      <div class="sched-widget" id="schedWidgetBody"></div>
+    </section>
+   </div>
+
+   <div id="coursePage" style="display:none;"></div>
+   <div id="myCoursesPage" style="display:none;"></div>
+   <div id="schedulePage" style="display:none;"></div>
+   <div id="examsPage" style="display:none;"></div>
+   <div id="assignmentsPage" style="display:none;"></div>
+   <div id="gradesPage" style="display:none;"></div>
+   <input type="file" id="importInput" accept=".json" style="display:none">
+  </main>
+</div>
+
+<footer id="footerText">المشاكسين</footer>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCGYp76VlTgqkAOwBqFF6mDxPctsZLT2IM",
+  authDomain: "ufuq-platform.firebaseapp.com",
+  projectId: "ufuq-platform",
+  storageBucket: "ufuq-platform.firebasestorage.app",
+  messagingSenderId: "903928758427",
+  appId: "1:903928758427:web:fea27ceac828ef7101463e"
+};
+
+let db = null;
+if(firebaseConfig.apiKey !== "REPLACE_ME"){
+  try{
+    const app = initializeApp(firebaseConfig);
+    db = getFirestore(app);
+  }catch(e){ console.error('Firebase init error:', e); }
+}
+const stateDocRef = () => doc(db, 'ufuq', 'state');
+
+/* تخزين الملفات نفسها جوه Firestore (مجاني تمامًا، بدون Storage) — محدود بحجم صغير لكل ملف */
+function fileToBase64(file){
+  return new Promise((resolve, reject)=>{
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(',')[1]);
+    r.onerror = () => reject(new Error(lang==='ar' ? 'تعذّرت قراءة الملف' : 'Could not read file'));
+    r.readAsDataURL(file);
+  });
+}
+
+async function uploadFileToFirestore(file){
+  const base64 = await fileToBase64(file);
+  const fileId = 'f' + Date.now() + Math.random().toString(36).slice(2,8);
+  await setDoc(doc(db, 'files', fileId), {
+    name: file.name, type: file.type || '', size: file.size, data: base64
+  });
+  return fileId;
+}
+
+async function openStoredFile(fileId, fallbackType, fallbackName){
+  try{
+    const snap = await getDoc(doc(db, 'files', fileId));
+    if(!snap.exists()){
+      alert(lang==='ar' ? 'الملف مش موجود (يمكن اتحذف)' : 'File not found (may have been deleted)');
+      return;
+    }
+    const data = snap.data();
+    const byteChars = atob(data.data);
+    const byteNumbers = new Array(byteChars.length);
+    for(let i=0; i<byteChars.length; i++) byteNumbers[i] = byteChars.charCodeAt(i);
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], {type: data.type || fallbackType || 'application/octet-stream'});
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  }catch(err){
+    console.error('Open file failed:', err);
+    alert((lang==='ar' ? 'تعذّر فتح الملف: ' : 'Could not open file: ') + err.message);
+  }
+}
+
+const FACULTIES = {
+  nursing: {label:{ar:'التمريض', en:'Nursing'}, short:{ar:'تمريض', en:'Nursing'}},
+  cs: {label:{ar:'الحاسبات والمعلومات', en:'Computer Science'}, short:{ar:'حاسبات', en:'CS'}},
+};
+
+const THEME = {
+  cg:    {c:'#1B7A93', bg:'#DCF0F4', label:{ar:'الرسم بالحاسب', en:'Computer Graphics'}},
+  net:   {c:'#6A4FA0', bg:'#ECE5F5', label:{ar:'شبكات الحاسب', en:'Computer Networks'}},
+  field: {c:'#557A46', bg:'#E4EEDF', label:{ar:'التدريب الميداني', en:'Field Training'}},
+  os:    {c:'#A67C27', bg:'#F3EAD3', label:{ar:'نظم التشغيل', en:'Operating Systems'}},
+  se:    {c:'#C1542D', bg:'#F6E6DB', label:{ar:'هندسة البرمجيات', en:'Software Engineering'}},
+  vp:    {c:'#A64C82', bg:'#F5E1EC', label:{ar:'البرمجة المرئية', en:'Visual Programming'}},
+  hosp:    {c:'#2F4858', bg:'#E1E6EA', label:{ar:'المستشفى', en:'Hospital'}},
+  adultTh: {c:'#B23A48', bg:'#F7E3E5', label:{ar:'تمريض البالغين (نظري)', en:'Adult Nursing (Theory)'}},
+  adultCl: {c:'#C1542D', bg:'#F6E6DB', label:{ar:'تمريض البالغين (عملي)', en:'Adult Nursing (Clinical)'}},
+  pharm:   {c:'#8B5E34', bg:'#F1E6D8', label:{ar:'علم الأدوية', en:'Pharmacology'}},
+  micro:   {c:'#3F7D5C', bg:'#E2F0E9', label:{ar:'الميكروبيولوجي', en:'Microbiology'}},
+  nutr:    {c:'#4F7A3D', bg:'#E5EFDF', label:{ar:'التغذية', en:'Nutrition'}},
+  intmed:  {c:'#6B4C6B', bg:'#F2E9EF', label:{ar:'الباطنة', en:'Internal Medicine'}},
+  comm:    {c:'#2E86AB', bg:'#E1EEF4', label:{ar:'التواصل', en:'Communication'}},
+  eng2:    {c:'#A67C27', bg:'#F3EAD3', label:{ar:'اللغة الإنجليزية 2', en:'English 2'}},
+};
+
+const courses = [
+  {id:'nurs_hosp', faculty:'nursing', subject:'hosp', code:'NURS 300', title:{ar:'المستشفى', en:'Hospital'}, lessons:[
+      {t:{ar:'التوجيه العام داخل المستشفى', en:'General Hospital Orientation'}, d:'20 د', done:true, files:[], notes:''},
+      {t:{ar:'إجراءات السلامة والتحكم في العدوى', en:'Safety & Infection Control'}, d:'22 د', done:false, files:[], notes:''},
+    ]
+  },
+  {id:'nurs_adultTh', faculty:'nursing', subject:'adultTh', code:'NURS 305', title:{ar:'تمريض البالغين - نظري', en:'Adult Nursing - Theory'}, lessons:[
+      {t:{ar:'تقييم المريض البالغ', en:'Adult Patient Assessment'}, d:'22 د', done:true, files:[], notes:''},
+      {t:{ar:'الأمراض المزمنة الشائعة', en:'Common Chronic Diseases'}, d:'26 د', done:false, files:[], notes:''},
+    ]
+  },
+  {id:'nurs_adultCl', faculty:'nursing', subject:'adultCl', code:'NURS 306', title:{ar:'تمريض البالغين - عملي', en:'Adult Nursing - Clinical'}, lessons:[
+      {t:{ar:'مهارات سريرية أساسية', en:'Basic Clinical Skills'}, d:'25 د', done:false, files:[], notes:''},
+    ]
+  },
+  {id:'nurs_pharm', faculty:'nursing', subject:'pharm', code:'NURS 220', title:{ar:'علم الأدوية', en:'Pharmacology'}, lessons:[
+      {t:{ar:'مبادئ علم الأدوية', en:'Principles of Pharmacology'}, d:'20 د', done:true, files:[], notes:''},
+      {t:{ar:'حساب الجرعات الدوائية', en:'Drug Dosage Calculation'}, d:'25 د', done:true, files:[], notes:''},
+    ]
+  },
+  {id:'nurs_micro', faculty:'nursing', subject:'micro', code:'NURS 215', title:{ar:'الميكروبيولوجي', en:'Microbiology'}, lessons:[
+      {t:{ar:'مقدمة في علم الميكروبات', en:'Introduction to Microbiology'}, d:'20 د', done:true, files:[], notes:''},
+    ]
+  },
+  {id:'nurs_nutr', faculty:'nursing', subject:'nutr', code:'NURS 230', title:{ar:'التغذية', en:'Nutrition'}, lessons:[
+      {t:{ar:'أساسيات التغذية السليمة', en:'Fundamentals of Nutrition'}, d:'18 د', done:true, files:[], notes:''},
+    ]
+  },
+  {id:'nurs_intmed', faculty:'nursing', subject:'intmed', code:'NURS 235', title:{ar:'الباطنة', en:'Internal Medicine'}, lessons:[
+      {t:{ar:'أمراض الجهاز الهضمي', en:'Gastrointestinal Diseases'}, d:'25 د', done:false, files:[], notes:''},
+    ]
+  },
+  {id:'nurs_comm', faculty:'nursing', subject:'comm', code:'NURS 240', title:{ar:'التواصل', en:'Communication'}, lessons:[
+      {t:{ar:'مهارات التواصل العلاجي', en:'Therapeutic Communication Skills'}, d:'20 د', done:true, files:[], notes:''},
+    ]
+  },
+  {id:'nurs_eng2', faculty:'nursing', subject:'eng2', code:'ENG 202', title:{ar:'اللغة الإنجليزية 2', en:'English 2'}, lessons:[
+      {t:{ar:'قواعد اللغة الأساسية', en:'Basic Grammar'}, d:'18 د', done:true, files:[], notes:''},
+    ]
+  },
+  {id:'cs_cg', faculty:'cs', subject:'cg', code:'CS 240', title:{ar:'الرسم بالحاسب', en:'Computer Graphics'}, lessons:[
+      {t:{ar:'مقدمة عن الرسم بالحاسب', en:'Introduction to Computer Graphics'}, d:'20 د', done:true, files:[], notes:''},
+      {t:{ar:'خوارزميات رسم الخطوط', en:'Line Drawing Algorithms'}, d:'24 د', done:false, files:[], notes:''},
+    ]
+  },
+  {id:'cs_net', faculty:'cs', subject:'net', code:'CS 250', title:{ar:'شبكات الحاسب', en:'Computer Networks'}, lessons:[
+      {t:{ar:'نموذج OSI', en:'OSI Model'}, d:'24 د', done:true, files:[], notes:''},
+    ]
+  },
+  {id:'cs_field', faculty:'cs', subject:'field', code:'CS 400', title:{ar:'التدريب الميداني', en:'Field Training'}, lessons:[
+      {t:{ar:'توجيه واختيار جهة التدريب', en:'Training Site Selection'}, d:'15 د', done:true, files:[], notes:''},
+    ]
+  },
+  {id:'cs_os', faculty:'cs', subject:'os', code:'CS 260', title:{ar:'نظم التشغيل', en:'Operating Systems'}, lessons:[
+      {t:{ar:'مقدمة عن نظم التشغيل', en:'Introduction to Operating Systems'}, d:'20 د', done:true, files:[], notes:''},
+    ]
+  },
+  {id:'cs_se', faculty:'cs', subject:'se', code:'CS 310', title:{ar:'هندسة البرمجيات', en:'Software Engineering'}, lessons:[
+      {t:{ar:'دورة حياة تطوير البرمجيات', en:'Software Development Life Cycle'}, d:'22 د', done:false, files:[], notes:''},
+    ]
+  },
+  {id:'cs_vp', faculty:'cs', subject:'vp', code:'CS 220', title:{ar:'البرمجة المرئية', en:'Visual Programming'}, lessons:[
+      {t:{ar:'مقدمة في بيئة البرمجة المرئية', en:'Introduction to Visual Programming'}, d:'20 د', done:true, files:[], notes:''},
+    ]
+  },
+];
+
+const assignments = [];
+let nextAssignmentId = 1;
+
+const schedule = [];
+let nextScheduleId = 1;
+
+const exams = [];
+let nextExamId = 1;
+
+let currentFaculty = 'nursing';
+let lang = 'ar';
+let darkMode = false;
+let currentView = {view: 'dashboard', params: {}};
+let avatarEmoji = '🦊';
+const AVATAR_OPTIONS = ['🦊','🦁','🐼','🐯','🐨','🐸','🐧','🦉','🐢','🦄'];
+
+/* معرّف فريد لكل جهاز/متصفح — بنستخدمه عشان نفرّق تحديثاتنا احنا عن تحديثات جهاز تاني */
+const CLIENT_ID = 'c' + Math.random().toString(36).slice(2) + Date.now();
+
+const DAYS_AR = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+const DAYS_EN = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const SHORT_DAYS_AR = ['أح','اث','ثل','أر','خم','جم','سب'];
+
+function dayName(dayIndex){
+  return lang==='ar' ? DAYS_AR[dayIndex] : DAYS_EN[dayIndex];
+}
+
+function getTodayDate(){
+  const d = new Date();
+  const months_ar = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const months_en = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const day = d.getDate();
+  const month = lang==='ar' ? months_ar[d.getMonth()] : months_en[d.getMonth()];
+  return lang==='ar' ? `${day} ${month}` : `${month} ${day}`;
+}
+
+function formatDateStr(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  const months_ar = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+  const months_en = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const day = d.getDate();
+  const month = lang==='ar' ? months_ar[d.getMonth()] : months_en[d.getMonth()];
+  const year = d.getFullYear();
+  return lang==='ar' ? `${day} ${month} ${year}` : `${month} ${day}, ${year}`;
+}
+
+/* تحويل وقت الحصة من صيغة 24 ساعة (HH:MM) لصيغة 12 ساعة سهلة القراءة */
+function formatTime12(timeStr){
+  if(!timeStr) return '';
+  const [h, m] = timeStr.split(':').map(Number);
+  const period = lang==='ar' ? (h < 12 ? 'ص' : 'م') : (h < 12 ? 'AM' : 'PM');
+  let h12 = h % 12; if(h12 === 0) h12 = 12;
+  const mm = String(m||0).padStart(2,'0');
+  return `${h12}:${mm} ${period}`;
+}
+
+/* المسافة بالدقايق من دلوقتي لحد أقرب حدوث لليوم ده والوقت ده (جدول أسبوعي متكرر) */
+function minutesUntilNext(dayIndex, timeStr){
+  const now = new Date();
+  const [h,m] = timeStr.split(':').map(Number);
+  const currentDay = now.getDay();
+  const currentMinutes = now.getHours()*60 + now.getMinutes();
+  const targetMinutes = h*60 + (m||0);
+  let dayDiff = (dayIndex - currentDay + 7) % 7;
+  let total = dayDiff*24*60 + (targetMinutes - currentMinutes);
+  if(total < 0) total += 7*24*60;
+  return total;
+}
+
+const ORDINALS = {
+  ar: ['الأولى','الثانية','الثالثة','الرابعة','الخامسة','السادسة','السابعة','الثامنة','التاسعة','العاشرة'],
+  en: ['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th'],
+};
+function lectureLabel(i){
+  const list = ORDINALS[lang];
+  return lang==='ar' ? ('المحاضرة ' + (list[i] || (i+1))) : ('Lecture ' + (list[i] || (i+1)));
+}
+
+function L(val){
+  if(val && typeof val === 'object' && !Array.isArray(val)) return val[lang] ?? val.ar ?? val.en ?? '';
+  return val;
+}
+
+function translate(arText){
+  const translations = {
+    'التوجيه العام داخل المستشفى': 'General Hospital Orientation',
+    'إجراءات السلامة والتحكم في العدوى': 'Safety & Infection Control',
+    'التعامل مع فريق العمل الطبي': 'Working with Medical Team',
+    'تقييم المريض البالغ': 'Adult Patient Assessment',
+    'الأمراض المزمنة الشائعة': 'Common Chronic Diseases',
+    'التخطيط لرعاية المريض البالغ': 'Care Planning for Adults',
+    'مهارات سريرية أساسية': 'Basic Clinical Skills',
+    'تطبيق خطة الرعاية عمليًا': 'Applying Care Plan',
+    'التوثيق السريري': 'Clinical Documentation',
+    'مبادئ علم الأدوية': 'Principles of Pharmacology',
+    'حساب الجرعات الدوائية': 'Drug Dosage Calculation',
+    'أدوية القلب والأوعية الدموية': 'Cardiovascular Drugs',
+    'المضادات الحيوية': 'Antibiotics',
+    'مقدمة في علم الميكروبات': 'Introduction to Microbiology',
+    'أنواع البكتيريا وتصنيفها': 'Bacteria Types & Classification',
+    'طرق الوقاية من العدوى الميكروبية': 'Infection Prevention Methods',
+    'أساسيات التغذية السليمة': 'Fundamentals of Nutrition',
+    'التغذية العلاجية لمرضى السكر': 'Therapeutic Nutrition for Diabetics',
+    'تقييم الحالة الغذائية للمريض': 'Nutritional Assessment',
+    'أمراض الجهاز الهضمي': 'Gastrointestinal Diseases',
+    'أمراض الجهاز البولي': 'Urinary System Diseases',
+    'التمريض في العيادات الخارجية': 'Outpatient Nursing',
+    'مهارات التواصل العلاجي': 'Therapeutic Communication Skills',
+    'التواصل مع المريض وأسرته': 'Communicating with Patient & Family',
+    'التعامل مع المواقف الصعبة': 'Handling Difficult Situations',
+    'قواعد اللغة الأساسية': 'Basic Grammar',
+    'المصطلحات الطبية بالإنجليزي': 'Medical Terminology in English',
+    'مهارات الكتابة والقراءة': 'Writing & Reading Skills',
+    'مقدمة عن الرسم بالحاسب': 'Introduction to Computer Graphics',
+    'خوارزميات رسم الخطوط والدوائر': 'Line & Circle Drawing Algorithms',
+    'خوارزميات رسم الخطوط': 'Line Drawing Algorithms',
+    'التحويلات الهندسية ثنائية الأبعاد': '2D Geometric Transformations',
+    'نماذج الألوان والإضاءة': 'Color & Lighting Models',
+    'تمثيل الأجسام ثلاثية الأبعاد': '3D Object Representation',
+    'نموذج OSI': 'OSI Model',
+    'بروتوكولات TCP/IP': 'TCP/IP Protocols',
+    'عنونة IP والتوجيه': 'IP Addressing & Routing',
+    'أساسيات أمن الشبكات': 'Network Security Basics',
+    'توجيه واختيار جهة التدريب': 'Training Site Selection',
+    'أساسيات بيئة العمل المهنية': 'Professional Work Environment Basics',
+    'كتابة تقرير التدريب': 'Writing Training Report',
+    'عرض تقديمي لمشروع التدريب': 'Training Project Presentation',
+    'مقدمة عن نظم التشغيل': 'Introduction to Operating Systems',
+    'إدارة العمليات (Processes)': 'Process Management',
+    'خوارزميات الجدولة (Scheduling)': 'Scheduling Algorithms',
+    'إدارة الذاكرة': 'Memory Management',
+    'أنظمة الملفات': 'File Systems',
+    'دورة حياة تطوير البرمجيات': 'Software Development Life Cycle',
+    'جمع وتحليل المتطلبات': 'Requirements Gathering & Analysis',
+    'أنماط التصميم (Design Patterns)': 'Design Patterns',
+    'الاختبار البرمجي': 'Software Testing',
+    'إدارة الإصدارات باستخدام Git': 'Version Control with Git',
+    'مقدمة في بيئة البرمجة المرئية': 'Introduction to Visual Programming',
+    'تصميم الواجهات الرسومية': 'GUI Design',
+    'ربط الأحداث (Events) بالعناصر': 'Event Handling',
+    'الاتصال بقواعد البيانات من الواجهة': 'Database Connection from UI',
+  };
+  
+  const reverseTranslations = {};
+  Object.entries(translations).forEach(([ar, en]) => {
+    reverseTranslations[en] = ar;
+  });
+  
+  if(lang === 'ar' && reverseTranslations[arText]) return reverseTranslations[arText];
+  if(lang === 'en' && translations[arText]) return translations[arText];
+  return arText;
+}
+
+const STR = {
+  ar: {
+    brandSubtitle:'منصة الطالب الجامعي',
+    tabDashboard:'لوحة التحكم',
+    tabCourses:'موادّي', tabSchedule:'جدول المذاكرة', tabExams:'جدول الامتحانات',
+    tabAssignments:'الواجبات', tabGrades:'الدرجات', 
+    dueLabel:'واجبات مستحقة',
+    nearestExamLabel:'أقرب امتحان', quickLinksTitle:'الوصول السريع',
+    scheduleTitle:'جدول المذاكرة', 
+    examsTitle:'جدول الامتحانات',
+    addBtn:'+ إضافة', 
+    coursesTitle:'موادّي هذا الفصل', 
+    coursesSuffix:'مواد',
+    lecturesTitle:'المحاضرات', 
+    courseAssignTitle:'واجبات هذه المادة', 
+    back:'→ رجوع', 
+    completedSuffix:'مكتمل',
+    lectureSuffix:'محاضرة', 
+    gradesHint:'كويزات · ميد تيرم · فاينال', 
+    assignBtnFull:'+ إضافة واجب',
+    empty_assign:'مفيش واجبات', 
+    empty_courseAssign:'لا توجد واجبات',
+    empty_grades:'مفيش مواد', 
+    empty_schedule:'مفيش جدول — دوس "+ إضافة"',
+    empty_exams:'لسه مفيش امتحانات مضافة',
+    footerText:'المشاكسين',
+    viewAll:'عرض الكل',
+    settingsTitle:'الإعدادات',
+    notifTitle:'الإشعارات',
+    notifEmpty:'مفيش إشعارات جديدة',
+    uploadFile:'📎 رفع ملف',
+    uploadingFile:'جارٍ الرفع...',
+    uploadedLocal:'✅ تم الرفع',
+    fileTooBig:'❌ الملف كبير جدًا (الحد الأقصى ٧٠٠ كيلوبايت — التخزين مجاني بدون بطاقة، فمحدود لملفات صغيرة زي شرائح الـ PDF)',
+    addLecture:'+ إضافة محاضرة',
+    notes:'ملاحظات',
+    saveNotes:'حفظ الملاحظات',
+    readingMode:'وضع القراءة',
+    exportData:'تصدير البيانات',
+    importData:'استيراد البيانات',
+    exportSuccess:'✅ تم تصدير البيانات بنجاح',
+    importSuccess:'✅ تم استيراد البيانات بنجاح',
+    notifUpcoming:'📌 تنبيه: واجبات قريبة!',
+    notifUrgent:'لديك {count} واجب مستحق خلال 3 أيام',
+    chooseDays:'اختار الأيام',
+    midterm:'ميد تيرم', final:'فاينال',
+    examDate:'التاريخ', examTime:'الوقت (اختياري)', examLocation:'المكان (اختياري)',
+  },
+  en: {
+    brandSubtitle:'Student Platform',
+    tabDashboard:'Dashboard',
+    tabCourses:'My Courses', tabSchedule:'Study Schedule', tabExams:'Exam Schedule',
+    tabAssignments:'Assignments', tabGrades:'Grades', 
+    dueLabel:'Due Assignments',
+    nearestExamLabel:'Nearest Exam', quickLinksTitle:'Quick Access',
+    scheduleTitle:'Study Schedule', 
+    examsTitle:'Exam Schedule',
+    addBtn:'+ Add', 
+    coursesTitle:'My Courses', 
+    coursesSuffix:'courses',
+    lecturesTitle:'Lectures', 
+    courseAssignTitle:'Assignments', 
+    back:'← Back', 
+    completedSuffix:'completed',
+    lectureSuffix:'lectures', 
+    gradesHint:'Quizzes · Midterm · Final', 
+    assignBtnFull:'+ Add Assignment',
+    empty_assign:'No assignments', 
+    empty_courseAssign:'No assignments',
+    empty_grades:'No courses', 
+    empty_schedule:'No schedule — tap "+ Add"',
+    empty_exams:'No exams added yet',
+    footerText:'El Mashakseen',
+    viewAll:'View All',
+    settingsTitle:'Settings',
+    notifTitle:'Notifications',
+    notifEmpty:'No new notifications',
+    uploadFile:'📎 Upload File',
+    uploadingFile:'Uploading...',
+    uploadedLocal:'✅ Uploaded',
+    fileTooBig:'❌ File too large (max 700KB — free storage without a card, best for small PDFs)',
+    addLecture:'+ Add Lecture',
+    notes:'Notes',
+    saveNotes:'Save Notes',
+    readingMode:'Reading Mode',
+    exportData:'Export Data',
+    importData:'Import Data',
+    exportSuccess:'✅ Data exported successfully',
+    importSuccess:'✅ Data imported successfully',
+    notifUpcoming:'📌 Alert: Upcoming Assignments!',
+    notifUrgent:'You have {count} assignment(s) due within 3 days',
+    chooseDays:'Choose Days',
+    midterm:'Midterm', final:'Final',
+    examDate:'Date', examTime:'Time (optional)', examLocation:'Location (optional)',
+  },
+};
+function S(key){ return STR[lang][key] || key; }
+
+const STORAGE_KEY = 'ufuq_platform_state_v8';
+const MAX_FILE_SIZE = 700 * 1024;
+
+// ===== Notification System =====
+function showNotification(title, body, duration = 5000){
+  const toast = document.getElementById('notificationToast');
+  document.getElementById('notifTitle').textContent = title;
+  document.getElementById('notifBody').textContent = body;
+  toast.classList.add('show');
+  setTimeout(() => hideNotification(), duration);
+}
+
+function hideNotification(){
+  document.getElementById('notificationToast').classList.remove('show');
+}
+
+function checkUpcomingAssignments(){
+  const urgentAssignments = assignments.filter(a => {
+    if(a.faculty !== currentFaculty) return false;
+    return a.urgent;
+  });
+  
+  if(urgentAssignments.length > 0){
+    const body = S('notifUrgent').replace('{count}', urgentAssignments.length);
+    showNotification(S('notifUpcoming'), body);
+  }
+  updateBellBadge();
+}
+
+// ===== Dark Mode =====
+function toggleDarkMode(){
+  darkMode = !darkMode;
+  document.body.classList.toggle('dark-mode', darkMode);
+  document.getElementById('themeToggle').textContent = darkMode ? '☀️' : '🌙';
+  saveLocalPrefs();
+}
+
+document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
+
+// ===== Notifications bell & settings/avatar panel =====
+function daysUntilDate(dateStr){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const d = new Date(dateStr + 'T00:00:00');
+  return Math.round((d - today) / (1000*60*60*24));
+}
+
+function getNotifItems(){
+  const items = [];
+  assignments.filter(a=>a.faculty===currentFaculty && a.urgent).forEach(a=>{
+    const course = courses.find(c=>c.id===a.courseId);
+    items.push({icon:'✅', title:L(a.title), sub:(course ? L(course.title)+' · ' : '') + formatDateStr(a.due)});
+  });
+  const todayStr = new Date().toISOString().slice(0,10);
+  exams.filter(x=>x.faculty===currentFaculty && x.date >= todayStr).forEach(x=>{
+    const dleft = daysUntilDate(x.date);
+    if(dleft <= 7){
+      const course = courses.find(c=>c.id===x.courseId);
+      const soon = dleft===0 ? (lang==='ar' ? ' · النهاردة' : ' · Today') : (lang==='ar' ? ` · بعد ${dleft} يوم` : ` · in ${dleft}d`);
+      items.push({icon:'📝', title:course ? L(course.title) : '', sub: formatDateStr(x.date) + soon});
+    }
+  });
+  return items;
+}
+
+function renderNotifPanel(){
+  const panel = document.getElementById('notifPanel');
+  if(!panel) return;
+  const items = getNotifItems();
+  panel.innerHTML = `
+    <div class="panel-head">${S('notifTitle')}</div>
+    <div class="panel-body">
+      ${items.length ? items.map(it=>`
+        <div class="notif-row">
+          <span class="ni-icon">${it.icon}</span>
+          <div>
+            <div class="ni-title">${it.title}</div>
+            <div class="ni-sub">${it.sub}</div>
+          </div>
+        </div>
+      `).join('') : `<div class="notif-empty">${S('notifEmpty')}</div>`}
+    </div>`;
+}
+
+function updateBellBadge(){
+  const badge = document.getElementById('bellBadge');
+  if(!badge) return;
+  const count = getNotifItems().length;
+  badge.textContent = count > 9 ? '9+' : count;
+  badge.classList.toggle('show', count > 0);
+}
+
+function renderAvatarGrid(){
+  const grid = document.getElementById('avatarGrid');
+  if(!grid) return;
+  grid.innerHTML = AVATAR_OPTIONS.map(em=>`
+    <button class="avatar-opt ${em===avatarEmoji ? 'active' : ''}" data-avatar="${em}">${em}</button>
+  `).join('');
+}
+
+document.getElementById('bellBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  document.getElementById('settingsPanel').classList.remove('show');
+  const panel = document.getElementById('notifPanel');
+  const willShow = !panel.classList.contains('show');
+  if(willShow) renderNotifPanel();
+  panel.classList.toggle('show', willShow);
+});
+
+document.getElementById('avatarBtn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  document.getElementById('notifPanel').classList.remove('show');
+  const panel = document.getElementById('settingsPanel');
+  if(!panel.classList.contains('show')) renderAvatarGrid();
+  panel.classList.toggle('show');
+});
+
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('#notifPanel') && !e.target.closest('#bellBtn')){
+    document.getElementById('notifPanel').classList.remove('show');
+  }
+  if(!e.target.closest('#settingsPanel') && !e.target.closest('#avatarBtn')){
+    document.getElementById('settingsPanel').classList.remove('show');
+  }
+  const avatarOptEl = e.target.closest('[data-avatar]');
+  if(avatarOptEl){
+    avatarEmoji = avatarOptEl.dataset.avatar;
+    document.getElementById('avatarBtn').textContent = avatarEmoji;
+    renderAvatarGrid();
+    saveLocalPrefs();
+  }
+});
+
+// ===== Export / Import =====
+function exportData(){
+  const state = buildState();
+  const dataStr = JSON.stringify(state, null, 2);
+  const blob = new Blob([dataStr], {type: 'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `ufuq-backup-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showNotification('✅', S('exportSuccess'), 3000);
+}
+
+function importData(){
+  document.getElementById('importInput').click();
+}
+
+document.getElementById('importInput').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try{
+      const imported = JSON.parse(ev.target.result);
+      applyState(imported);
+      saveState();
+      showNotification('✅', S('importSuccess'), 3000);
+      location.reload();
+    }catch(err){
+      alert('❌ خطأ في قراءة الملف');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+function buildState(){
+  const doneMap = {};
+  const filesMap = {};
+  const lessonsMap = {};
+  const notesMap = {};
+  courses.forEach(c=>{
+    doneMap[c.id] = c.lessons.map(l=>l.done);
+    filesMap[c.id] = {};
+    c.lessons.forEach((l,i)=>{ filesMap[c.id][i] = l.files || []; });
+    lessonsMap[c.id] = c.lessons.map(l=>({t:l.t, d:l.d}));
+    notesMap[c.id] = c.lessons.map(l=>l.notes || '');
+  });
+  return {
+    _writerId: CLIENT_ID,
+    assignments, nextAssignmentId, schedule, nextScheduleId, exams, nextExamId, gradesData,
+    doneMap, filesMap, lessonsMap, notesMap
+  };
+}
+
+function applyState(state){
+  if(!state) return;
+  if(Array.isArray(state.assignments)){
+    assignments.length = 0;
+    state.assignments.forEach(a=>assignments.push(a));
+  }
+  if(typeof state.nextAssignmentId === 'number') nextAssignmentId = state.nextAssignmentId;
+  if(Array.isArray(state.schedule)){
+    schedule.length = 0;
+    state.schedule.forEach(s=>schedule.push(s));
+  }
+  if(typeof state.nextScheduleId === 'number') nextScheduleId = state.nextScheduleId;
+  if(Array.isArray(state.exams)){
+    exams.length = 0;
+    state.exams.forEach(x=>exams.push(x));
+  }
+  if(typeof state.nextExamId === 'number') nextExamId = state.nextExamId;
+  if(state.gradesData) Object.assign(gradesData, state.gradesData);
+  if(state.lessonsMap){
+    courses.forEach(c=>{
+      const arr = state.lessonsMap[c.id];
+      if(arr && arr.length > 0){
+        c.lessons = arr.map(l=>({t:l.t, d:l.d, done:false, files:[], notes:''}));
+      }
+    });
+  }
+  if(state.doneMap){
+    courses.forEach(c=>{
+      const arr = state.doneMap[c.id];
+      if(arr) c.lessons.forEach((l,i)=>{ if(arr[i] !== undefined) l.done = arr[i]; });
+    });
+  }
+  if(state.filesMap){
+    courses.forEach(c=>{
+      const obj = state.filesMap[c.id];
+      if(obj){
+        c.lessons.forEach((l,i)=>{
+          if(obj[i]) l.files = obj[i];
+        });
+      }
+    });
+  }
+  if(state.notesMap){
+    courses.forEach(c=>{
+      const arr = state.notesMap[c.id];
+      if(arr){
+        c.lessons.forEach((l,i)=>{
+          if(arr[i] !== undefined) l.notes = arr[i];
+        });
+      }
+    });
+  }
+}
+
+/* ===== تفضيلات شخصية لكل جهاز — بتتخزن محليًا بس، مش بتتزامن مع حد ===== */
+const LOCAL_PREFS_KEY = 'ufuq_local_prefs_v1';
+
+function saveLocalPrefs(){
+  try{
+    localStorage.setItem(LOCAL_PREFS_KEY, JSON.stringify({lang, darkMode, currentFaculty, currentView, avatarEmoji, quickLinksOrder}));
+  }catch(e){ console.error('Local prefs save failed:', e); }
+}
+
+function loadLocalPrefs(){
+  try{
+    const raw = localStorage.getItem(LOCAL_PREFS_KEY);
+    if(!raw) return;
+    const p = JSON.parse(raw);
+    if(p.lang) lang = p.lang;
+    if(p.darkMode !== undefined){
+      darkMode = p.darkMode;
+      document.body.classList.toggle('dark-mode', darkMode);
+      document.getElementById('themeToggle').textContent = darkMode ? '☀️' : '🌙';
+    }
+    if(p.currentFaculty) currentFaculty = p.currentFaculty;
+    if(p.currentView) currentView = p.currentView;
+    if(p.avatarEmoji){
+      avatarEmoji = p.avatarEmoji;
+      const btn = document.getElementById('avatarBtn');
+      if(btn) btn.textContent = avatarEmoji;
+    }
+    if(Array.isArray(p.quickLinksOrder) && p.quickLinksOrder.length) quickLinksOrder = p.quickLinksOrder;
+  }catch(e){ console.error('Local prefs load failed:', e); }
+}
+
+async function saveState(){
+  const state = buildState();
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){ console.error('Local save failed:', e); }
+  if(db){
+    try{
+      await setDoc(stateDocRef(), state);
+    }catch(e){
+      console.error('Firebase save failed:', e);
+      showNotification('⚠️ Firebase', (e.code || '') + ' — ' + (e.message || String(e)), 8000);
+    }
+  }
+}
+
+async function loadState(){
+  let state = null;
+  if(db){
+    try{
+      const snap = await getDoc(stateDocRef());
+      if(snap.exists()) state = snap.data();
+    }catch(e){
+      console.error('Firebase load failed:', e);
+      showNotification('⚠️ Firebase', (e.code || '') + ' — ' + (e.message || String(e)), 8000);
+    }
+  }
+  if(!state){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw) state = JSON.parse(raw);
+    }catch(e){ console.error('Local load failed:', e); }
+  }
+  applyState(state);
+}
+
+function refreshSharedViews(){
+  renderCourses();
+  renderSchedule();
+  renderExams();
+  renderAssignmentsList();
+  updateDueStat();
+  updateNearestExamStat();
+  if(currentView.view === 'course'){
+    renderCoursePageContent(currentView.params.courseId);
+  }else if(currentView.view === 'assignments'){
+    renderAssignmentsPage();
+  }else if(currentView.view === 'grades'){
+    renderGradesPage();
+  }
+}
+
+let lastRemoteNotifTime = 0;
+
+function startRealtimeSync(){
+  if(!db) return;
+  onSnapshot(stateDocRef(), (snap)=>{
+    if(!snap.exists()) return;
+    const remoteData = snap.data();
+    if(remoteData._writerId === CLIENT_ID) return; // ده تحديث احنا اللي عملناه، تجاهله
+    applyState(remoteData);
+    refreshSharedViews();
+    const now = Date.now();
+    if(now - lastRemoteNotifTime > 4000){
+      lastRemoteNotifTime = now;
+      showNotification('🔄', lang==='ar' ? 'اتحدثت البيانات من جهاز تاني' : 'Data updated from another device', 3000);
+    }
+  }, (err)=>{
+    console.error('Realtime sync error:', err);
+    showNotification('⚠️', lang==='ar' ? 'انقطعت المزامنة الفورية' : 'Realtime sync disconnected', 4000);
+  });
+}
+
+const VIEW_IDS = ['dashboardView','coursePage','myCoursesPage','schedulePage','examsPage','assignmentsPage','gradesPage'];
+
+function hideAllViews(){
+  VIEW_IDS.forEach(id=>{ document.getElementById(id).style.display = 'none'; });
+}
+
+function showView(view, params={}){
+  hideAllViews();
+  currentView = {view, params};
+  expandedLecture = null;
+  showAddLectureForm = false;
+  
+  if(view === 'course'){
+    document.body.classList.add('course-view');
+    renderCoursePageContent(params.courseId);
+    document.getElementById('coursePage').style.display = 'block';
+  }else if(view === 'courses'){
+    document.body.classList.remove('course-view');
+    renderCoursesPage();
+    document.getElementById('myCoursesPage').style.display = 'block';
+  }else if(view === 'schedule'){
+    document.body.classList.remove('course-view');
+    renderSchedulePage();
+    document.getElementById('schedulePage').style.display = 'block';
+  }else if(view === 'exams'){
+    document.body.classList.remove('course-view');
+    renderExamsPage();
+    document.getElementById('examsPage').style.display = 'block';
+  }else if(view === 'assignments'){
+    document.body.classList.remove('course-view');
+    renderAssignmentsPage();
+    document.getElementById('assignmentsPage').style.display = 'block';
+  }else if(view === 'grades'){
+    document.body.classList.remove('course-view');
+    renderGradesPage();
+    document.getElementById('gradesPage').style.display = 'block';
+  }else{
+    document.body.classList.remove('course-view');
+    document.getElementById('dashboardView').style.display = 'block';
+  }
+  window.scrollTo({top:0, behavior:'smooth'});
+  saveLocalPrefs();
+}
+
+function navigate(view, params={}){
+  showView(view, params);
+  history.pushState({view, params}, '', '#'+view);
+}
+
+window.addEventListener('popstate', (e)=>{
+  const state = e.state || {view:'dashboard', params:{}};
+  showView(state.view, state.params);
+});
+
+function pct(course){
+  if(course.lessons.length === 0) return 0;
+  const done = course.lessons.filter(l=>l.done).length;
+  return Math.round((done/course.lessons.length)*100);
+}
+
+function renderCourses(){
+  const grid = document.getElementById('courseGrid');
+  if(!grid) return;
+  grid.innerHTML = '';
+  const facCourses = courses.filter(c=>c.faculty===currentFaculty);
+  facCourses.forEach(course=>{
+    const th = THEME[course.subject];
+    const p = pct(course);
+    const card = document.createElement('div');
+    card.className = 'course-card';
+    card.style.setProperty('--c', th.c);
+    card.style.setProperty('--cbg', th.bg);
+    card.innerHTML = `
+      <div class="top">
+        <div>
+          <h3>${L(course.title)}</h3>
+          <span class="code">${course.code}</span>
+        </div>
+        <span class="tag">${L(th.label)}</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${p}%"></div></div>
+      <div class="meta"><span>${p}% ${S('completedSuffix')}</span><span>${course.lessons.length} ${S('lectureSuffix')}</span></div>
+    `;
+    card.addEventListener('click', ()=>openCourse(course.id));
+    grid.appendChild(card);
+  });
+  const countEl = document.getElementById('courseCount');
+  if(countEl) countEl.textContent = facCourses.length + ' ' + S('coursesSuffix');
+  renderGradesList(facCourses);
+}
+
+function renderCoursesPage(){
+  const page = document.getElementById('myCoursesPage');
+  page.innerHTML = `
+    <button class="back-btn" id="coursesBack">${S('back')}</button>
+    <div class="section-head">
+      <h2>${S('coursesTitle')}</h2>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="export-btn" id="exportBtn">📥 ${lang==='ar'?'تصدير':'Export'}</button>
+        <button class="export-btn" id="importBtn">📤 ${lang==='ar'?'استيراد':'Import'}</button>
+        <span id="courseCount">0 ${S('coursesSuffix')}</span>
+      </div>
+    </div>
+    <div class="courses" id="courseGrid"></div>
+  `;
+  page.querySelector('#coursesBack').addEventListener('click', ()=>history.back());
+  renderCourses();
+}
+
+const gradesData = {};
+
+function getCourseGrades(courseId){
+  if(!gradesData[courseId]){
+    gradesData[courseId] = {
+      quizzes: [{label:(lang==='ar'?'كويز 1':'Quiz 1'), score:'', max:10}],
+      midterm: {score:'', max:30},
+      final:   {score:'', max:50},
+    };
+  }
+  return gradesData[courseId];
+}
+
+function computeTotal(g){
+  let scoreSum = 0, maxSum = 0;
+  (g.quizzes || []).forEach(q=>{
+    const s = parseFloat(q.score), m = parseFloat(q.max);
+    if(!isNaN(m) && m > 0) maxSum += m;
+    if(!isNaN(s)) scoreSum += s;
+  });
+  ['midterm','final'].forEach(p=>{
+    const s = parseFloat(g[p].score), m = parseFloat(g[p].max);
+    if(!isNaN(m) && m > 0) maxSum += m;
+    if(!isNaN(s)) scoreSum += s;
+  });
+  if(maxSum === 0) return null;
+  return {scoreSum, maxSum, pct: Math.round((scoreSum/maxSum)*100)};
+}
+
+function gradeRowHtml(courseId, part, label, obj, extra=''){
+  return `
+    <div class="grade-row">
+      <span class="grade-label">${label}</span>
+      <input type="number" class="grade-input" placeholder="${lang==='ar'?'الدرجة':'Score'}" value="${obj.score}" data-grade="${courseId}|${part}|score" inputmode="decimal">
+      <span class="grade-slash">/</span>
+      <input type="number" class="grade-input small" placeholder="${lang==='ar'?'من':'Max'}" value="${obj.max}" data-grade="${courseId}|${part}|max" inputmode="decimal">
+      ${extra}
+    </div>`;
+}
+
+function renderGradesList(facCourses){
+  const list = facCourses || courses.filter(c=>c.faculty===currentFaculty);
+  const wrap = document.getElementById('gradesList');
+  if(!wrap) return;
+  if(list.length === 0){
+    wrap.innerHTML = `<div class="cp-empty">${S('empty_grades')}</div>`;
+    return;
+  }
+
+  wrap.innerHTML = list.map(course=>{
+    const th = THEME[course.subject];
+    const g = getCourseGrades(course.id);
+    const total = computeTotal(g);
+    const quizRows = g.quizzes.map((q,qi)=>gradeRowHtml(
+      course.id, `quiz-${qi}`, q.label, q,
+      `<button class="grade-del" data-del-quiz="${course.id}|${qi}" title="✕">✕</button>`
+    )).join('');
+    return `
+      <div class="grade-card" style="--gc:${th.c}; --gcbg:${th.bg}">
+        <div class="grade-card-head">
+          <span class="grade-course-title">${L(course.title)}</span>
+          <span class="grade-total" id="total-${course.id}">${total ? `${total.scoreSum} / ${total.maxSum} (${total.pct}%)` : '—'}</span>
+        </div>
+        <div class="grade-rows" id="quizRows-${course.id}">${quizRows}</div>
+        <button class="add-quiz-btn" data-add-quiz="${course.id}">${lang==='ar'?'+ إضافة كويز':'+ Add Quiz'}</button>
+        <div class="grade-rows" style="margin-top:10px;">
+          ${gradeRowHtml(course.id, 'midterm', lang==='ar'?'ميد تيرم':'Midterm', g.midterm)}
+          ${gradeRowHtml(course.id, 'final', lang==='ar'?'فاينال':'Final', g.final)}
+        </div>
+      </div>`;
+  }).join('');
+
+  function updateTotalDisplay(courseId){
+    const total = computeTotal(gradesData[courseId]);
+    const totalEl = document.getElementById(`total-${courseId}`);
+    if(totalEl) totalEl.textContent = total ? `${total.scoreSum} / ${total.maxSum} (${total.pct}%)` : '—';
+  }
+
+  let gradeSaveTimer = null;
+  wrap.querySelectorAll('[data-grade]').forEach(inp=>{
+    inp.addEventListener('input', ()=>{
+      const [courseId, part, field] = inp.dataset.grade.split('|');
+      if(part.startsWith('quiz-')){
+        const qi = +part.split('-')[1];
+        gradesData[courseId].quizzes[qi][field] = inp.value;
+      }else{
+        gradesData[courseId][part][field] = inp.value;
+      }
+      updateTotalDisplay(courseId);
+      clearTimeout(gradeSaveTimer);
+      gradeSaveTimer = setTimeout(()=>{ saveState(); }, 900);
+    });
+  });
+
+  wrap.querySelectorAll('[data-add-quiz]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const courseId = btn.dataset.addQuiz;
+      const n = gradesData[courseId].quizzes.length + 1;
+      gradesData[courseId].quizzes.push({label: (lang==='ar'?'كويز ':'Quiz ') + n, score:'', max:10});
+      renderGradesList(list);
+      saveState();
+    });
+  });
+
+  wrap.querySelectorAll('[data-del-quiz]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const [courseId, qi] = btn.dataset.delQuiz.split('|');
+      gradesData[courseId].quizzes.splice(+qi, 1);
+      if(gradesData[courseId].quizzes.length === 0){
+        gradesData[courseId].quizzes.push({label: lang==='ar'?'كويز 1':'Quiz 1', score:'', max:10});
+      }
+      renderGradesList(list);
+      saveState();
+    });
+  });
+}
+
+function renderGradesPage(){
+  const page = document.getElementById('gradesPage');
+  page.innerHTML = `
+    <button class="back-btn" id="gradesBack">${S('back')}</button>
+    <div class="section-head">
+      <h2>${S('tabGrades')} — ${L(FACULTIES[currentFaculty].short)}</h2>
+      <span>${S('gradesHint')}</span>
+    </div>
+    <div id="gradesList"></div>
+  `;
+  page.querySelector('#gradesBack').addEventListener('click', ()=>history.back());
+  renderGradesList();
+}
+
+/* ===== جدول المذاكرة الأسبوعي (متعدد الأيام + فواصل + ترتيب حسب الأقرب) ===== */
+
+function renderSchedule(){
+  const wrap = document.getElementById('schedTimeline');
+  if(!wrap) return;
+  const today = new Date().getDay();
+  let facSchedule = schedule.filter(s=>s.faculty===currentFaculty);
+  facSchedule = [...facSchedule].sort((a,b)=>
+    ((a.dayIndex - today + 7) % 7) - ((b.dayIndex - today + 7) % 7) || a.time.localeCompare(b.time)
+  );
+
+  if(facSchedule.length === 0){
+    wrap.innerHTML = `<div class="cp-empty">${S('empty_schedule')}</div>`;
+    return;
+  }
+
+  let html = '';
+  let lastDay = null;
+  facSchedule.forEach(s=>{
+    const course = courses.find(c=>c.id===s.courseId);
+    if(!course) return;
+    if(s.dayIndex !== lastDay){
+      html += `<div class="day-divider">${dayName(s.dayIndex)}</div>`;
+      lastDay = s.dayIndex;
+    }
+    const th = THEME[course.subject];
+    html += `
+      <div class="t-item" style="--tc:${th.c}">
+        <div class="t-time">${formatTime12(s.time)}</div>
+        <div class="t-card">
+          <div class="t-info">
+            <div class="name">${L(course.title)}</div>
+            <span class="room" style="background:${th.bg}; color:${th.c};">${L(th.label)}</span>
+          </div>
+          <button class="t-del" data-del-sched="${s.id}" title="✕">✕</button>
+        </div>
+      </div>`;
+  });
+  wrap.innerHTML = html;
+  renderScheduleWidget();
+}
+
+// ===== اقتباس تحفيزي يومي =====
+const DAILY_QUOTES = [
+  {ar:'خطوة صغيرة النهاردة، فرق كبير بكرة.', en:'A small step today, a big difference tomorrow.'},
+  {ar:'مذاكرة نص ساعة صح، أحسن من ساعتين تشتت.', en:'Thirty focused minutes beat two distracted hours.'},
+  {ar:'إنت أقوى من الكسل، كمّل شوية كمان.', en:"You're stronger than the laziness — push a little more."},
+  {ar:'ابدأ دلوقتي، الكمال هيجي بعدين.', en:'Start now — perfection can come later.'},
+  {ar:'كل مذاكرة بتقربك خطوة من حلمك.', en:'Every study session brings you a step closer to your dream.'},
+  {ar:'الراحة الحقيقية بعد ما تخلّص شغلك.', en:'Real rest comes after the work is done.'},
+  {ar:'ثقتك في نفسك أول خطوة للتفوق.', en:'Confidence in yourself is the first step to excelling.'},
+];
+function renderDailyQuote(){
+  const el = document.getElementById('dailyQuote');
+  if(!el) return;
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+  const q = DAILY_QUOTES[dayOfYear % DAILY_QUOTES.length];
+  el.innerHTML = `<span class="qs-icon">💡</span><span>${lang==='ar' ? q.ar : q.en}</span>`;
+}
+
+// ===== ساعة رقمية بسيطة في الهيدر =====
+function startHeaderClock(){
+  const el = document.getElementById('headerClock');
+  if(!el) return;
+  function tick(){
+    const now = new Date();
+    let h = now.getHours();
+    const m = String(now.getMinutes()).padStart(2,'0');
+    const period = lang==='ar' ? (h < 12 ? 'صباحًا' : 'مساءً') : (h < 12 ? 'AM' : 'PM');
+    let h12 = h % 12; if(h12 === 0) h12 = 12;
+    el.textContent = `🕐 ${h12}:${m} ${period}`;
+  }
+  tick();
+  setInterval(tick, 15000);
+}
+
+// ===== زر العودة لأعلى الصفحة =====
+function initScrollTopBtn(){
+  const btn = document.getElementById('scrollTopBtn');
+  if(!btn) return;
+  window.addEventListener('scroll', ()=>{
+    btn.classList.toggle('show', window.scrollY > 400);
+  });
+  btn.addEventListener('click', ()=>{
+    window.scrollTo({top:0, behavior:'smooth'});
+  });
+}
+
+// ===== تتبع الحصص المخلّصة (checkbox) في ودجت جدول المذاكرة =====
+let completedSessions = {};
+function loadCompletedSessions(){
+  try{ completedSessions = JSON.parse(localStorage.getItem('sched_completed_v1') || '{}'); }
+  catch(e){ completedSessions = {}; }
+}
+function saveCompletedSessions(){
+  try{ localStorage.setItem('sched_completed_v1', JSON.stringify(completedSessions)); }
+  catch(e){ console.error('Could not save completed sessions:', e); }
+}
+/* تاريخ أقرب حدوث ليوم الأسبوع ده (يُستخدم كجزء من مفتاح التخزين عشان يتصفّر تلقائيًا كل أسبوع) */
+function occurrenceDateStr(dayIndex){
+  const now = new Date();
+  const diff = (dayIndex - now.getDay() + 7) % 7;
+  const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+  return d.toISOString().slice(0,10);
+}
+
+/* بطاقة معاينة جدول المذاكرة في لوحة التحكم — شريط أيام الأسبوع + شريط إنجاز + أقرب المحاضرات */
+function renderScheduleWidget(){
+  const wrap = document.getElementById('schedWidgetBody');
+  if(!wrap) return;
+
+  let facSchedule = schedule.filter(s=>s.faculty===currentFaculty);
+  const today = new Date().getDay();
+  facSchedule = facSchedule.map(s=>({
+    ...s,
+    _dist: minutesUntilNext(s.dayIndex, s.time),
+    _date: occurrenceDateStr(s.dayIndex)
+  }));
+  facSchedule.sort((a,b)=>
+    ((a.dayIndex - today + 7) % 7) - ((b.dayIndex - today + 7) % 7) || a.time.localeCompare(b.time)
+  );
+
+  const daysWithSession = new Set(facSchedule.map(s=>s.dayIndex));
+  const stripHtml = [0,1,2,3,4,5,6].map(i=>{
+    const label = lang==='ar' ? SHORT_DAYS_AR[i] : DAYS_EN[i].slice(0,2);
+    return `<div class="sw-day ${daysWithSession.has(i) ? 'has-session' : ''} ${i===today ? 'is-today' : ''}">${label}</div>`;
+  }).join('');
+
+  // شريط الإنجاز اليومي: عدد حصص النهاردة اللي خلصت
+  const todaysSessions = facSchedule.filter(s=>s.dayIndex === today);
+  let progressHtml = '';
+  if(todaysSessions.length > 0){
+    const todaysDone = todaysSessions.filter(s=>completedSessions[`${currentFaculty}_${s.id}_${s._date}`]).length;
+    const pct = Math.round((todaysDone / todaysSessions.length) * 100);
+    const progressText = lang==='ar'
+      ? `تم إنهاء ${todaysDone} من أصل ${todaysSessions.length} دروس اليوم`
+      : `${todaysDone} of ${todaysSessions.length} sessions done today`;
+    progressHtml = `
+      <div class="sw-progress-row"><span>${progressText}</span><span>${pct}%</span></div>
+      <div class="sw-progress-track"><div class="sw-progress-fill" style="width:${pct}%"></div></div>`;
+  }
+
+  let listHtml;
+  const shown = facSchedule.slice(0,4);
+  if(facSchedule.length === 0){
+    listHtml = `<div class="sched-empty-dash">${S('empty_schedule')}</div>`;
+  }else{
+    listHtml = shown.map((s,idx)=>{
+      const course = courses.find(c=>c.id===s.courseId);
+      if(!course) return '';
+      const th = THEME[course.subject];
+      const initial = L(course.title).trim().charAt(0);
+      const key = `${currentFaculty}_${s.id}_${s._date}`;
+      const isDone = !!completedSessions[key];
+
+      let statusBadge = '';
+      if(!isDone){
+        if(s._dist <= 0 && s._dist > -90){
+          statusBadge = `<span class="su-now">${lang==='ar'?'جارية الآن':'Now'}</span>`;
+        }else if(idx === 0 && s._dist > 0 && s._dist <= 24*60){
+          statusBadge = `<span class="su-next">${lang==='ar'?'القادمة':'Next'}</span>`;
+        }
+      }
+
+      return `
+        <div class="su-item ${isDone?'done':''}">
+          <button class="su-check ${isDone?'checked':''}" data-check-key="${key}" title="${lang==='ar'?'تم':'Done'}">${isDone?'✓':''}</button>
+          <div class="su-icon" style="background:${th.c}">${initial}</div>
+          <div class="su-info">
+            <div class="su-name">${L(course.title)}</div>
+            <div class="su-meta">
+              <span class="su-time">${formatTime12(s.time)}</span>
+              <span>·</span>
+              <span>${dayName(s.dayIndex)}</span>
+            </div>
+          </div>
+          ${statusBadge}
+        </div>`;
+    }).join('');
+
+    const remaining = facSchedule.length - shown.length;
+    if(remaining > 0){
+      const moreText = lang==='ar'
+        ? `+${remaining} حصة تانية — اضغط لعرض الجدول كامل`
+        : `+${remaining} more sessions — tap to view full schedule`;
+      listHtml += `<div class="sw-more" data-nav="schedule">${moreText}</div>`;
+    }
+  }
+
+  wrap.innerHTML = `${progressHtml}<div class="sched-week-strip">${stripHtml}</div><div class="sched-upcoming">${listHtml}</div>`;
+
+  wrap.querySelectorAll('[data-check-key]').forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const key = btn.dataset.checkKey;
+      completedSessions[key] = !completedSessions[key];
+      saveCompletedSessions();
+      renderScheduleWidget();
+    });
+  });
+}
+
+function renderSchedulePage(){
+  const page = document.getElementById('schedulePage');
+  page.innerHTML = `
+    <button class="back-btn" id="scheduleBack">${S('back')}</button>
+    <div class="section-head">
+      <h2>${S('scheduleTitle')}</h2>
+      <button class="add-btn" id="addSchedBtn">${S('addBtn')}</button>
+    </div>
+    <div id="schedForm" class="schedule-form" style="display:none;"></div>
+    <div class="timeline" id="schedTimeline"></div>
+  `;
+  page.querySelector('#scheduleBack').addEventListener('click', ()=>history.back());
+  renderSchedule();
+}
+
+function openScheduleForm(){
+  const facCourses = courses.filter(c=>c.faculty===currentFaculty);
+  const formEl = document.getElementById('schedForm');
+  if(!formEl) return;
+
+  const dayChecks = DAYS_AR.map((_,i)=>`
+    <label class="day-check-item">
+      <input type="checkbox" class="sched-day-check" value="${i}"> ${dayName(i)}
+    </label>
+  `).join('');
+
+  formEl.innerHTML = `
+    <div>
+      <div style="font-size:12px; color:var(--ink-soft); margin-bottom:6px;">${S('chooseDays')}</div>
+      <div class="day-checks">${dayChecks}</div>
+    </div>
+    <input type="time" id="newSchedTime">
+    <select id="newSchedCourse">
+      ${facCourses.map(c=>`<option value="${c.id}">${L(c.title)}</option>`).join('')}
+    </select>
+    <div class="form-actions">
+      <button class="btn-save" id="saveSchedBtn">${lang==='ar'?'حفظ':'Save'}</button>
+      <button class="btn-cancel" id="cancelSchedBtn">${lang==='ar'?'إلغاء':'Cancel'}</button>
+    </div>
+  `;
+  formEl.style.display = 'flex';
+}
+
+function closeScheduleForm(){
+  const formEl = document.getElementById('schedForm');
+  if(!formEl) return;
+  formEl.style.display = 'none';
+  formEl.innerHTML = '';
+}
+
+function saveNewSchedule(){
+  const checkedDays = Array.from(document.querySelectorAll('.sched-day-check:checked')).map(el=>+el.value);
+  const time = document.getElementById('newSchedTime').value.trim();
+  const courseId = document.getElementById('newSchedCourse').value;
+
+  if(checkedDays.length === 0){
+    alert(lang==='ar' ? 'اختار يوم واحد على الأقل' : 'Select at least one day');
+    return;
+  }
+  if(!time){
+    alert(lang==='ar' ? 'اختار الوقت' : 'Select time');
+    return;
+  }
+
+  checkedDays.forEach(dayIndex=>{
+    schedule.push({
+      id: nextScheduleId++,
+      dayIndex, time, courseId,
+      faculty: currentFaculty
+    });
+  });
+  closeScheduleForm();
+  renderSchedule();
+  saveState();
+}
+
+/* ===== جدول الامتحانات (ميد تيرم / فاينال) ===== */
+
+function renderExams(){
+  const wrap = document.getElementById('examsList');
+  if(!wrap) return;
+  let facExams = exams.filter(x=>x.faculty===currentFaculty);
+  facExams.sort((a,b)=> (a.date+ (a.time||'')).localeCompare(b.date + (b.time||'')));
+
+  if(facExams.length === 0){
+    wrap.innerHTML = `<div class="cp-empty">${S('empty_exams')}</div>`;
+    return;
+  }
+
+  wrap.innerHTML = facExams.map(x=>{
+    const course = courses.find(c=>c.id===x.courseId);
+    if(!course) return '';
+    const isMid = x.type === 'midterm';
+    const exColor = isMid ? '#A67C27' : '#B23A48';
+    const exBg = isMid ? '#F3EAD3' : '#F7E3E5';
+    return `
+      <div class="exam-card" style="--ex:${exColor}; --exbg:${exBg}">
+        <div class="info">
+          <span class="e-course">${L(course.title)}</span>
+          <div class="e-meta">
+            <span class="exam-type-badge">${isMid ? S('midterm') : S('final')}</span>
+            ${x.time ? `<span>${x.time}</span>` : ''}
+            ${x.location ? `<span>· ${x.location}</span>` : ''}
+          </div>
+        </div>
+        <div class="e-right">
+          <span class="e-date">${formatDateStr(x.date)}</span>
+          <button class="e-delete" data-del-exam="${x.id}" title="✕">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderExamsPage(){
+  const page = document.getElementById('examsPage');
+  page.innerHTML = `
+    <button class="back-btn" id="examsBack">${S('back')}</button>
+    <div class="section-head">
+      <h2>${S('examsTitle')}</h2>
+      <button class="add-btn" id="addExamBtn">${S('addBtn')}</button>
+    </div>
+    <div id="examForm" class="schedule-form" style="display:none;"></div>
+    <div id="examsList"></div>
+  `;
+  page.querySelector('#examsBack').addEventListener('click', ()=>history.back());
+  renderExams();
+}
+
+function openExamForm(){
+  const facCourses = courses.filter(c=>c.faculty===currentFaculty);
+  const formEl = document.getElementById('examForm');
+  if(!formEl) return;
+  formEl.innerHTML = `
+    <select id="newExamCourse">
+      ${facCourses.map(c=>`<option value="${c.id}">${L(c.title)}</option>`).join('')}
+    </select>
+    <select id="newExamType">
+      <option value="midterm">${S('midterm')}</option>
+      <option value="final">${S('final')}</option>
+    </select>
+    <input type="date" id="newExamDate">
+    <input type="time" id="newExamTime" placeholder="${S('examTime')}">
+    <input type="text" id="newExamLocation" placeholder="${S('examLocation')}">
+    <div class="form-actions">
+      <button class="btn-save" id="saveExamBtn">${lang==='ar'?'حفظ':'Save'}</button>
+      <button class="btn-cancel" id="cancelExamBtn">${lang==='ar'?'إلغاء':'Cancel'}</button>
+    </div>
+  `;
+  formEl.style.display = 'flex';
+}
+
+function closeExamForm(){
+  const formEl = document.getElementById('examForm');
+  if(!formEl) return;
+  formEl.style.display = 'none';
+  formEl.innerHTML = '';
+}
+
+function saveNewExam(){
+  const courseId = document.getElementById('newExamCourse').value;
+  const type = document.getElementById('newExamType').value;
+  const date = document.getElementById('newExamDate').value;
+  const time = document.getElementById('newExamTime').value.trim();
+  const location = document.getElementById('newExamLocation').value.trim();
+
+  if(!date){
+    alert(lang==='ar' ? 'اختار التاريخ' : 'Select date');
+    return;
+  }
+
+  exams.push({
+    id: nextExamId++,
+    courseId, type, date, time, location,
+    faculty: currentFaculty
+  });
+  closeExamForm();
+  renderExams();
+  updateNearestExamStat();
+  saveState();
+}
+
+function renderFacultySwitch(){
+  const wrap = document.getElementById('facultySwitch');
+  wrap.innerHTML = Object.entries(FACULTIES).map(([key, f])=>`
+    <button class="fac-btn ${key===currentFaculty?'active':''}" data-fac="${key}">${L(f.label)}</button>
+  `).join('');
+  wrap.querySelectorAll('.fac-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      currentFaculty = btn.dataset.fac;
+      renderFacultySwitch();
+      renderCourses();
+      renderSchedule();
+      renderExams();
+      renderAssignmentsList();
+      updateDueStat();
+      updateNearestExamStat();
+      checkUpcomingAssignments();
+      saveLocalPrefs();
+    });
+  });
+}
+
+function renderCoursePageContent(courseId){
+  const course = courses.find(c=>c.id===courseId);
+  const th = THEME[course.subject];
+  const coursePage = document.getElementById('coursePage');
+  coursePage.style.setProperty('--c-page', th.c);
+  coursePage.style.setProperty('--c-bg', th.bg);
+  expandedLecture = null;
+  showAddLectureForm = false;
+
+  const ownAssignments = assignments.filter(a => a.courseId === course.id);
+
+  function assignHtml(){
+    if(ownAssignments.length === 0){
+      return `<div class="cp-empty">${S('empty_courseAssign')}</div>`;
+    }
+    return ownAssignments.map(a=>`
+      <div class="assign ${a.urgent?'urgent':''}">
+        <div class="info"><span class="a-title">${L(a.title)}</span></div>
+        <span class="due" style="color:${a.urgent?'#e74c3c':'#5B6472'}">${formatDateStr(a.due)}</span>
+      </div>
+    `).join('');
+  }
+
+  coursePage.innerHTML = `
+    <button class="back-btn" id="backBtn">${S('back')}</button>
+    <div class="course-hero">
+      <span class="tag">${L(th.label)}</span>
+      <h2>${L(course.title)}</h2>
+      <div class="sub">${course.code} · ${course.lessons.length} ${S('lectureSuffix')} · <span id="cpPct">${pct(course)}%</span> ${S('completedSuffix')}</div>
+      <div class="progress-track"><div class="progress-fill" id="cpProgressFill" style="width:${pct(course)}%"></div></div>
+    </div>
+    <div class="cp-section">
+      <h3>${S('lecturesTitle')}</h3>
+      <div id="lectureList">${lecturesHtml(course)}</div>
+      <div id="addLectureFormWrap"></div>
+      <button class="add-lecture-btn" id="addLectureBtn">${S('addLecture')}</button>
+    </div>
+    <div class="cp-section">
+      <h3>${S('courseAssignTitle')}</h3>
+      <div class="assign-list">${assignHtml()}</div>
+    </div>
+  `;
+}
+
+let showAddLectureForm = false;
+
+function toggleAddLectureForm(course){
+  showAddLectureForm = !showAddLectureForm;
+  const wrap = document.getElementById('addLectureFormWrap');
+  if(showAddLectureForm){
+    wrap.innerHTML = `
+      <div class="lecture-form">
+        <input type="text" id="newLectureTitle" placeholder="${lang==='ar'?'عنوان المحاضرة':'Lecture Title'}">
+        <input type="text" id="newLectureDur" placeholder="${lang==='ar'?'المدة (مثلاً: 20 د)':'Duration (e.g. 20 min)'}">
+        <div class="form-actions">
+          <button class="btn-save" id="saveLectureBtn">${lang==='ar'?'حفظ':'Save'}</button>
+          <button class="btn-cancel" id="cancelLectureBtn">${lang==='ar'?'إلغاء':'Cancel'}</button>
+        </div>
+      </div>`;
+  }else{
+    wrap.innerHTML = '';
+  }
+}
+
+function saveNewLecture(course){
+  const titleInput = document.getElementById('newLectureTitle');
+  const durInput = document.getElementById('newLectureDur');
+  
+  const title = titleInput.value.trim();
+  const dur = durInput.value.trim() || '20 د';
+  
+  if(!title){
+    alert(lang==='ar' ? 'اكتب عنوان المحاضرة' : 'Enter lecture title');
+    return;
+  }
+  
+  const translated = translate(title);
+  
+  course.lessons.push({
+    t: lang === 'ar' ? {ar: title, en: translated} : {ar: translated, en: title},
+    d: dur,
+    done: false,
+    files: [],
+    notes: ''
+  });
+  
+  showAddLectureForm = false;
+  renderCoursePageContent(course.id);
+  renderCourses();
+  saveState();
+}
+
+function openCourse(id){
+  navigate('course', {courseId: id});
+}
+
+function getCurrentCourse(){
+  if(!currentView || currentView.view !== 'course') return null;
+  return courses.find(c=>c.id === currentView.params.courseId) || null;
+}
+
+let expandedLecture = null;
+let readingMode = false;
+
+function lecturesHtml(course){
+  return course.lessons.map((l,i)=>lectureCardHtml(course,l,i)).join('');
+}
+
+function lectureCardHtml(course, l, i){
+  const open = expandedLecture === i;
+  const fileCount = (l.files || []).length;
+  return `
+    <div class="lecture-card ${open?'open':''} ${readingMode && open?'reading-mode':''}">
+      <div class="lecture-head" data-toggle="${i}">
+        <input type="checkbox" class="lecture-check" data-check="${i}" ${l.done?'checked':''} onclick="event.stopPropagation()">
+        <span class="lecture-title ${l.done?'done':''}">${lectureLabel(i)}: ${translate(L(l.t))}</span>
+        <span class="lecture-dur">${l.d}</span>
+        <span class="lecture-icons">${fileCount > 0 ? '📎' : ''}</span>
+        <span class="lecture-badge">${open?'−':'+'}</span>
+      </div>
+      ${open ? `<div class="lecture-body">${lectureContentHtml(course, l, i)}</div>` : ''}
+    </div>`;
+}
+
+function refreshLectureList(course){
+  document.getElementById('lectureList').innerHTML = lecturesHtml(course);
+}
+
+function getFileIcon(file){
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(['pdf'].includes(ext)) return '📄';
+  if(['mp3','wav','m4a','ogg'].includes(ext)) return '🎙️';
+  if(['mp4','avi','mov','mkv'].includes(ext)) return '🎬';
+  if(['jpg','jpeg','png','gif','svg'].includes(ext)) return '🖼️';
+  if(['doc','docx'].includes(ext)) return '📝';
+  if(['xls','xlsx'].includes(ext)) return '📊';
+  if(['ppt','pptx'].includes(ext)) return '📽️';
+  if(['zip','rar','7z'].includes(ext)) return '📦';
+  return '📎';
+}
+
+function lectureContentHtml(course, l, i){
+  const files = l.files || [];
+  const filesHtml = files.length > 0 ? `
+    <div class="files-list">
+      ${files.map((f,fi)=>`
+        <div class="attach-chip" data-open-file="${f.fileId||''}" data-file-type="${f.type||''}" data-file-name="${f.name}" data-file-url="${f.url||''}" role="button" tabindex="0">
+          <div class="file-icon">${getFileIcon(f)}</div>
+          <div class="file-name">${f.name}</div>
+          <button class="file-del" data-del-file="${i}|${fi}" title="✕">✕</button>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
+  const driveHtml = `
+    <div class="upload-row" style="margin-top:6px;">
+      <input type="text" id="driveNameInput-${i}" placeholder="${lang==='ar'?'اسم الملف (مثلاً: محاضرة صوتية 1)':'File name (e.g. Audio lecture 1)'}" style="flex:1; min-width:140px; border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:12.5px; background:var(--bg); color:var(--ink);">
+      <input type="text" id="driveLinkInput-${i}" placeholder="${lang==='ar'?'رابط الملف (Google Drive مثلاً)':'File link (e.g. Google Drive)'}" style="flex:1; min-width:180px; border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:12.5px; background:var(--bg); color:var(--ink);">
+      <button type="button" class="upload-btn" id="driveLinkBtn-${i}">${lang==='ar'?'➕ إضافة الرابط':'➕ Add Link'}</button>
+    </div>
+  `;
+  
+  const notesHtml = `
+    <div style="margin-top:14px;">
+      <label style="font-size:13px; font-weight:600; margin-bottom:6px; display:block;">${S('notes')}</label>
+      <textarea id="notes-${i}" class="essay-box" placeholder="${lang==='ar'?'اكتب ملاحظاتك هنا...':'Write your notes here...'}">${l.notes || ''}</textarea>
+      <button class="reading-mode-toggle" data-save-notes="${i}">${S('saveNotes')}</button>
+    </div>
+  `;
+  
+  return `
+    <div class="upload-row">
+      <button type="button" class="upload-btn" id="fileUploadBtn-${i}">${S('uploadFile')}</button>
+      <input type="file" multiple id="fileInput-${i}" style="display:none">
+      <button class="reading-mode-toggle" id="readingModeBtn-${i}">${S('readingMode')}</button>
+    </div>
+    <div class="upload-status" id="uploadStatus-${i}"></div>
+    ${driveHtml}
+    ${filesHtml}
+    ${notesHtml}
+  `;
+}
+
+/* ===== تفويض الأحداث (Event Delegation): ربط دائم مرة واحدة، بيشتغل مهما اتغيّر محتوى الصفحة ===== */
+
+document.addEventListener('click', (e)=>{
+  // رجوع من صفحة المادة
+  if(e.target.closest('#backBtn')){ history.back(); return; }
+
+  // زرار "إضافة محاضرة"
+  if(e.target.closest('#addLectureBtn')){
+    const course = getCurrentCourse();
+    if(course) toggleAddLectureForm(course);
+    return;
+  }
+  if(e.target.closest('#saveLectureBtn')){
+    const course = getCurrentCourse();
+    if(course) saveNewLecture(course);
+    return;
+  }
+  if(e.target.closest('#cancelLectureBtn')){
+    showAddLectureForm = false;
+    const wrap = document.getElementById('addLectureFormWrap');
+    if(wrap) wrap.innerHTML = '';
+    return;
+  }
+
+  // فتح/قفل المحاضرة (accordion)
+  const toggleEl = e.target.closest('[data-toggle]');
+  if(toggleEl){
+    const course = getCurrentCourse();
+    if(course){
+      const i = +toggleEl.dataset.toggle;
+      expandedLecture = (expandedLecture === i) ? null : i;
+      refreshLectureList(course);
+    }
+    return;
+  }
+
+  // زرار رفع ملف (بيفتح اختيار الملف)
+  const fileBtnEl = e.target.closest('[id^="fileUploadBtn-"]');
+  if(fileBtnEl){
+    const li = fileBtnEl.id.split('-')[1];
+    const inputEl = document.getElementById('fileInput-'+li);
+    if(inputEl) inputEl.click();
+    return;
+  }
+
+  // إضافة رابط ملف كبير (Google Drive وغيره)
+  const driveBtnEl = e.target.closest('[id^="driveLinkBtn-"]');
+  if(driveBtnEl){
+    const li = driveBtnEl.id.split('-')[1];
+    const course = getCurrentCourse();
+    const input = document.getElementById('driveLinkInput-'+li);
+    const nameInput = document.getElementById('driveNameInput-'+li);
+    if(course && input){
+      const url = input.value.trim();
+      if(!url){ alert(lang==='ar' ? 'الصق رابط الملف الأول' : 'Paste the file link first'); return; }
+      if(!course.lessons[li].files) course.lessons[li].files = [];
+      let fname = (nameInput && nameInput.value.trim()) || '';
+      if(!fname){
+        fname = url;
+        try{ fname = decodeURIComponent(url.split('/').pop().split('?')[0]) || url; }catch(e){}
+      }
+      course.lessons[li].files.push({name: fname.slice(0,60), url, isExternal:true});
+      refreshLectureList(course);
+      saveState();
+    }
+    return;
+  }
+
+  // وضع القراءة
+  const readBtnEl = e.target.closest('[id^="readingModeBtn-"]');
+  if(readBtnEl){
+    readingMode = !readingMode;
+    const course = getCurrentCourse();
+    if(course) refreshLectureList(course);
+    return;
+  }
+
+  // حذف ملف
+  const delFileEl = e.target.closest('[data-del-file]');
+  if(delFileEl){
+    const course = getCurrentCourse();
+    if(course){
+      const [lectureIdx, fileIdx] = delFileEl.dataset.delFile.split('|').map(Number);
+      course.lessons[lectureIdx].files.splice(fileIdx, 1);
+      refreshLectureList(course);
+      saveState();
+    }
+    return;
+  }
+
+  // فتح ملف مرفوع
+  const openFileEl = e.target.closest('[data-open-file]');
+  if(openFileEl && !e.target.closest('.file-del')){
+    const url = openFileEl.dataset.fileUrl;
+    if(url){ window.open(url, '_blank'); }
+    else{ openStoredFile(openFileEl.dataset.openFile, openFileEl.dataset.fileType, openFileEl.dataset.fileName); }
+    return;
+  }
+
+  // حفظ الملاحظات
+  const saveNotesEl = e.target.closest('[data-save-notes]');
+  if(saveNotesEl){
+    const course = getCurrentCourse();
+    const idx = +saveNotesEl.dataset.saveNotes;
+    const notesArea = document.getElementById('notes-'+idx);
+    if(course && notesArea){
+      course.lessons[idx].notes = notesArea.value;
+      saveState();
+      showNotification('✅', lang==='ar'?'تم حفظ الملاحظات':'Notes saved', 2000);
+    }
+    return;
+  }
+
+  // تصدير / استيراد البيانات
+  if(e.target.closest('#exportBtn')){ exportData(); return; }
+
+  // كروت الوصول السريع في لوحة التحكم
+  const navCardEl = e.target.closest('[data-nav]');
+  if(navCardEl){
+    if(qlJustDragged) return;
+    navigate(navCardEl.dataset.nav);
+    return;
+  }
+  if(e.target.closest('#importBtn')){ importData(); return; }
+
+  // جدول المذاكرة: إضافة / حفظ / إلغاء
+  if(e.target.closest('#addSchedBtn')){
+    const formEl = document.getElementById('schedForm');
+    if(formEl && formEl.style.display === 'flex') closeScheduleForm();
+    else openScheduleForm();
+    return;
+  }
+  if(e.target.closest('#saveSchedBtn')){ saveNewSchedule(); return; }
+  if(e.target.closest('#cancelSchedBtn')){ closeScheduleForm(); return; }
+  const delSchedEl = e.target.closest('[data-del-sched]');
+  if(delSchedEl){
+    const id = +delSchedEl.dataset.delSched;
+    const idx = schedule.findIndex(s=>s.id===id);
+    if(idx !== -1) schedule.splice(idx, 1);
+    renderSchedule();
+    saveState();
+    return;
+  }
+
+  // جدول الامتحانات: إضافة / حفظ / إلغاء
+  if(e.target.closest('#addExamBtn')){
+    const formEl = document.getElementById('examForm');
+    if(formEl && formEl.style.display === 'flex') closeExamForm();
+    else openExamForm();
+    return;
+  }
+  if(e.target.closest('#saveExamBtn')){ saveNewExam(); return; }
+  if(e.target.closest('#cancelExamBtn')){ closeExamForm(); return; }
+  const delExamEl = e.target.closest('[data-del-exam]');
+  if(delExamEl){
+    const id = +delExamEl.dataset.delExam;
+    const idx = exams.findIndex(x=>x.id===id);
+    if(idx !== -1) exams.splice(idx, 1);
+    renderExams();
+    updateNearestExamStat();
+    saveState();
+    return;
+  }
+});
+
+document.addEventListener('change', (e)=>{
+  // تحديد محاضرة كمكتملة
+  if(e.target.matches('[data-check]')){
+    const course = getCurrentCourse();
+    if(course){
+      const i = +e.target.dataset.check;
+      course.lessons[i].done = e.target.checked;
+      renderCourses();
+      refreshLectureList(course);
+      const pctEl = document.getElementById('cpPct');
+      const fillEl = document.getElementById('cpProgressFill');
+      if(pctEl) pctEl.textContent = pct(course) + '%';
+      if(fillEl) fillEl.style.width = pct(course) + '%';
+      saveState();
+    }
+    return;
+  }
+
+  // رفع ملف فعليًا بعد اختياره
+  if(e.target.id && e.target.id.startsWith('fileInput-')){
+    const li = +e.target.id.split('-')[1];
+    const course = getCurrentCourse();
+    if(course) handleFileUpload(e, course, li);
+    return;
+  }
+});
+
+async function handleFileUpload(e, course, li){
+  const files = Array.from(e.target.files);
+  if(files.length === 0) return;
+  const statusEl = document.getElementById(`uploadStatus-${li}`);
+
+  for(const file of files){
+    if(file.size > MAX_FILE_SIZE){
+      statusEl.textContent = S('fileTooBig');
+      continue;
+    }
+
+    statusEl.textContent = S('uploadingFile');
+
+    try{
+      if(db){
+        const fileId = await uploadFileToFirestore(file);
+        if(!course.lessons[li].files) course.lessons[li].files = [];
+        course.lessons[li].files.push({name:file.name, type:file.type||'', size:file.size, fileId});
+        statusEl.textContent = S('uploadedLocal');
+      }else{
+        const url = URL.createObjectURL(file);
+        if(!course.lessons[li].files) course.lessons[li].files = [];
+        course.lessons[li].files.push({name:file.name, url, size:file.size});
+        statusEl.textContent = lang==='ar' ? 'تم الرفع مؤقتًا بس (مفيش اتصال بقاعدة البيانات) — هيتفقد لو قفلت الصفحة' : 'Uploaded locally only (no database connection) — will be lost on reload';
+      }
+    }catch(err){
+      console.error('Upload failed:', err);
+      statusEl.textContent = '❌ ' + (err.code || '') + ' ' + err.message;
+    }
+  }
+  
+  refreshLectureList(course);
+  saveState();
+  e.target.value = '';
+}
+
+function updateDueStat(){
+  const el = document.getElementById('dueStat');
+  if(!el) return;
+  const todayStr = new Date().toISOString().slice(0,10);
+  const count = assignments.filter(a=>a.faculty===currentFaculty && (!a.due || a.due >= todayStr)).length;
+  if(count === 0){
+    el.textContent = lang==='ar' ? '🎉 مفيش واجبات متأخرة' : '🎉 No pending work';
+    el.style.fontSize = '15px';
+  }else{
+    el.textContent = count;
+    el.style.fontSize = '';
+  }
+}
+
+function updateNearestExamStat(){
+  const el = document.getElementById('nearestExamStat');
+  if(!el) return;
+  const todayStr = new Date().toISOString().slice(0,10);
+  const upcoming = exams
+    .filter(x=>x.faculty===currentFaculty && x.date >= todayStr)
+    .sort((a,b)=> (a.date+(a.time||'')).localeCompare(b.date+(b.time||'')));
+  if(upcoming.length === 0){
+    el.textContent = lang==='ar' ? '📖 لا توجد امتحانات قريبة، استغل الوقت في المذاكرة!' : '📖 No exams coming up, make the most of your time!';
+    el.style.fontSize = '13.5px';
+    updateBellBadge();
+    return;
+  }
+  const x = upcoming[0];
+  const course = courses.find(c=>c.id===x.courseId);
+  el.textContent = `${course ? L(course.title) : ''} · ${formatDateStr(x.date)}`;
+  el.style.fontSize = '15px';
+  updateBellBadge();
+}
+
+const QUICK_LINKS = [
+  {view:'courses', icon:'📚', key:'tabCourses', color:'#3BA7D9'},
+  {view:'schedule', icon:'🗓️', key:'tabSchedule', color:'#1F6F5C'},
+  {view:'exams', icon:'📝', key:'tabExams', color:'#B23A48'},
+  {view:'assignments', icon:'✅', key:'tabAssignments', color:'#C1542D'},
+  {view:'grades', icon:'📊', key:'tabGrades', color:'#6A4FA0'},
+];
+
+/* ترتيب كروت الوصول السريع حسب أولوية الطالب — بيتغيّر بالسحب والإفلات وبيتخزن محليًا */
+let quickLinksOrder = QUICK_LINKS.map(q=>q.view);
+let quickLinksSortable = null;
+let qlJustDragged = false;
+
+function getOrderedQuickLinks(){
+  const map = {};
+  QUICK_LINKS.forEach(q=>{ map[q.view] = q; });
+  const ordered = quickLinksOrder.map(v=>map[v]).filter(Boolean);
+  QUICK_LINKS.forEach(q=>{ if(!ordered.includes(q)) ordered.push(q); });
+  return ordered;
+}
+
+function renderQuickLinks(){
+  const wrap = document.getElementById('quickLinksGrid');
+  if(!wrap) return;
+  wrap.innerHTML = getOrderedQuickLinks().map(it=>`
+    <div class="quick-link-card" style="--qc:${it.color}" data-nav="${it.view}">
+      <div class="qc-icon">${it.icon}</div>
+      <div class="qc-label">${S(it.key)}</div>
+    </div>
+  `).join('');
+  initQuickLinksDragDrop();
+}
+
+function initQuickLinksDragDrop(){
+  const wrap = document.getElementById('quickLinksGrid');
+  if(!wrap || typeof Sortable === 'undefined') return;
+  if(quickLinksSortable){ quickLinksSortable.destroy(); }
+  quickLinksSortable = new Sortable(wrap, {
+    animation:150,
+    delay:150,
+    delayOnTouchOnly:true,
+    touchStartThreshold:5,
+    ghostClass:'dragging',
+    onStart:function(){ qlJustDragged = true; },
+    onEnd:function(){
+      quickLinksOrder = [...wrap.querySelectorAll('.quick-link-card')].map(c=>c.dataset.nav);
+      saveLocalPrefs();
+      setTimeout(()=>{ qlJustDragged = false; }, 150);
+    }
+  });
+}
+
+function renderAssignmentsList(){
+  const list = document.getElementById('assignList');
+  if(!list) return;
+  const facAssignments = assignments.filter(a=>a.faculty===currentFaculty);
+  if(facAssignments.length === 0){
+    list.innerHTML = `<div class="cp-empty">${S('empty_assign')}</div>`;
+  }else{
+    list.innerHTML = facAssignments.map(a=>{
+      const course = courses.find(c=>c.id===a.courseId);
+      return `
+      <div class="assign ${a.urgent?'urgent':''}">
+        <div class="info">
+          <span class="a-title">${L(a.title)}</span>
+          <span class="a-course">${L(course.title)}</span>
+        </div>
+        <div class="a-right">
+          <span class="due" style="color:${a.urgent?'#e74c3c':'#5B6472'}">${formatDateStr(a.due)}</span>
+          <button class="a-delete" data-del-assign="${a.id}" title="✕">✕</button>
+        </div>
+      </div>
+    `;}).join('');
+    list.querySelectorAll('[data-del-assign]').forEach(btn=>{
+      btn.addEventListener('click', ()=>deleteAssignment(+btn.dataset.delAssign));
+    });
+  }
+  updateDueStat();
+}
+
+function renderAssignmentsPage(){
+  const page = document.getElementById('assignmentsPage');
+  page.innerHTML = `
+    <button class="back-btn" id="assignBack">${S('back')}</button>
+    <div class="section-head">
+      <h2>${S('tabAssignments')} — ${L(FACULTIES[currentFaculty].short)}</h2>
+      <button class="add-btn" id="addAssignBtn">${S('assignBtnFull')}</button>
+    </div>
+    <div id="assignForm" class="assign-form" style="display:none;"></div>
+    <div class="assign-list" id="assignList"></div>
+  `;
+  page.querySelector('#assignBack').addEventListener('click', ()=>history.back());
+  page.querySelector('#addAssignBtn').addEventListener('click', ()=>{
+    const formEl = document.getElementById('assignForm');
+    if(formEl.style.display === 'flex'){ closeAssignForm(); }
+    else{ openAssignForm(); }
+  });
+  renderAssignmentsList();
+}
+
+function deleteAssignment(id){
+  const idx = assignments.findIndex(a=>a.id===id);
+  if(idx !== -1) assignments.splice(idx, 1);
+  renderAssignmentsList();
+  checkUpcomingAssignments();
+  saveState();
+}
+
+function openAssignForm(){
+  const facCourses = courses.filter(c=>c.faculty===currentFaculty);
+  const formEl = document.getElementById('assignForm');
+  formEl.innerHTML = `
+    <input type="text" id="newAssignTitle" placeholder="${lang==='ar'?'عنوان الواجب':'Assignment Title'}">
+    <select id="newAssignCourse">
+      ${facCourses.map(c=>`<option value="${c.id}">${L(c.title)}</option>`).join('')}
+    </select>
+    <input type="date" id="newAssignDue">
+    <label><input type="checkbox" id="newAssignUrgent"> ${lang==='ar'?'عاجل':'Urgent'}</label>
+    <div class="form-actions">
+      <button class="btn-save" id="saveAssignBtn">${lang==='ar'?'حفظ':'Save'}</button>
+      <button class="btn-cancel" id="cancelAssignBtn">${lang==='ar'?'إلغاء':'Cancel'}</button>
+    </div>
+  `;
+  formEl.style.display = 'flex';
+  document.getElementById('saveAssignBtn').addEventListener('click', saveNewAssignment);
+  document.getElementById('cancelAssignBtn').addEventListener('click', closeAssignForm);
+}
+
+function closeAssignForm(){
+  const formEl = document.getElementById('assignForm');
+  if(!formEl) return;
+  formEl.style.display = 'none';
+  formEl.innerHTML = '';
+}
+
+function saveNewAssignment(){
+  const titleInput = document.getElementById('newAssignTitle');
+  const courseSelect = document.getElementById('newAssignCourse');
+  const dueInput = document.getElementById('newAssignDue');
+  const urgentCheck = document.getElementById('newAssignUrgent');
+
+  const titleVal = titleInput.value.trim();
+  const courseId = courseSelect.value;
+  const dueVal = dueInput.value.trim();
+  const urgentVal = urgentCheck.checked;
+
+  if(!titleVal || !dueVal){
+    alert(lang==='ar' ? 'اكتب عنوان الواجب واختار تاريخ التسليم' : 'Enter title and select due date');
+    return;
+  }
+
+  assignments.push({
+    id: nextAssignmentId++, 
+    title: {ar:titleVal, en:titleVal}, 
+    courseId, 
+    faculty: currentFaculty, 
+    due: dueVal, 
+    urgent: urgentVal
+  });
+  closeAssignForm();
+  renderAssignmentsList();
+  checkUpcomingAssignments();
+  saveState();
+}
+
+function applyLanguage(){
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang==='ar' ? 'rtl' : 'ltr';
+  document.body.classList.toggle('ltr', lang==='en');
+
+  document.getElementById('brandTitle').textContent = lang==='ar' ? 'المشاكسين' : 'El Mashakseen';
+  document.getElementById('brandSubtitle').textContent = S('brandSubtitle');
+  document.getElementById('langToggle').textContent = lang==='ar' ? 'EN' : 'عربي';
+
+  document.getElementById('statLabel').textContent = S('dueLabel');
+  document.getElementById('nearestExamLabel').textContent = S('nearestExamLabel');
+  document.getElementById('quickLinksTitle').textContent = S('quickLinksTitle');
+  document.getElementById('schedWidgetTitle').textContent = '📅 ' + S('scheduleTitle');
+  document.getElementById('schedWidgetViewAll').textContent = S('viewAll');
+  document.getElementById('settingsPanelTitle').textContent = S('settingsTitle');
+  document.getElementById('footerText').textContent = S('footerText');
+  renderDailyQuote();
+  updateBellBadge();
+
+  renderFacultySwitch();
+  renderQuickLinks();
+  renderCourses();
+  renderSchedule();
+  renderExams();
+  renderAssignmentsList();
+  updateDueStat();
+  updateNearestExamStat();
+  
+  if(currentView.view === 'course'){
+    renderCoursePageContent(currentView.params.courseId);
+  }else if(currentView.view === 'courses'){
+    renderCoursesPage();
+  }else if(currentView.view === 'schedule'){
+    renderSchedulePage();
+  }else if(currentView.view === 'exams'){
+    renderExamsPage();
+  }else if(currentView.view === 'assignments'){
+    renderAssignmentsPage();
+  }else if(currentView.view === 'grades'){
+    renderGradesPage();
+  }
+}
+
+document.getElementById('langToggle').addEventListener('click', ()=>{
+  lang = lang==='ar' ? 'en' : 'ar';
+  applyLanguage();
+  saveLocalPrefs();
+});
+
+async function initApp(){
+  loadLocalPrefs();
+  loadCompletedSessions();
+  await loadState();
+  applyLanguage();
+  renderDailyQuote();
+  startHeaderClock();
+  initScrollTopBtn();
+  
+  if(currentView && currentView.view){
+    showView(currentView.view, currentView.params);
+    history.replaceState(currentView, '', '#' + currentView.view);
+  }else{
+    history.replaceState({view:'dashboard', params:{}}, '', '#dashboard');
+  }
+  
+  checkUpcomingAssignments();
+  startRealtimeSync();
+}
+initApp();
+</script>
+<button id="scrollTopBtn" title="ارجع لفوق" aria-label="ارجع لفوق">↑</button>
+</body>
+</html>
