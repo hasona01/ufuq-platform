@@ -154,6 +154,11 @@
   .stat-card .value{font-size:26px; font-weight:700; font-family:'IBM Plex Mono',monospace; direction:ltr; text-align:right;}
   body.ltr .stat-card .value{text-align:left;}
   .stat-card .value small{font-size:14px; font-weight:400; color:var(--ink-soft);}
+  .stat-card .countdown{font-size:12.5px; font-weight:700; margin-top:7px; color:var(--gold);}
+  .stat-card .countdown:empty{display:none;}
+  .stat-card .countdown.soon{color:#C1542D;}
+  .stat-card .countdown.urgent{color:#B23A48; animation:pulseUrgent 1.6s ease-in-out infinite;}
+  @keyframes pulseUrgent{0%,100%{opacity:1;} 50%{opacity:.55;}}
 
   section{margin-bottom:30px;}
   .section-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:14px; flex-wrap:wrap; gap:10px;}
@@ -574,6 +579,7 @@
       <div class="stat-card">
         <div class="label" id="nearestExamLabel">أقرب امتحان</div>
         <div class="value" id="nearestExamStat" style="font-size:15px;">—</div>
+        <div class="countdown" id="nearestExamCountdown"></div>
       </div>
     </div>
 
@@ -2459,6 +2465,9 @@ function updateDueStat(){
   }
 }
 
+/* موعد أقرب امتحان (كتاريخ/وقت كامل) — بيتحدث كل ما نعيد حساب الإحصائية، وبيستخدمه العداد التنازلي */
+let nearestExamDT = null;
+
 function updateNearestExamStat(){
   const el = document.getElementById('nearestExamStat');
   if(!el) return;
@@ -2469,6 +2478,8 @@ function updateNearestExamStat(){
   if(upcoming.length === 0){
     el.textContent = lang==='ar' ? '📖 لا توجد امتحانات قريبة، استغل الوقت في المذاكرة!' : '📖 No exams coming up, make the most of your time!';
     el.style.fontSize = '13.5px';
+    nearestExamDT = null;
+    updateExamCountdown();
     updateBellBadge();
     return;
   }
@@ -2476,7 +2487,57 @@ function updateNearestExamStat(){
   const course = courses.find(c=>c.id===x.courseId);
   el.textContent = `${course ? L(course.title) : ''} · ${formatDateStr(x.date)}`;
   el.style.fontSize = '15px';
+  // لو الامتحان معاه وقت محدد بنستخدمه، لو لأ بنعتبره بداية اليوم عشان العداد يفضل شغال طول يوم الامتحان
+  nearestExamDT = new Date(`${x.date}T${x.time || '00:00'}:00`);
+  updateExamCountdown();
   updateBellBadge();
+}
+
+/* بيحول الفرق الزمني (بالميلي ثانية) لنص زي "باقي 3 أيام و12 ساعة" — بيدي إحساس بالإلحاح كل ما الوقت يقرب */
+function formatExamCountdown(diffMs){
+  const isAr = lang==='ar';
+  if(diffMs <= 0){
+    return isAr ? '🔴 الامتحان النهاردة!' : '🔴 Exam is today!';
+  }
+  const totalMinutes = Math.floor(diffMs / 60000);
+  const days = Math.floor(totalMinutes / 1440);
+  const hours = Math.floor((totalMinutes % 1440) / 60);
+  const minutes = totalMinutes % 60;
+
+  if(isAr){
+    const dayWord = days===1 ? 'يوم واحد' : days===2 ? 'يومين' : days<=10 ? `${days} أيام` : `${days} يوم`;
+    const hourWord = hours===1 ? 'ساعة واحدة' : hours===2 ? 'ساعتين' : hours<=10 ? `${hours} ساعات` : `${hours} ساعة`;
+    const minWord = minutes===1 ? 'دقيقة واحدة' : minutes===2 ? 'دقيقتين' : minutes<=10 ? `${minutes} دقايق` : `${minutes} دقيقة`;
+    if(days > 0) return `⏳ باقي ${dayWord}${hours>0 ? ' و'+hourWord : ''}`;
+    if(hours > 0) return `⏳ باقي ${hourWord}${minutes>0 ? ' و'+minWord : ''}`;
+    return `⏳ باقي ${minutes>0 ? minWord : 'أقل من دقيقة'}`;
+  }else{
+    if(days > 0) return `⏳ ${days} day${days!==1?'s':''}${hours>0 ? ' and '+hours+' hour'+(hours!==1?'s':'') : ''} left`;
+    if(hours > 0) return `⏳ ${hours} hour${hours!==1?'s':''}${minutes>0 ? ' and '+minutes+' min' : ''} left`;
+    return `⏳ ${minutes>0 ? minutes+' min left' : 'Less than a minute left'}`;
+  }
+}
+
+/* بيرسم نص العداد التنازلي وبيلوّنه حسب قرب الموعد (أحمر لو أقل من يوم، برتقالي لو أقل من 3 أيام) */
+function updateExamCountdown(){
+  const el = document.getElementById('nearestExamCountdown');
+  if(!el) return;
+  if(!nearestExamDT){
+    el.textContent = '';
+    el.className = 'countdown';
+    return;
+  }
+  const diff = nearestExamDT.getTime() - Date.now();
+  el.textContent = formatExamCountdown(diff);
+  el.className = 'countdown';
+  if(diff <= 24*3600000) el.classList.add('urgent');
+  else if(diff <= 3*24*3600000) el.classList.add('soon');
+}
+
+/* بيحدّث نص العداد كل دقيقة من غير ما يعيد حساب أقرب امتحان من الأول */
+function startExamCountdownTicker(){
+  updateExamCountdown();
+  setInterval(updateExamCountdown, 60000);
 }
 
 const QUICK_LINKS = [
@@ -2733,6 +2794,7 @@ async function initApp(){
   applyLanguage();
   renderDailyQuote();
   startHeaderClock();
+  startExamCountdownTicker();
   initScrollTopBtn();
   
   if(currentView && currentView.view){
